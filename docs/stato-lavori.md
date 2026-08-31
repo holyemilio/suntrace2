@@ -316,3 +316,25 @@ print('ok' if ki==ke else sorted(ki^ke))"
   `body { overflow: hidden; height: 100vh }` per il layout fisso del
   simulatore, che romperebbe lo scroll normale della landing. Le due pagine
   condividono solo `tokens.css` (i design token in `:root`).
+- **`page.waitForFunction(fn, { timeout: N })` in Playwright (non `@playwright/test`,
+  l'API "core" usata da `tests/e2e/app.e2e.js`) — l'oggetto opzioni finisce
+  silenziosamente nell'`arg` della funzione, non nelle opzioni**, se non si
+  passa esplicitamente `undefined` come secondo parametro:
+  `page.waitForFunction(fn, undefined, { timeout: N })`. Senza, il timeout
+  dichiarato viene ignorato e si usa sempre il default di Playwright (30s) —
+  verificato con un microbenchmark diretto. Bug trovato il 31/08/2026 in
+  `drawAndAnalyse()` (mascherava un secondo bug reale, vedi sotto, facendolo
+  fallire dopo 30s invece che 8s).
+- **T33 (finestra che si restringe → layout mobile) era flaky in CI, non
+  riproducibile nei primi run locali**: aspettava solo che `#mobile-bottom-bar`
+  diventasse visibile via CSS dopo `setViewportSize`, ma quello scatta
+  indipendentemente dal listener JS `resize` che deve ancora chiamare
+  `map.invalidateSize()`. Disegnando la stanza prima che il resize JS finisse,
+  Leaflet calcolava i vertici sulla sua dimensione interna ancora pre-resize:
+  il controllo di chiusura dell'anello non tornava mai e `drawAndAnalyse()`
+  restava bloccato fino al timeout. **Riprodotto in locale (1 fallimento su 8
+  run)** una volta isolato — non è mai stato un problema specifico della CI.
+  Fix: aspettare un segnale JS-driven reale (il reparent di
+  `#energy-class-field` dentro la barra, fatto da `initMobileLayout()` nello
+  stesso handler sincrono che chiama `invalidateSize()`), non la visibilità
+  CSS. 20/20 run locali puliti dopo il fix.
