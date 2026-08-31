@@ -162,7 +162,10 @@ async function drawAndAnalyse(page, opts = {}) {
   const overpassDone = page.waitForResponse('**/overpass-api.de/**', { timeout: 2000 }).catch(() => null);
   await drawRoom(page, opts);
   await overpassDone;
-  await page.waitForFunction(() => document.getElementById('thermal-result').textContent !== '--°C', { timeout: 8000 });
+  // The explicit `undefined` matters: waitForFunction(fn, options) without it
+  // treats `options` as the page function's arg instead, silently discarding
+  // the timeout override and falling back to Playwright's 30s default.
+  await page.waitForFunction(() => document.getElementById('thermal-result').textContent !== '--°C', undefined, { timeout: 8000 });
   await page.waitForTimeout(30); // let the post-OSM refreshUI() finish applying
 }
 
@@ -543,10 +546,16 @@ test('T33: shrinking the window activates the mobile layout instead of hiding co
   assert.equal(await page.locator('#mobile-bottom-bar').isVisible(), false, 'no mobile UI yet, at desktop width');
 
   // Narrower than the desktop breakpoint — same as a live window resize or browser zoom.
-  // The bar is `position: fixed` — offsetParent stays null even when visible for
-  // fixed-position elements, so wait on visibility itself, not offsetParent.
   await page.setViewportSize({ width: 500, height: 820 });
-  await page.locator('#mobile-bottom-bar').waitFor({ state: 'visible' });
+  // #mobile-bottom-bar turning visible is pure CSS (a media query) and can win the
+  // race against the JS `resize` listener that still has to run initMobileLayout()
+  // (which reparents #energy-class-field into the bar) and map.invalidateSize().
+  // Drawing on the map before invalidateSize() runs made the polygon-closing check
+  // compare against Leaflet's stale pre-resize size, so the loop never closed and
+  // drawAndAnalyse() hung for the rest of its timeout — wait on the JS-driven
+  // reparent (a real signal the resize handler finished), not just CSS visibility.
+  await page.waitForFunction(() =>
+    document.getElementById('mobile-bottom-bar')?.contains(document.getElementById('energy-class-field')));
   await drawAndAnalyse(page);
   assert.match(await text(page, 'val-q-winter'), /°C$/, 'the seasonal reading followed into the bottom bar');
   assert.equal(await page.locator('#mobile-warning').isVisible(), false, 'this width is usable, not blocked');
