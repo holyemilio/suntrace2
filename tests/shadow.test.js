@@ -8,10 +8,13 @@ import assert from 'node:assert/strict';
 
 import {
   localXY,
+  localToLatLng,
   pointInPolygon,
   pointSegDist,
   outwardNormalAz,
-  nearestFacadeAzimuth,
+  polygonArea,
+  polygonCentroid,
+  classifyRoomEdges,
   sunBlocked,
   sunAccessFraction,
 } from '../src/shadow.js';
@@ -49,7 +52,6 @@ function courtyardAt(dist, h) {
   ];
 }
 
-const asOverpass = b => ({ geometry: b.geom });
 const norm = deg => (deg % 360 + 360) % 360;
 
 // ─── projection ───────────────────────────────────────────────────────────────
@@ -87,11 +89,50 @@ test('outwardNormalAz: the normal points back at the observer', () => {
   assert.equal(Math.round(outwardNormalAz({ x: -5, y: 10 }, { x: 5, y: 10 }, click)), 180);
 });
 
-test('nearestFacadeAzimuth: picks the closest wall of the closest building', () => {
-  const near = asOverpass(block('N', 10, 20, 15)); // wall 10 m north
-  const far = asOverpass(block('E', 60, 20, 15));  // wall 60 m east
-  const az = nearestFacadeAzimuth(LAT, LNG, [near, far]);
-  assert.ok(Math.abs(az - 180) <= 2, `expected the north building's south face (~180°), got ${az}`);
+test('localToLatLng: inverse of localXY round-trips', () => {
+  const xy = localXY(LAT, LNG);
+  const back = localToLatLng(LAT, LNG);
+  const targetLat = LAT + 10 * M_LAT, targetLng = LNG + 20 * M_LNG;
+  const p = xy(targetLat, targetLng);
+  const ll = back(p.x, p.y);
+  assert.ok(Math.abs(ll.lat - targetLat) < 1e-9);
+  assert.ok(Math.abs(ll.lon - targetLng) < 1e-9);
+});
+
+// ─── room polygon geometry ─────────────────────────────────────────────────────
+
+test('polygonArea: shoelace formula on a known rectangle', () => {
+  const ring = [{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 5 }, { x: 0, y: 5 }];
+  assert.equal(polygonArea(ring), 50);
+});
+
+test('polygonCentroid: vertex average of a square', () => {
+  const ring = [{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 10 }, { x: 0, y: 10 }];
+  const c = polygonCentroid(ring);
+  assert.equal(c.x, 5);
+  assert.equal(c.y, 5);
+});
+
+test('classifyRoomEdges: a wall flush with the building perimeter is exterior, a deep wall is interior', () => {
+  const buildings = [block('N', 10, 20, 15)]; // footprint spans x:[-10,10], y:[10,30]
+  const room = [
+    { x: -5, y: 10.5 }, // A→B: 0.5 m from the building's south (y=10) wall —
+    { x: 5, y: 10.5 },  // B    comfortably inside EDGE_TOLERANCE_M (1.0 m),
+                        //      not sitting exactly on the boundary
+    { x: 5, y: 20 },  // C→D: deep inside, far from every wall
+    { x: -5, y: 20 }, // D
+  ];
+  const classes = classifyRoomEdges(LAT, LNG, room, buildings);
+  assert.ok(classes, 'a containing building was found');
+  const byIndex = Object.fromEntries(classes.map(c => [c.i, c.exterior]));
+  assert.equal(byIndex[0], true, 'A→B, flush with the south wall, should be exterior');
+  assert.equal(byIndex[2], false, 'C→D, deep inside the footprint, should be interior');
+});
+
+test('classifyRoomEdges: no containing building found → null', () => {
+  const farAway = [block('N', 500, 20, 15)]; // nowhere near the room
+  const room = [{ x: -5, y: -5 }, { x: 5, y: -5 }, { x: 5, y: 5 }, { x: -5, y: 5 }];
+  assert.equal(classifyRoomEdges(LAT, LNG, room, farAway), null);
 });
 
 // ─── shadow ray-casting ───────────────────────────────────────────────────────

@@ -1,8 +1,9 @@
 /**
  * climate.test.js — thermal model and Comfort Rate.
  * Covers airTemperature, solarThermalGain, apparentTemperature, cozynessScore,
- * seasonalTemperatures (including the per-season obstruction function) and the
- * label helpers. Pure functions: no DOM, no network.
+ * seasonalTemperatures (including the per-season obstruction function),
+ * roomSeasonalTemperatures (multi-wall + room-size aggregation) and the label
+ * helpers. Pure functions: no DOM, no network.
  */
 
 import { test } from 'node:test';
@@ -13,6 +14,7 @@ import {
   solarThermalGain,
   apparentTemperature,
   seasonalTemperatures,
+  roomSeasonalTemperatures,
   cozynessScore,
   obstructionLabel,
   cardinalLabel,
@@ -122,6 +124,54 @@ test('seasonalTemperatures: isRoof ignores facadeAz — a wall facing away from 
   const southWall = seasonalTemperatures(eastSun, 180, 41.9, 1.0, null, 'double', 'none', false);
   const roof = seasonalTemperatures(eastSun, 180, 41.9, 1.0, null, 'double', 'none', true);
   assert.ok(roof.summer > southWall.summer, 'the roof gains heat even when every wall is turned away from the sun');
+});
+
+// ─── roomSeasonalTemperatures ─────────────────────────────────────────────────
+
+// Matches climate.js's internal REF_ROOM_AREA_M2 (not exported) — a "typical"
+// single room, the calibration point where room-size damping is a no-op.
+const REF_ROOM_AREA_M2 = 16;
+// Matches climate.js's internal INTERIOR_WALL_REF_C (not exported) — the fixed
+// reference an interior (non-sun-facing) wall contributes, every season.
+const INTERIOR_WALL_REF_C = 19;
+
+test('roomSeasonalTemperatures: one exterior wall at the reference area matches seasonalTemperatures directly', () => {
+  const wall = { azDeg: 180, lengthM: 4, exterior: true, obstrK: 1.0 };
+  const direct = seasonalTemperatures(noonSun, 180, 41.9, 1.0);
+  const room = roomSeasonalTemperatures(noonSun, [wall], REF_ROOM_AREA_M2, 41.9);
+  for (const key of ['winter', 'spring', 'summer', 'autumn']) {
+    assert.ok(Math.abs(room[key] - direct[key]) < 1e-9, `${key}: room=${room[key]} direct=${direct[key]}`);
+  }
+});
+
+test('roomSeasonalTemperatures: an all-interior room ignores the sun entirely', () => {
+  const walls = [
+    { azDeg: 0, lengthM: 3, exterior: false, obstrK: 1.0 },
+    { azDeg: 180, lengthM: 3, exterior: false, obstrK: 1.0 },
+  ];
+  const room = roomSeasonalTemperatures(noonSun, walls, REF_ROOM_AREA_M2, 41.9);
+  for (const key of ['winter', 'spring', 'summer', 'autumn']) {
+    assert.ok(Math.abs(room[key] - INTERIOR_WALL_REF_C) < 1e-9, `${key}=${room[key]}`);
+  }
+});
+
+test('roomSeasonalTemperatures: a small room swings more than a large one with identical walls', () => {
+  const walls = [{ azDeg: 180, lengthM: 4, exterior: true, obstrK: 1.0 }];
+  const small = roomSeasonalTemperatures(noonSun, walls, 6, 41.9);
+  const big = roomSeasonalTemperatures(noonSun, walls, 40, 41.9);
+  const spread = r => r.summer - r.winter;
+  assert.ok(spread(small) > spread(big), `small room spread (${spread(small)}) should beat big room spread (${spread(big)})`);
+});
+
+test('roomSeasonalTemperatures: length-weighting pulls the result toward the longer wall', () => {
+  const south = { azDeg: 180, lengthM: 1, exterior: true, obstrK: 1.0 }; // sun-facing
+  const north = { azDeg: 0, lengthM: 1, exterior: true, obstrK: 1.0 };   // away from the sun
+  const even = roomSeasonalTemperatures(noonSun, [south, north], REF_ROOM_AREA_M2, 41.9);
+
+  const longSouth = { ...south, lengthM: 10 };
+  const southHeavy = roomSeasonalTemperatures(noonSun, [longSouth, north], REF_ROOM_AREA_M2, 41.9);
+
+  assert.ok(southHeavy.summer > even.summer, 'weighting toward the sun-facing wall should raise summer heat');
 });
 
 // ─── cozynessScore ────────────────────────────────────────────────────────────

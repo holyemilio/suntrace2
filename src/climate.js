@@ -18,6 +18,16 @@ const SOLAR_POWER = [1.2, 2.0, 4.2, 6.5, 8.5, 9.8, 10.0, 8.8, 6.5, 4.0, 2.0, 1.0
 // Reference latitude for the tables above
 const LAT_ROME = 41.9;
 
+// A wall facing another room (not the exterior) has no solar term at all — a
+// fixed "neutral adjacent room" reference, no seasonal swing. Deliberately the
+// simplest defensible heuristic, in keeping with this model's stated
+// indicative-only precision.
+const INTERIOR_WALL_REF_C = 19;
+
+// "Typical" single-room floor area (~4×4 m) used to calibrate the room-size
+// damping factor below — not a physical constant, a calibration choice.
+const REF_ROOM_AREA_M2 = 16;
+
 // ─── Comfort Rate colors keyed by star count (5 best → 1 worst) ───────────────
 const STAR_COLORS = { 5: '#15803d', 4: '#16a34a', 3: '#ca8a04', 2: '#ea580c', 1: '#dc2626' };
 
@@ -111,6 +121,64 @@ export function seasonalTemperatures(getSolarPos, facadeAz, lat, obstrK, customB
     result[s.key] = temp;
   }
   return result;
+}
+
+/**
+ * Damp or amplify a room's solar-driven seasonal swing by its floor area:
+ * a small room heats/cools faster than a large one for the same wall
+ * exposure. Isolates the swing already present in `raw` (relative to the
+ * no-solar-gain outdoor baseline `airTemperature` starts from) and scales
+ * just that part — the baseline itself is left untouched.
+ *
+ * Uses sqrt of the area ratio (not the ratio itself): that corresponds to a
+ * linear ratio of the room's characteristic *length*, a gentler, more
+ * defensible proxy than punishing/rewarding a 4× bigger room with a flat 4×
+ * (or 1/4×) swing. Clamped so a degenerate sliver or a huge hall never
+ * produces an absurd multiplier.
+ *
+ * @param {{winter:number,spring:number,summer:number,autumn:number}} raw
+ * @param {number} roomAreaM2
+ * @param {number} lat
+ * @param {?number[]} customBaseTemps
+ */
+function applyRoomSizeDamping(raw, roomAreaM2, lat, customBaseTemps) {
+  const SEASON_MONTHS = { winter: 0, spring: 3, summer: 6, autumn: 9 };
+  const sizeFactor = Math.min(1.8, Math.max(0.5, Math.sqrt(REF_ROOM_AREA_M2 / Math.max(1, roomAreaM2))));
+
+  const out = {};
+  for (const key in SEASON_MONTHS) {
+    const baseline = airTemperature(SEASON_MONTHS[key], 12, lat, customBaseTemps);
+    out[key] = baseline + (raw[key] - baseline) * sizeFactor;
+  }
+  return out;
+}
+
+/**
+ * Room-level seasonal temperatures, combining every wall instead of a single
+ * facade. Exterior (sun-facing) walls run through `seasonalTemperatures`
+ * unmodified, one call per wall; interior walls (facing another room)
+ * contribute a fixed, season-invariant reference instead of a solar term.
+ * The per-wall results are combined by a length-weighted average (a longer
+ * wall carries proportionally more of the room's exposure), then scaled by
+ * the room's floor area (see `applyRoomSizeDamping`).
+ *
+ * @param {Function} getSolarPos — (month) => { elevation, azimuth }
+ * @param {Array<{azDeg:number, obstrK:(number|Function), lengthM:number, exterior:boolean}>} walls
+ * @param {number} roomAreaM2
+ * @param {number} lat
+ * @returns {{ winter: number, spring: number, summer: number, autumn: number }}
+ */
+export function roomSeasonalTemperatures(getSolarPos, walls, roomAreaM2, lat, customBaseTemps = null, windowsType = 'double', insulationType = 'none') {
+  const perWall = walls.map(w => w.exterior
+    ? seasonalTemperatures(getSolarPos, w.azDeg, lat, w.obstrK, customBaseTemps, windowsType, insulationType, false)
+    : { winter: INTERIOR_WALL_REF_C, spring: INTERIOR_WALL_REF_C, summer: INTERIOR_WALL_REF_C, autumn: INTERIOR_WALL_REF_C });
+
+  const totalLen = walls.reduce((s, w) => s + w.lengthM, 0) || 1;
+  const raw = {};
+  for (const key of ['winter', 'spring', 'summer', 'autumn']) {
+    raw[key] = walls.reduce((s, w, i) => s + w.lengthM * perWall[i][key], 0) / totalLen;
+  }
+  return applyRoomSizeDamping(raw, roomAreaM2, lat, customBaseTemps);
 }
 
 /**

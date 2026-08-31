@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SunTrace — Simulatore Microclimatico Urbano</title>
+  <title>SunTrace 2 — Simulatore Microclimatico Urbano</title>
 
   <link rel="icon" type="image/svg+xml" href="docs/app-icon.svg">
 
@@ -19,7 +19,7 @@
 <body>
 
   <!-- ── Sidebar ─────────────────────────────────────────────────────────── -->
-  <aside id="sidebar" data-i18n-aria="sidebar-aria" aria-label="Pannello di Controllo SunTrace">
+  <aside id="sidebar" data-i18n-aria="sidebar-aria" aria-label="Pannello di Controllo SunTrace 2">
 
     <a href="index.html" class="back-home-link" data-i18n-aria="back-home-aria" aria-label="Torna alla home">
       <span aria-hidden="true">←</span>
@@ -80,7 +80,7 @@
             </g>
           </svg>
         </span>
-        <h1 class="logo-text">Sun<span>Trace</span></h1>
+        <h1 class="logo-text">Sun<span>Trace</span> 2</h1>
       </div>
       <div class="scanner-badge">
         <svg width="7" height="7" viewBox="0 0 8 8" aria-hidden="true"><circle cx="4" cy="4" r="4" fill="#22c55e"/></svg>
@@ -124,6 +124,7 @@
         <div class="coord-row">
           <span id="coord-lat">--°N</span>
           <span id="coord-lng">--°E</span>
+          <span id="room-area">-- m²</span>
         </div>
       </div>
 
@@ -233,7 +234,7 @@
             <span data-i18n="time-hour">Ora locale</span>
             <span class="info-tip" tabindex="0" data-i18n-aria="tip-time-hour">
               <span class="info-tip-icon" aria-hidden="true">ⓘ</span>
-              <span class="info-tip-box" role="tooltip" data-i18n="tip-time-hour">L'ora locale muove il sole sulla mappa e sulla bussola: mostra dove cade l'ombra e se la facciata è illuminata in quel momento.</span>
+              <span class="info-tip-box" role="tooltip" data-i18n="tip-time-hour">L'ora locale muove il sole sulla mappa: mostra dove cade l'ombra e se le pareti della stanza sono illuminate in quel momento.</span>
             </span>
           </span>
           <strong id="hour-label">12:00</strong>
@@ -242,9 +243,9 @@
       </div>
     </section>
 
-    <!-- Facade parameters: orientation and shading are detected silently (they
-         still drive the compass and the comfort score) — only the two user
-         choices are shown here. -->
+    <!-- Facade parameters: each wall's orientation and shading are derived
+         silently from the drawn room and OSM buildings (they still drive the
+         comfort score) — only the two user choices are shown here. -->
     <section class="card" data-i18n-aria="facade-card-aria" aria-label="Parametri Geometrici Facciata">
       <div class="choice-row">
         <span class="choice-label" data-i18n="facade-windows">Tipo di Infissi</span>
@@ -399,7 +400,7 @@
           <li><a href="privacy.html" data-i18n="footer-privacy">Privacy</a></li>
         </ul>
       </nav>
-      <p class="footer-copy" data-i18n="footer-copy">© 2026 SunTrace. Motore Meeus/SPA — solo uso indicativo.</p>
+      <p class="footer-copy" data-i18n="footer-copy">© 2026 SunTrace 2. Motore Meeus/SPA — solo uso indicativo.</p>
     </footer>
 
   </aside>
@@ -414,7 +415,7 @@
       data-i18n-title="geo-title"
       title="Rileva posizione"
     >
-      <span id="geo-icon" role="img" aria-hidden="true">🎯</span>
+      <span id="geo-icon" role="img" aria-hidden="true">📌</span>
     </button>
 
     <!-- Language switcher (bottom-left of the map) -->
@@ -452,11 +453,12 @@
       <div class="mini-panel-body" id="map-legend-body">
         <p class="map-legend-title" data-i18n="legend-title">Legenda</p>
         <ul class="map-legend-list">
-          <li class="map-legend-item"><span class="lg-swatch lg-point"></span><span data-i18n="legend-point">Punto analizzato</span></li>
-          <li class="map-legend-item"><span class="lg-swatch lg-facade"></span><span data-i18n="legend-facade">Orientamento facciata</span></li>
+          <li class="map-legend-item"><span class="lg-swatch lg-area"></span><span data-i18n="legend-room">Perimetro stanza</span></li>
+          <li class="map-legend-item"><span class="lg-swatch lg-facade"></span><span data-i18n="legend-facade">Parete esposta, ora al sole</span></li>
+          <li class="map-legend-item"><span class="lg-swatch lg-facade-dim"></span><span data-i18n="legend-facade-shadow">Parete esposta, ora in ombra</span></li>
+          <li class="map-legend-item"><span class="lg-swatch lg-facade-interior"></span><span data-i18n="legend-facade-interior">Parete verso un altro vano (contorno sottile)</span></li>
           <li class="map-legend-item"><span class="lg-swatch lg-sun"></span><span data-i18n="legend-sun">Direzione del sole</span></li>
           <li class="map-legend-item"><span class="lg-swatch lg-shadow"></span><span data-i18n="legend-shadow">Ombra proiettata</span></li>
-          <li class="map-legend-item"><span class="lg-swatch lg-area"></span><span data-i18n="legend-area">Area di analisi</span></li>
         </ul>
       </div>
     </div>
@@ -475,26 +477,22 @@
       >
         <span aria-hidden="true">💡</span>
       </button>
-      <p class="mini-panel-body" id="map-hint-text" data-i18n="placement-hint">Posiziona il punto in linea con il muro da analizzare: né dentro l'edificio né in mezzo alla strada, altrimenti la lettura non è attendibile.</p>
+      <p class="mini-panel-body" id="map-hint-text" data-i18n="placement-hint">Clicca per disegnare il perimetro della stanza, un punto per parete. Clicca vicino al primo punto per chiudere e bloccare la stanza; usa 🗑️ per ricominciare.</p>
     </div>
 
-    <!-- Facade compass: pick which wall you are analysing, and see at a glance
-         where the sun is and whether it reaches that wall. -->
-    <div id="compass" class="compass" role="group" data-i18n-aria="compass-aria" aria-label="Orientamento della facciata">
-      <div class="compass-dial">
-        <div class="compass-needle" id="compass-needle"></div>
-        <div class="compass-sun" id="compass-sun" aria-hidden="true">☀</div>
-        <div class="compass-hub" id="compass-hub" aria-hidden="true"></div>
-        <button type="button" class="compass-dir" data-az="0" style="left:39.0px;top:3.0px" data-i18n="dir-n">N</button>
-        <button type="button" class="compass-dir" data-az="45" style="left:67.3px;top:14.7px" data-i18n="dir-ne">NE</button>
-        <button type="button" class="compass-dir" data-az="90" style="left:79.0px;top:43.0px" data-i18n="dir-e">E</button>
-        <button type="button" class="compass-dir" data-az="135" style="left:67.3px;top:71.3px" data-i18n="dir-se">SE</button>
-        <button type="button" class="compass-dir" data-az="180" style="left:39.0px;top:83.0px" data-i18n="dir-s">S</button>
-        <button type="button" class="compass-dir" data-az="225" style="left:10.7px;top:71.3px" data-i18n="dir-sw">SO</button>
-        <button type="button" class="compass-dir" data-az="270" style="left:-1.0px;top:43.0px" data-i18n="dir-w">O</button>
-        <button type="button" class="compass-dir" data-az="315" style="left:10.7px;top:14.7px" data-i18n="dir-nw">NO</button>
-      </div>
-    </div>
+    <!-- Remove-room: clears the locked room polygon and re-enables drawing.
+         A dedicated button (rather than click-to-edit) so a stray tap on the
+         map never disturbs an already-drawn room. -->
+    <button
+      class="map-floating-btn"
+      id="remove-room-btn"
+      data-i18n-aria="remove-room-aria"
+      aria-label="Rimuovi la stanza disegnata"
+      data-i18n-title="remove-room-title"
+      title="Rimuovi stanza"
+    >
+      <span aria-hidden="true">🗑️</span>
+    </button>
 
     <!-- ── Mobile-only layout ────────────────────────────────────────────────
          Below the desktop breakpoint the sidebar is hidden and its content is
@@ -538,12 +536,6 @@
           <span aria-hidden="true">🌡️</span>
         </button>
         <div class="mini-panel-body" id="mobile-climate-body"></div>
-      </div>
-      <div class="mini-panel mini-panel-col mobile-widget collapsed" id="mobile-compass-widget">
-        <button type="button" class="mini-panel-toggle" id="mobile-compass-toggle" aria-expanded="false" aria-controls="mobile-compass-body" data-i18n-aria="mobile-compass-aria" aria-label="Orientamento della facciata">
-          <span aria-hidden="true">🧭</span>
-        </button>
-        <div class="mini-panel-body" id="mobile-compass-body"></div>
       </div>
     </div>
 
@@ -591,6 +583,10 @@
           <span class="kpi-val" id="kpi-isolamento-selected">--</span>
           <span class="kpi-lbl" data-i18n="kpi-insulation">Isolamento Pareti</span>
         </div>
+        <div class="kpi-cell">
+          <span class="kpi-val" id="kpi-room-area">--</span>
+          <span class="kpi-lbl" data-i18n="kpi-area">Superficie disegnata</span>
+        </div>
       </div>
 
       <div class="modal-climate" id="modal-climate">
@@ -630,7 +626,7 @@
   <div id="mobile-warning" class="mobile-warning-overlay" role="alert" aria-live="assertive">
     <div class="mobile-warning-card">
       <div class="mobile-warning-icon">🖥️</div>
-      <h2 data-i18n="mobile-title">Ops! SunTrace ha bisogno di spazio...</h2>
+      <h2 data-i18n="mobile-title">Ops! SunTrace 2 ha bisogno di spazio...</h2>
       <p data-i18n="mobile-p1">Ci hai scoperto! 🕵️‍♂️ Per il momento l'esperienza da smartphone non è disponibile.</p>
       <p data-i18n="mobile-p2">Collegati da un computer per iniziare a scansionare al meglio ed esplorare l'esposizione al sole!</p>
     </div>

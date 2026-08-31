@@ -36,6 +36,30 @@ function initSearchHandoff() {
   });
 }
 
+/** Hand off to the app with real coordinates, skipping the address search entirely. */
+function initGeolocationHandoff() {
+  const btn = document.getElementById('landing-geo-btn');
+  const icon = document.getElementById('landing-geo-icon');
+  if (!btn) return;
+
+  btn.addEventListener('click', () => {
+    if (!navigator.geolocation) return; // no silent failure UI here — typing an address still works
+    btn.classList.add('loading');
+    icon.textContent = '⟳';
+
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        location.href = `app.html?lat=${pos.coords.latitude}&lng=${pos.coords.longitude}`;
+      },
+      () => {
+        btn.classList.remove('loading');
+        icon.textContent = '📌';
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+    );
+  });
+}
+
 /** Fade sections and draw the feature charts in as they enter the viewport. */
 function initScrollReveal() {
   const targets = document.querySelectorAll('.reveal');
@@ -58,4 +82,5 @@ applyTranslations();
 document.title = t('landing-title');
 initLangSwitch();
 initSearchHandoff();
+initGeolocationHandoff();
 initScrollReveal();

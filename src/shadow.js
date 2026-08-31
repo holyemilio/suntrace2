@@ -1,6 +1,7 @@
 /**
- * shadow.js — Urban geometry: facade orientation and line-of-sight solar access
- * through nearby OpenStreetMap building footprints. Pure functions, no DOM.
+ * shadow.js — Urban geometry: room-polygon wall orientation/classification and
+ * line-of-sight solar access through nearby OpenStreetMap building footprints.
+ * Pure functions, no DOM.
  *
  * Buildings are `{ geom: [{lat, lon}, …], h: metres }`; coordinates are projected
  * to local metres centred on the observation point.
@@ -44,26 +45,76 @@ export function outwardNormalAz(a, c, click) {
   return (deg % 360 + 360) % 360;
 }
 
-/**
- * Facade azimuth: the outward normal (facing the click) of the nearest building
- * edge. Takes raw Overpass elements, which carry `geometry`.
- */
-export function nearestFacadeAzimuth(clat, clng, buildings) {
-  const xy = localXY(clat, clng);
-  const click = { x: 0, y: 0 };
+/** Inverse of localXY: metres relative to the origin back to lat/lon. */
+export function localToLatLng(clat, clng) {
+  const mLat = 111320;
+  const mLng = 111320 * Math.cos(clat * Math.PI / 180);
+  return (x, y) => ({ lat: clat + y / mLat, lon: clng + x / mLng });
+}
 
-  let bestDist = Infinity;
-  let bestAz = 180;
-  for (const b of buildings) {
-    const g = b.geometry;
-    for (let i = 0; i < g.length - 1; i++) {
-      const a = xy(g[i].lat, g[i].lon);
-      const c = xy(g[i + 1].lat, g[i + 1].lon);
-      const dist = pointSegDist(click, a, c);
-      if (dist < bestDist) { bestDist = dist; bestAz = outwardNormalAz(a, c, click); }
-    }
+// ─── room polygon geometry ─────────────────────────────────────────────────────
+
+/** Area (shoelace formula) of a ring in local metres, m². Ring may be open (n
+ *  distinct vertices, edges wrap i→(i+1)%n) or closed (first===last). */
+export function polygonArea(ring) {
+  let sum = 0;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    sum += ring[j].x * ring[i].y - ring[i].x * ring[j].y;
   }
-  return Math.round(((bestAz % 360) + 360) % 360);
+  return Math.abs(sum) / 2;
+}
+
+/** Centroid (vertex average) of a ring in local metres. */
+export function polygonCentroid(ring) {
+  const sx = ring.reduce((s, p) => s + p.x, 0);
+  const sy = ring.reduce((s, p) => s + p.y, 0);
+  return { x: sx / ring.length, y: sy / ring.length };
+}
+
+// A room edge counts as "exterior" (sun-facing) when it sits this close to the
+// containing building's own outer wall — absorbs typical OSM/hand-drawn slop
+// without misclassifying a genuine partition wall a few metres further in.
+// Was 2.5 m; lowered to 1.0 m (v3.1.1) — 2.5 m was generous enough that a room
+// drawn near a building CORNER could have several edges each within tolerance
+// of a *different* nearby wall segment, regardless of the room's own
+// rotation, so a deliberately misaligned room still came out mostly
+// "exterior". A distance-only check can't fully rule that out (fixing it
+// properly needs also comparing the edge's angle to the matched wall's, not
+// implemented), but shrinking the tolerance shrinks how often it happens in
+// practice while still absorbing an honest few-pixel drawing slip.
+const EDGE_TOLERANCE_M = 1.0;
+
+/**
+ * Classify each edge of a user-drawn room polygon as exterior (near the
+ * containing OSM building's outer wall — sun-facing) or interior (facing
+ * another room). `roomRing`: local-metres ring (open, n distinct vertices),
+ * same origin as `clat,clng`. `buildings`: `{ geom: [{lat,lon}], h }`, the
+ * same shape already used by sunBlocked/monthlySunAccess.
+ * @returns {?Array<{i:number, exterior:boolean}>} null when no containing
+ *   building is found (caller should then treat every edge as exterior).
+ */
+export function classifyRoomEdges(clat, clng, roomRing, buildings) {
+  if (!buildings || !buildings.length) return null;
+  const xy = localXY(clat, clng);
+  const centroid = polygonCentroid(roomRing);
+
+  let host = null;
+  for (const b of buildings) {
+    const ring = b.geom.map(p => xy(p.lat, p.lon));
+    if (pointInPolygon(centroid.x, centroid.y, ring)) { host = ring; break; }
+  }
+  if (!host) return null;
+
+  const n = roomRing.length;
+  return roomRing.map((a, i) => {
+    const c = roomRing[(i + 1) % n];
+    const mid = { x: (a.x + c.x) / 2, y: (a.y + c.y) / 2 };
+    let bestDist = Infinity;
+    for (let k = 0; k < host.length - 1; k++) {
+      bestDist = Math.min(bestDist, pointSegDist(mid, host[k], host[k + 1]));
+    }
+    return { i, exterior: bestDist <= EDGE_TOLERANCE_M };
+  });
 }
 
 // ─── solar access (line-of-sight to the sun) ──────────────────────────────────
@@ -116,13 +167,17 @@ export function sunAccessFraction(clat, clng, buildings, obsH, month, year, time
 }
 
 // Cached per (point, floor, building set) so dragging the sliders stays cheap.
-let accessCache = { key: null, byMonth: {} };
+// A Map (not a single slot) because a room refresh calls this once per exterior
+// wall — each with its own origin point — in the same cycle; a single-slot
+// cache would evict itself on every call and never actually cache anything.
+let accessCache = new Map();
 
 export function monthlySunAccess(clat, clng, buildings, obsH, month, year, timeZone) {
   const key = `${clat.toFixed(5)},${clng.toFixed(5)},${obsH},${buildings ? buildings.length : 0}`;
-  if (accessCache.key !== key) accessCache = { key, byMonth: {} };
-  if (accessCache.byMonth[month] === undefined) {
-    accessCache.byMonth[month] = sunAccessFraction(clat, clng, buildings, obsH, month, year, timeZone);
+  let byMonth = accessCache.get(key);
+  if (!byMonth) { byMonth = {}; accessCache.set(key, byMonth); }
+  if (byMonth[month] === undefined) {
+    byMonth[month] = sunAccessFraction(clat, clng, buildings, obsH, month, year, timeZone);
   }
-  return accessCache.byMonth[month];
+  return byMonth[month];
 }

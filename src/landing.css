@@ -235,6 +235,28 @@ a { color: inherit; }
 .l-search button:hover { filter: brightness(1.08); }
 .l-search button:active { transform: translateY(1px); }
 
+.l-geo-btn {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-strong);
+  border: 1px solid var(--stroke-2);
+  border-radius: 50%;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+.l-geo-btn:hover { background: rgba(255, 255, 255, 0.12); border-color: rgba(245, 179, 1, 0.5); }
+.l-geo-btn.loading { pointer-events: none; opacity: 0.7; animation: lGeoSpin 1s linear infinite; }
+@keyframes lGeoSpin { to { transform: rotate(360deg); } }
+
 /* ─── why section ────────────────────────────────────────────────────────── */
 .l-why {
   position: relative;

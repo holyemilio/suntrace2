@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SunTrace — Manuale Utente</title>
+<title>SunTrace 2 — Manuale Utente</title>
 <style>
   :root { --ink:#14181f; --muted:#5b6675; --line:#e4e8ee; --accent:#ea580c; --green:#059669; --soft:#f7f9fc; }
   * { box-sizing:border-box; }
@@ -53,13 +53,14 @@
       <h1>Sun<span>Trace</span></h1>
     </div>
     <div class="doc-meta">
-      Manuale Utente<br>Versione 2.1.0 · Agosto 2026
+      Manuale Utente<br>Versione 3.0.0 · Agosto 2026
     </div>
   </header>
 
-  <p class="lead">SunTrace è un simulatore che mostra <strong>quanto sole prende una casa</strong> e quanto risulterà
-  confortevole, in qualsiasi punto d'Italia. Scegli un luogo sulla mappa, imposta mese e ora, e ottieni una stima
-  della temperatura, un giudizio di comfort a stelle e consigli pratici.</p>
+  <p class="lead">SunTrace 2 è un simulatore che mostra <strong>quanto sole prende una stanza</strong> e quanto
+  risulterà confortevole, in qualsiasi punto d'Italia. Disegni il perimetro della tua stanza sulla mappa, imposti
+  mese e ora, e ottieni una stima della temperatura, un giudizio di comfort a stelle e consigli pratici — tenendo
+  conto di ogni parete della stanza, non di una sola facciata.</p>
 
   <h2>Indice</h2>
   <div class="toc">
@@ -69,16 +70,18 @@
     <a href="#comfort">4. Il Comfort Rate</a><br>
     <a href="#sole">4-bis. Sole diretto</a><br>
     <a href="#clima">4-ter. Clima del luogo</a><br>
-    <a href="#facciata">5. Parametri della facciata</a><br>
-    <a href="#mappa">6. Mappa: simboli e controlli</a><br>
-    <a href="#cta">7. Pulsanti e notifiche</a><br>
-    <a href="#lingua">8. Lingua</a><br>
-    <a href="#limiti">9. Limiti e note</a><br>
+    <a href="#pareti">5. Come viene letta la stanza</a><br>
+    <a href="#facciata">6. Parametri dell'involucro</a><br>
+    <a href="#mappa">7. Mappa: simboli e controlli</a><br>
+    <a href="#cta">8. Pulsanti e notifiche</a><br>
+    <a href="#lingua">9. Lingua</a><br>
+    <a href="#limiti">10. Limiti e note</a><br>
   </div>
 
   <h2 id="req">1. Requisiti e avvio</h2>
-  <p>SunTrace è un'app web: serve un browser aggiornato (Chrome, Safari, Edge, Firefox) su <strong>computer</strong>
-  (da smartphone l'esperienza è bloccata: gli schermi piccoli non permettono click precisi).</p>
+  <p>SunTrace 2 è un'app web: serve un browser aggiornato (Chrome, Safari, Edge, Firefox) su <strong>computer</strong>
+  (da smartphone o finestra stretta l'interfaccia si adatta a un layout mobile dedicato; solo sotto i 320px
+  di larghezza — uno zoom estremo del browser, in pratica — l'app mostra un avviso e non si avvia).</p>
   <div class="callout">
     <strong>Importante:</strong> non aprire <code>index.html</code> con un doppio click. Il browser bloccherebbe
     mappa, ricerca e dati. Avvia sempre da un <strong>server locale</strong>.
@@ -92,21 +95,28 @@
   <h2 id="tour">2. Panoramica dell'interfaccia</h2>
   <p>Lo schermo è diviso in due:</p>
   <ul>
-    <li><strong>Pannello a sinistra</strong> — ricerca, risultati (temperatura e comfort), impostazioni di tempo e facciata.</li>
-    <li><strong>Mappa a destra</strong> — dove scegli il punto da analizzare; mostra sole, ombra e orientamento.</li>
+    <li><strong>Pannello a sinistra</strong> — ricerca, risultati (temperatura e comfort), impostazioni di tempo e involucro.</li>
+    <li><strong>Mappa a destra</strong> — dove disegni il perimetro della stanza; mostra sole, ombra e le pareti esposte.</li>
   </ul>
 
   <h2 id="uso">3. Come si usa (passo-passo)</h2>
   <ol>
-    <li><strong>Scegli il luogo.</strong> Tre modi: scrivi un indirizzo in alto e premi <strong>«Vai»</strong>;
-        clicca direttamente un punto sulla mappa; oppure premi 🎯 per usare la tua posizione.</li>
-    <li><strong>Imposta il momento.</strong> Nella sezione <em>Crono-Solare</em> scegli il <strong>mese</strong> e l'<strong>ora</strong>
-        con i cursori: la stima e le ombre si aggiornano di conseguenza.</li>
-    <li><strong>Regola la facciata.</strong> In <em>Parametri Facciata</em> puoi correggere l'orientamento della parete
-        e scegliere il tipo di infissi e l'isolamento.</li>
-    <li><strong>Leggi il risultato.</strong> In alto trovi la <strong>temperatura stimata del vano</strong>, il
+    <li><strong>Vai al posto giusto.</strong> Tre modi per centrare la mappa: scrivi un indirizzo in alto e premi
+        <strong>«Vai»</strong>; premi 📌 per usare la tua posizione; oppure zooma/trascina la mappa a mano. Nessuno di
+        questi analizza ancora nulla — servono solo a portarti nel punto giusto.</li>
+    <li><strong>Disegna la stanza.</strong> Clicca sulla mappa un punto per ogni parete, seguendo il perimetro della
+        stanza (anche solo tre punti bastano, per una forma triangolare). Clicca di nuovo vicino al <strong>primo</strong>
+        punto per chiudere l'anello: la stanza si <strong>blocca</strong> subito e parte l'analisi — non si può più
+        modificarla trascinando i vertici, proprio per evitare di rovinarla per sbaglio.</li>
+    <li><strong>Imposta il momento.</strong> Coi cursori <strong>mese</strong> e <strong>ora</strong> la stima e le
+        ombre si aggiornano di conseguenza.</li>
+    <li><strong>Regola l'involucro.</strong> Scegli il tipo di infissi e l'isolamento (sezione 6) — l'orientamento
+        delle pareti non si imposta più a mano: lo calcola da solo dalla forma che hai disegnato.</li>
+    <li><strong>Leggi il risultato.</strong> In alto trovi la <strong>temperatura stimata della stanza</strong>, il
         <strong>Comfort Rate</strong> a stelle e le quattro temperature stagionali.</li>
     <li><strong>Approfondisci.</strong> Tocca il badge del Comfort Rate per aprire il dettaglio (vedi sezione 4).</li>
+    <li><strong>Ricomincia, se serve.</strong> Il pulsante 🗑️ (sotto 📌) rimuove la stanza disegnata e ti lascia
+        disegnarne subito un'altra.</li>
   </ol>
   <div class="callout ok">
     <strong>Suggerimento:</strong> quando scrivi un indirizzo compaiono dei suggerimenti. Cliccarne uno
@@ -115,33 +125,37 @@
 
   <h2 id="comfort">4. Il Comfort Rate</h2>
   <p>È il giudizio di <strong>comfort abitativo stimato</strong>, da 1 a 5 stelle
-  (Critico → Scarso → Discreto → Buono → Eccellente). Tiene conto di orientamento, sole, ostruzioni,
-  infissi, isolamento e del clima reale del luogo.</p>
+  (Critico → Scarso → Discreto → Buono → Eccellente). Tiene conto dell'orientamento e ostruzione di ogni parete
+  esposta, infissi, isolamento e del clima reale del luogo.</p>
   <p>Toccando il badge si apre un dettaglio con:</p>
   <ul>
     <li><strong>Comfort inverno / estate</strong> (a mezzogiorno).</li>
     <li><strong>Infissi</strong> e <strong>isolamento</strong> selezionati.</li>
     <li><strong>Percepita estate</strong> — quanto "si sente" il caldo tenendo conto dell'umidità e del vento.</li>
     <li><strong>Umidità media</strong> e <strong>pioggia annua</strong> reali della zona.</li>
-    <li><strong>Esposizione al sole</strong> di oggi su quella facciata e un <strong>consiglio</strong> pratico.</li>
+    <li><strong>Esposizione al sole</strong> di oggi sulle pareti esposte della stanza e un <strong>consiglio</strong> pratico.</li>
   </ul>
 
-  <h2 id="sole">4-bis. Sole diretto: sei al sole o all'ombra?</h2>
+  <h2 id="sole">4-bis. Sole diretto: la stanza è al sole o all'ombra?</h2>
   <p>Nella sezione <em>Dati Solari</em> la voce <strong>Sole diretto</strong> risponde alla domanda più concreta:
-  in questo preciso momento (mese e ora scelti) il sole <strong>colpisce davvero</strong> la tua facciata?</p>
+  in questo preciso momento (mese e ora scelti) il sole <strong>colpisce davvero</strong> almeno una delle pareti
+  esposte della tua stanza?</p>
   <ul>
-    <li><strong>☀️ In sole</strong> — nessun edificio si frappone: la facciata riceve sole diretto.</li>
-    <li><strong>🌑 In ombra</strong> — un edificio vicino blocca il sole; resta solo la luce diffusa del cielo
-        (la temperatura stimata scende di conseguenza). Salendo di piano spesso si esce dall'ombra.</li>
-    <li><strong>🧭 Sole sull'altro lato</strong> — nessun edificio si frappone, ma la parete è rivolta
-        altrove: a quell'ora il sole batte su un'altra facciata. Non dipende dal piano, cambia con l'ora.</li>
+    <li><strong>☀️ In sole</strong> — nessun edificio si frappone: una o più pareti esposte ricevono sole diretto.</li>
+    <li><strong>🌑 In ombra</strong> — un edificio vicino blocca il sole sulle pareti esposte; resta solo la luce
+        diffusa del cielo (la temperatura stimata scende di conseguenza). Salendo di piano spesso si esce dall'ombra.</li>
+    <li><strong>🧭 Sole sull'altro lato</strong> — nessun edificio si frappone, ma nessuna parete esposta è rivolta
+        verso il sole in questo momento (oppure la stanza non ha pareti esposte — vedi sezione 5). Non dipende dal
+        piano, cambia con l'ora.</li>
     <li><strong>— Sotto l'orizzonte</strong> — è notte o il sole è troppo basso.</li>
   </ul>
-  <p>Il calcolo tiene conto di due cose distinte: <strong>l'orientamento</strong> della parete (il sole è dal suo
-  lato?) e la <strong>geometria</strong> (dal punto scelto viene "tirato" un raggio verso il sole e si controlla se
-  incontra un edificio abbastanza alto da bloccarlo, usando sagome e altezze reali di OpenStreetMap). Muovendo il cursore
-  dell'<strong>ora</strong> vedi l'esito cambiare con il muoversi del sole; cambiando <strong>piano</strong> si
-  alza il punto di osservazione, quindi spesso si esce dall'ombra.</p>
+  <p>Il calcolo tiene conto di due cose distinte, per ogni parete esposta: <strong>l'orientamento</strong> (il sole è
+  dal suo lato?) e la <strong>geometria</strong> (dal punto medio della parete viene "tirato" un raggio verso il
+  sole e si controlla se incontra un edificio vicino abbastanza alto da bloccarlo, usando sagome e altezze reali di
+  OpenStreetMap). Muovendo il cursore dell'<strong>ora</strong> vedi l'esito cambiare con il muoversi del sole;
+  cambiando <strong>piano</strong> si alza il punto di osservazione, quindi spesso si esce dall'ombra. Il tetto (piano
+  5) fa eccezione: essendo orizzontale non ha un lato a cui rivolgersi, quindi prende sole ogni volta che il sole è
+  alto abbastanza, indipendentemente dalla forma della stanza sotto.</p>
 
   <h2 id="clima">4-ter. Clima del luogo</h2>
   <p>La sezione <em>Clima del Luogo</em> mostra le medie reali del <strong>mese selezionato</strong> in quel punto
@@ -149,77 +163,91 @@
   e la <strong>temperatura percepita</strong> in quel momento, che combina temperatura, umidità e vento. Cambiando
   mese i valori si aggiornano.</p>
 
-  <h2 id="facciata">5. Parametri della facciata</h2>
+  <h2 id="pareti">5. Come viene letta la stanza</h2>
+  <p>Ogni lato del perimetro che disegni diventa una <strong>parete</strong>, con un orientamento calcolato
+  automaticamente dalla sua direzione — non c'è più una bussola da regolare a mano. Poco dopo aver chiuso il
+  perimetro, ogni parete viene confrontata con la sagoma reale dell'edificio (da OpenStreetMap) che contiene la
+  stanza, e classificata in una di due categorie:</p>
+  <ul>
+    <li><strong>Parete esposta al sole</strong> (linea verde sulla mappa) — è a ridosso del muro esterno reale
+        dell'edificio: riceve sole/ombra secondo l'ora, il mese e gli edifici vicini, esattamente come nella
+        sezione 4-bis.</li>
+    <li><strong>Parete verso un altro vano</strong> — è disegnata in profondità dentro l'edificio, non a contatto
+        col muro esterno: si considera un confine con una stanza adiacente a temperatura stabile, senza guadagno
+        solare proprio.</li>
+  </ul>
+  <p>Se l'edificio non è mappato su OpenStreetMap, ogni parete resta prudenzialmente <strong>esposta</strong> (scelta
+  volutamente conservativa, per non sottostimare il sole in assenza di dati).</p>
+  <p>Il risultato finale <strong>non è la media di N pareti separate</strong>, ma un unico valore per la stanza: le
+  pareti esposte pesano in proporzione alla propria lunghezza, quelle interne tirano verso un valore neutro, e
+  l'intera escursione stagionale viene <strong>smorzata o amplificata in base alla superficie</strong> della stanza
+  che hai disegnato — una stanza piccola scalda e raffredda più in fretta di una grande, a parità di pareti.</p>
+
+  <h2 id="facciata">6. Parametri dell'involucro</h2>
   <table>
     <tr><th>Parametro</th><th>Cosa fa</th></tr>
-    <tr><td>Orientamento / Cardinale</td><td>La direzione verso cui guarda la parete. Viene rilevata dagli edifici
-      reali della zona; puoi correggerla con la <strong>bussola</strong> in basso a destra sulla mappa, che offre
-      le 8 direzioni (N, NE, E, SE, S, SO, O, NO).</td></tr>
-    <tr><td>Schermatura rilevata</td><td>Quanto sole arriva davvero nel mese scelto: l'app simula il percorso
-      del sole ora per ora e verifica se gli edifici vicini (sagome e altezze reali da OpenStreetMap) lo bloccano,
-      dal piano che hai selezionato.</td></tr>
     <tr><td>Tipo di Infissi</td><td>Tre pulsanti: 🪟 vetro singolo, 🧊 doppio vetro, 🛡️ triplo/termico.
-      Passa il mouse su un'icona per leggerne il nome. Incide su quanto caldo e freddo entra.</td></tr>
+      Passa il mouse su un'icona per leggerne il nome. Incide su quanto caldo e freddo entra dalle pareti esposte.</td></tr>
     <tr><td>Isolamento Muri</td><td>Tre pulsanti: 🧱 muro storico, 🧥 cappotto termico, 🏰 casa passiva.
       Più isoli, più riduci le escursioni tra inverno ed estate.</td></tr>
   </table>
   <p>Accanto ad alcune voci c'è l'icona <strong>ⓘ</strong>: passandoci sopra compare una breve spiegazione.</p>
   <div class="callout">
-    <strong>Dove mettere il punto</strong> (promemoria sempre visibile sulla mappa, in alto a sinistra):
-    posizionalo <strong>in linea con il muro</strong> che vuoi analizzare —
-    né dentro l'edificio, né in mezzo alla strada. Se il punto è nel posto sbagliato, l'orientamento rilevato e
-    l'ombra non corrispondono alla tua parete e la lettura non è attendibile.
+    <strong>Come disegnare bene la stanza</strong> (promemoria sempre visibile sulla mappa, in alto a sinistra):
+    segui il più possibile il perimetro reale della stanza — se un lato che in realtà è un muro esterno viene
+    disegnato troppo all'interno dell'edificio, rischia di essere classificato "verso un altro vano" invece che
+    esposto, e la lettura per quel lato non sarà realistica.
   </div>
 
-  <h2 id="mappa">6. Mappa: simboli e controlli</h2>
+  <h2 id="mappa">7. Mappa: simboli e controlli</h2>
   <p>La <strong>legenda</strong> in alto a destra spiega i simboli:</p>
   <table>
     <tr><th>Simbolo</th><th>Significato</th></tr>
-    <tr><td>Punto verde</td><td>Il punto analizzato.</td></tr>
-    <tr><td>Linea verde</td><td>Orientamento della facciata.</td></tr>
+    <tr><td>Contorno verde chiuso</td><td>Il perimetro della stanza disegnata.</td></tr>
+    <tr><td>Linea verde spessa</td><td>Una parete esposta al sole (i lati "verso un altro vano" restano solo il sottile contorno).</td></tr>
     <tr><td>Linea tratteggiata gialla</td><td>Direzione del sole in quel momento.</td></tr>
-    <tr><td>Area scura</td><td>Ombra proiettata.</td></tr>
-    <tr><td>Cerchio tratteggiato</td><td>Area di analisi attorno al punto.</td></tr>
+    <tr><td>Area scura</td><td>Ombra proiettata (un solo cuneo rappresentativo, dal centro della stanza).</td></tr>
   </table>
 
-  <h2 id="cta">7. Pulsanti e notifiche</h2>
+  <h2 id="cta">8. Pulsanti e notifiche</h2>
   <table>
     <tr><th>Elemento</th><th>Dove</th><th>Cosa fa</th></tr>
-    <tr><td>«Vai»</td><td>accanto alla ricerca</td><td>Avvia la ricerca dell'indirizzo scritto.</td></tr>
-    <tr><td>🎯</td><td>alto-sinistra mappa</td><td>Usa la tua posizione (chiede il permesso al browser).</td></tr>
-    <tr><td>IT | EN</td><td>basso-sinistra mappa</td><td>Cambia la lingua dell'interfaccia.</td></tr>
+    <tr><td>«Vai»</td><td>accanto alla ricerca</td><td>Sposta la mappa sull'indirizzo scritto (e rimuove un'eventuale stanza già disegnata altrove).</td></tr>
+    <tr><td>📌</td><td>alto-sinistra mappa</td><td>Centra la mappa sulla tua posizione (chiede il permesso al browser). Non disegna né analizza nulla da solo.</td></tr>
+    <tr><td>🗑️</td><td>alto-sinistra mappa, sotto 📌</td><td>Rimuove la stanza bloccata e riabilita subito il disegno.</td></tr>
+    <tr><td>IT | EN</td><td>alto-sinistra mappa</td><td>Cambia la lingua dell'interfaccia.</td></tr>
     <tr><td>+ / −</td><td>alto-destra mappa</td><td>Zoom della mappa.</td></tr>
-    <tr><td>Barra Piani (🏠 1 2 3 4 5)</td><td>alto-centro mappa</td><td>Scegli il piano della tua abitazione: più sali, meno gli edifici vicini ti fanno ombra.</td></tr>
-    <tr><td>Bussola</td><td>basso-destra mappa</td><td>Scegli quale parete stai analizzando fra le 8 direzioni. L'ago verde indica la facciata, il ☀ dove si trova il sole, e sotto leggi se il sole la raggiunge.</td></tr>
+    <tr><td>Barra Piani (🏠 1 2 3 4 5)</td><td>alto-centro mappa</td><td>Scegli il piano della tua abitazione: più sali, meno gli edifici vicini ti fanno ombra. Il piano 5 (🔺) è il tetto.</td></tr>
     <tr><td>Badge a stelle</td><td>pannello, sotto la temperatura</td><td>Apre il dettaglio del Comfort Rate.</td></tr>
   </table>
-  <p><strong>Barra dei Piani:</strong> in alto al centro della mappa scegli a che piano si trova l'abitazione
-  (🏠 = piano terra, fino al 5°). Salendo di piano si "vedono oltre" gli edifici vicini, quindi l'ombra diminuisce;
-  quando il tuo piano supera i tetti circostanti, l'app calcola come se non ci fossero ostruzioni. L'altezza la
-  dichiari tu: cambiando piano, la <em>Schermatura rilevata</em> e il Comfort Rate si aggiornano.</p>
+  <p><strong>Barra dei Piani:</strong> in alto al centro della mappa scegli a che piano si trova la stanza
+  (🏠 = piano terra, fino al 5° = tetto). Salendo di piano si "vedono oltre" gli edifici vicini, quindi l'ombra sulle
+  pareti esposte diminuisce; quando il tuo piano supera i tetti circostanti, l'app calcola come se non ci fossero
+  ostruzioni. L'altezza la dichiari tu: cambiando piano, "Sole diretto", Comfort Rate e stima si aggiornano.</p>
   <p><strong>Notifiche che potresti vedere:</strong></p>
   <ul>
-    <li><strong>«Ops! Ci hai scoperto…»</strong> — hai cliccato fuori dall'Italia: l'app ti riporta a Roma.</li>
-    <li><strong>«🌊 Qui c'è solo acqua!»</strong> — hai cliccato in mare: si analizzano edifici sulla terraferma.</li>
-    <li><strong>Valori che "pulsano"</strong> — l'app sta scaricando i dati reali degli edifici/clima: attendi un istante.</li>
-    <li><strong>Errori di rete</strong> — se un servizio esterno non risponde, l'app usa valori di ripiego e continua a funzionare.</li>
+    <li><strong>«Ops! Ci hai scoperto…»</strong> — hai chiuso una stanza fuori dall'Italia: viene rimossa e la mappa torna a Roma.</li>
+    <li><strong>«🌊 Qui c'è solo acqua!»</strong> — hai chiuso una stanza in mare: viene rimossa e la mappa torna a Roma.</li>
+    <li><strong>Valori che "pulsano"</strong> — l'app sta scaricando i dati reali degli edifici/clima e classificando le pareti: attendi un istante.</li>
+    <li><strong>Errori di rete</strong> — se un servizio esterno non risponde, l'app usa valori di ripiego (ogni parete resta "esposta") e continua a funzionare.</li>
   </ul>
 
-  <h2 id="lingua">8. Lingua</h2>
+  <h2 id="lingua">9. Lingua</h2>
   <p>L'app è in <strong>Italiano ed Inglese</strong>. Alla prima apertura sceglie in automatico la lingua del tuo
-  browser; puoi cambiarla in ogni momento col selettore <strong>IT | EN</strong> in basso a sinistra. La scelta
-  viene ricordata.</p>
+  browser; puoi cambiarla in ogni momento col selettore <strong>IT | EN</strong> in alto a sinistra sulla mappa. La
+  scelta viene ricordata.</p>
 
-  <h2 id="limiti">9. Limiti e note</h2>
+  <h2 id="limiti">10. Limiti e note</h2>
   <ul>
     <li>Le temperature usano <strong>medie climatiche reali</strong> del luogo (1991–2020); non sono previsioni meteo del giorno.</li>
     <li>Il modello è una <strong>stima</strong> e <strong>non</strong> sostituisce un APE (Attestato di Prestazione Energetica) certificato.</li>
-    <li>Orientamento e ombreggiamento derivano da <strong>OpenStreetMap</strong>: in zone poco mappate si usano valori neutri.</li>
+    <li>Orientamento delle pareti e classificazione esposta/interna derivano da <strong>OpenStreetMap</strong>: in zone poco mappate ogni parete resta prudenzialmente esposta.</li>
+    <li>Lo smorzamento per dimensione della stanza è una stima euristica (non una simulazione termica reale) calibrata su una stanza "tipica" di circa 16 m².</li>
     <li>L'app funziona solo sul <strong>territorio italiano</strong> (isole comprese, più le enclavi di Città del Vaticano e San Marino).</li>
   </ul>
 
   <footer class="doc">
-    SunTrace — Manuale Utente · Documento generato per uso indicativo. Le stime non costituiscono certificazione ufficiale.
+    SunTrace 2 — Manuale Utente · Documento generato per uso indicativo. Le stime non costituiscono certificazione ufficiale.
   </footer>
 
 </div>

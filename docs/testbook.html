@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SunTrace — Testbook (Piano di Test)</title>
+<title>SunTrace 2 — Testbook (Piano di Test)</title>
 <style>
   :root { --ink:#14181f; --muted:#5b6675; --line:#d8dee7; --accent:#ea580c; --green:#059669; --soft:#f7f9fc; }
   * { box-sizing:border-box; }
@@ -56,11 +56,13 @@
       </svg>
       <h1>Sun<span>Trace</span></h1>
     </div>
-    <div class="doc-meta">Testbook — Piano di Test<br>Versione app 2.1.0</div>
+    <div class="doc-meta">Testbook — Piano di Test<br>Versione app 3.0.0</div>
   </header>
 
   <p>Piano di test in formato standard (ID · Area · Precondizioni · Passi · Risultato atteso · Esito · Note).
-  Compila i campi qui sotto, esegui ogni caso e segna l'esito. Stampa in PDF con <strong>Cmd/Ctrl + P</strong>.</p>
+  Compila i campi qui sotto, esegui ogni caso e segna l'esito. Stampa in PDF con <strong>Cmd/Ctrl + P</strong>.
+  Gli ID marcati <code>[e2e]</code> hanno un equivalente automatizzato in <code>tests/e2e/app.e2e.js</code> —
+  utile per capire cosa è già coperto da CI e cosa va verificato solo a mano.</p>
 
   <div class="fields">
     <div class="field"><label>Tester:</label><span class="blank"></span></div>
@@ -84,10 +86,10 @@
     <tbody>
       <tr class="area-row"><td colspan="7">Avvio</td></tr>
       <tr>
-        <td class="id">T01</td><td class="area">Avvio</td>
+        <td class="id">T01 <code>[e2e]</code></td><td class="area">Avvio</td>
         <td>App servita da server locale.</td>
-        <td><ol class="steps"><li>Apri <code>http://localhost:8000</code>.</li></ol></td>
-        <td>L'app carica: mappa scura a destra, pannello a sinistra, nessun errore.</td>
+        <td><ol class="steps"><li>Apri <code>http://localhost:8000</code>, poi vai su <code>app.html</code>.</li></ol></td>
+        <td>L'app carica: mappa scura a destra, pannello a sinistra, nessun errore. <strong>Nessuna analisi</strong> (stima "--°C") finché non si disegna una stanza — non c'è più un punto di default.</td>
         <td class="esito"></td><td></td>
       </tr>
       <tr>
@@ -107,24 +109,17 @@
         <td class="esito"></td><td></td>
       </tr>
       <tr>
-        <td class="id">T04</td><td class="area">Ricerca</td>
+        <td class="id">T04 <code>[e2e]</code></td><td class="area">Ricerca</td>
         <td>Suggerimenti visibili (T03).</td>
         <td><ol class="steps"><li>Clicca un suggerimento.</li></ol></td>
-        <td>Il campo si riempie; la mappa NON si sposta (nessuna ricerca).</td>
+        <td>Il campo si riempie; la mappa NON si sposta ancora (nessuna ricerca).</td>
         <td class="esito"></td><td></td>
       </tr>
       <tr>
-        <td class="id">T05</td><td class="area">Ricerca</td>
+        <td class="id">T05/T06 <code>[e2e]</code></td><td class="area">Ricerca</td>
         <td>Campo compilato.</td>
-        <td><ol class="steps"><li>Premi «Vai».</li></ol></td>
-        <td>La mappa si sposta sull'indirizzo e i dati si aggiornano.</td>
-        <td class="esito"></td><td></td>
-      </tr>
-      <tr>
-        <td class="id">T06</td><td class="area">Ricerca</td>
-        <td>Campo compilato.</td>
-        <td><ol class="steps"><li>Premi Invio nel campo di testo.</li></ol></td>
-        <td>La ricerca NON parte (parte solo col tasto «Vai»).</td>
+        <td><ol class="steps"><li>Premi Invio → non succede nulla.</li><li>Premi «Vai».</li></ol></td>
+        <td>Invio non avvia la ricerca. «Vai» sposta la mappa sull'indirizzo e, se c'era una stanza disegnata, la rimuove (pronta per disegnarne una nuova lì).</td>
         <td class="esito"></td><td></td>
       </tr>
       <tr>
@@ -135,24 +130,45 @@
         <td class="esito"></td><td></td>
       </tr>
 
-      <tr class="area-row"><td colspan="7">Mappa e posizione</td></tr>
+      <tr class="area-row"><td colspan="7">Disegno della stanza</td></tr>
       <tr>
-        <td class="id">T08</td><td class="area">Mappa</td>
+        <td class="id">T08</td><td class="area">Disegno</td>
+        <td>App avviata, mappa su una città italiana.</td>
+        <td><ol class="steps"><li>Clicca 3 o più punti sulla mappa per tracciare il perimetro di una stanza.</li><li>Clicca di nuovo vicino al primo punto per chiudere l'anello.</li></ol></td>
+        <td>Ad ogni click appare un marker verde e una linea tratteggiata che li collega; alla chiusura il perimetro si blocca (contorno pieno) e parte l'analisi (temperatura, comfort, stagioni).</td>
+        <td class="esito"></td><td></td>
+      </tr>
+      <tr>
+        <td class="id">T40 <code>[e2e]</code></td><td class="area">Disegno</td>
         <td>App avviata.</td>
-        <td><ol class="steps"><li>Clicca un punto su una città italiana.</li></ol></td>
-        <td>Appare il puntatore verde e parte l'analisi (temperatura, comfort, stagioni).</td>
+        <td><ol class="steps"><li>Disegna una stanza stretta e allungata in una direzione.</li><li>Rimuovi e ridisegnane una identica ma ruotata di 90°.</li></ol></td>
+        <td>La stima (temperatura, stagioni) cambia tra le due forme: l'orientamento delle pareti conta.</td>
         <td class="esito"></td><td></td>
       </tr>
       <tr>
-        <td class="id">T09</td><td class="area">Mappa</td>
+        <td class="id">T41 <code>[e2e]</code></td><td class="area">Disegno</td>
+        <td>App avviata.</td>
+        <td><ol class="steps"><li>Clicca solo 2 punti.</li><li>Clicca di nuovo vicino al primo punto.</li></ol></td>
+        <td>Il poligono NON si chiude (serve almeno un triangolo, 3 vertici): il terzo click aggiunge invece un vertice.</td>
+        <td class="esito"></td><td></td>
+      </tr>
+      <tr>
+        <td class="id">T42 <code>[e2e]</code></td><td class="area">Disegno</td>
+        <td>Stanza disegnata e bloccata (T08).</td>
+        <td><ol class="steps"><li>Clicca il pulsante 🗑️ (sotto 📌, in alto a sinistra sulla mappa).</li></ol></td>
+        <td>La stanza sparisce, l'analisi torna al placeholder ("--°C"), ed è possibile disegnarne subito una nuova.</td>
+        <td class="esito"></td><td></td>
+      </tr>
+      <tr>
+        <td class="id">T09</td><td class="area">Disegno</td>
         <td>Browser con geolocalizzazione attiva.</td>
-        <td><ol class="steps"><li>Clicca 🎯.</li><li>Concedi il permesso.</li></ol></td>
-        <td>La mappa si centra sulla tua posizione e la analizza.</td>
+        <td><ol class="steps"><li>Clicca 📌.</li><li>Concedi il permesso.</li></ol></td>
+        <td>La mappa si centra sulla tua posizione (e rimuove un'eventuale stanza già disegnata altrove). <strong>Non analizza da sola</strong>: va poi disegnata una stanza.</td>
         <td class="esito"></td><td></td>
       </tr>
       <tr>
-        <td class="id">T10</td><td class="area">Mappa</td>
-        <td>Punto selezionato.</td>
+        <td class="id">T10</td><td class="area">Disegno</td>
+        <td>App avviata.</td>
         <td><ol class="steps"><li>Zooma al massimo con «+».</li></ol></td>
         <td>Si raggiunge un livello di zoom profondo (20) senza riquadri grigi.</td>
         <td class="esito"></td><td></td>
@@ -160,123 +176,121 @@
 
       <tr class="area-row"><td colspan="7">Confini (geofencing)</td></tr>
       <tr>
-        <td class="id">T11</td><td class="area">Confini</td>
+        <td class="id">T11 <code>[e2e]</code></td><td class="area">Confini</td>
         <td>App avviata.</td>
-        <td><ol class="steps"><li>Clicca all'estero (es. Francia o Tunisia).</li></ol></td>
-        <td>Notifica "Ops! Ci hai scoperto…" e ritorno automatico a Roma.</td>
+        <td><ol class="steps"><li>Cerca un indirizzo all'estero (es. Parigi) e premi «Vai».</li><li>Disegna e chiudi una stanza lì.</li></ol></td>
+        <td>Notifica "Ops! Ci hai scoperto…", la stanza viene rimossa e la mappa torna a Roma.</td>
         <td class="esito"></td><td></td>
       </tr>
       <tr>
         <td class="id">T12</td><td class="area">Confini</td>
         <td>App avviata.</td>
-        <td><ol class="steps"><li>Clicca in mare vicino all'Italia (es. Mar Tirreno).</li></ol></td>
-        <td>Notifica "🌊 Qui c'è solo acqua!" e ritorno a Roma.</td>
+        <td><ol class="steps"><li>Disegna e chiudi una stanza in mare vicino all'Italia (es. Mar Tirreno).</li></ol></td>
+        <td>Notifica "🌊 Qui c'è solo acqua!", la stanza viene rimossa e la mappa torna a Roma.</td>
         <td class="esito"></td><td></td>
       </tr>
       <tr>
         <td class="id">T13</td><td class="area">Confini</td>
         <td>App avviata.</td>
-        <td><ol class="steps"><li>Clicca sulla terraferma in Italia.</li></ol></td>
+        <td><ol class="steps"><li>Disegna e chiudi una stanza sulla terraferma in Italia.</li></ol></td>
         <td>L'analisi procede, nessuna notifica di confine.</td>
         <td class="esito"></td><td></td>
       </tr>
-
-      <tr class="area-row"><td colspan="7">Tempo e facciata</td></tr>
       <tr>
-        <td class="id">T14</td><td class="area">Tempo</td>
-        <td>Punto selezionato.</td>
+        <td class="id">T35 <code>[e2e]</code></td><td class="area">Confini</td>
+        <td>App avviata.</td>
+        <td><ol class="steps"><li>Cerca "Vaticano" o "San Marino" e premi «Vai».</li><li>Disegna e chiudi una stanza lì.</li></ol></td>
+        <td>Nessuna notifica di confine: entrambi contano come Italia.</td>
+        <td class="esito"></td><td></td>
+      </tr>
+
+      <tr class="area-row"><td colspan="7">Tempo e parametri stanza</td></tr>
+      <tr>
+        <td class="id">T14 <code>[e2e]</code></td><td class="area">Tempo</td>
+        <td>Stanza disegnata.</td>
         <td><ol class="steps"><li>Muovi il cursore del mese.</li></ol></td>
         <td>L'etichetta del mese e i valori (temperatura, sole) si aggiornano.</td>
         <td class="esito"></td><td></td>
       </tr>
       <tr>
-        <td class="id">T15</td><td class="area">Tempo</td>
-        <td>Punto selezionato.</td>
+        <td class="id">T15 <code>[e2e]</code></td><td class="area">Tempo</td>
+        <td>Stanza disegnata.</td>
         <td><ol class="steps"><li>Muovi il cursore dell'ora.</li></ol></td>
         <td>Ora, posizione del sole e ombra sulla mappa si aggiornano.</td>
         <td class="esito"></td><td></td>
       </tr>
       <tr>
-        <td class="id">T16</td><td class="area">Facciata</td>
-        <td>Punto selezionato.</td>
-        <td><ol class="steps"><li>Sulla bussola in basso a destra, clicca una direzione (es. E).</li></ol></td>
-        <td>Orientamento/Cardinale passa a quella direzione, l'ago la indica, la scheda resta evidenziata e i valori si aggiornano.</td>
-        <td class="esito"></td><td></td>
-      </tr>
-      <tr>
-        <td class="id">T17</td><td class="area">Facciata</td>
-        <td>Punto selezionato.</td>
+        <td class="id">T17 <code>[e2e]</code></td><td class="area">Parametri</td>
+        <td>Stanza disegnata.</td>
         <td><ol class="steps"><li>Nelle schede "Tipo di Infissi" scegli 🪟 Vetro Singolo.</li></ol></td>
         <td>Le temperature stagionali e il Comfort Rate si aggiornano.</td>
         <td class="esito"></td><td></td>
       </tr>
       <tr>
-        <td class="id">T18</td><td class="area">Facciata</td>
-        <td>Punto selezionato.</td>
+        <td class="id">T18 <code>[e2e]</code></td><td class="area">Parametri</td>
+        <td>Stanza disegnata.</td>
         <td><ol class="steps"><li>Nelle schede "Isolamento Muri" scegli 🧱🧱 Cappotto Termico, poi 🏰 Da Fortezza.</li></ol></td>
         <td>I valori si aggiornano progressivamente (inverno sempre più caldo, estate sempre più fresca); resta selezionata una sola scheda.</td>
         <td class="esito"></td><td></td>
       </tr>
       <tr>
-        <td class="id">T19</td><td class="area">Facciata</td>
+        <td class="id">T32 <code>[e2e]</code></td><td class="area">Parametri</td>
+        <td>Stanza disegnata.</td>
+        <td><ol class="steps"><li>Nelle schede infissi e isolamento, verifica che sia selezionata una sola opzione per gruppo.</li></ol></td>
+        <td>Solo una scheda evidenziata per gruppo; 🏰 Da Fortezza scalda l'inverno più di 🧱🧱 Cappotto.</td>
+        <td class="esito"></td><td></td>
+      </tr>
+      <tr>
+        <td class="id">T19</td><td class="area">Parametri</td>
         <td>App avviata.</td>
-        <td><ol class="steps"><li>Passa il mouse sulle icone ⓘ (Dati Solari, Orientamento, Schermatura).</li></ol></td>
+        <td><ol class="steps"><li>Passa il mouse sulle icone ⓘ (Dati Solari, Tempo).</li></ol></td>
         <td>Compare un riquadro con la spiegazione.</td>
         <td class="esito"></td><td></td>
       </tr>
 
-      <tr class="area-row"><td colspan="7">Rilevamento edifici (OSM)</td></tr>
+      <tr class="area-row"><td colspan="7">Pareti esposte al sole / verso altri vani</td></tr>
       <tr>
         <td class="id">T20</td><td class="area">OSM</td>
         <td>App avviata.</td>
-        <td><ol class="steps"><li>Clicca in un centro urbano denso.</li></ol></td>
-        <td>Orientamento e Schermatura pulsano brevemente e si assestano su valori reali (senza saltare a Sud).</td>
+        <td><ol class="steps"><li>Disegna e chiudi una stanza in un centro urbano denso.</li></ol></td>
+        <td>Le pareti a ridosso del perimetro reale dell'edificio (linea verde) restano/diventano esposte al sole; quelle disegnate in profondità nell'edificio si classificano verso un altro vano — i valori si assestano poco dopo la chiusura, senza saltare tutti a "esposte".</td>
         <td class="esito"></td><td></td>
       </tr>
       <tr>
-        <td class="id">T21</td><td class="area">OSM</td>
-        <td>Un punto già analizzato.</td>
-        <td><ol class="steps"><li>Trascina il puntatore poco più in là.</li></ol></td>
-        <td>L'orientamento parte dall'ultimo valore noto, non da 180°, poi si aggiorna.</td>
+        <td class="id">T30 <code>[e2e]</code></td><td class="area">OSM</td>
+        <td>App avviata, edificio molto più grande della stanza disegnata (es. un isolato intero).</td>
+        <td><ol class="steps"><li>Disegna e chiudi una piccola stanza ben dentro l'edificio, lontano da ogni muro esterno.</li><li>Guarda "Sole diretto".</li></ol></td>
+        <td>Nessuna parete è esposta al sole: mostra 🧭 Sole sull'altro lato indipendentemente da mese/ora, su qualunque piano tranne il tetto.</td>
+        <td class="esito"></td><td></td>
+      </tr>
+      <tr>
+        <td class="id">T39 <code>[e2e]</code></td><td class="area">Piano</td>
+        <td>Stanza del caso T30 (nessuna parete esposta).</td>
+        <td><ol class="steps"><li>Cambia piano da 🏠 (terra) a 5 (🔺 Tetto).</li></ol></td>
+        <td>Il tetto prende comunque sole (non ha un lato a cui rivolgersi, a differenza delle pareti). Tornando a un piano normale, "Sole sull'altro lato" ricompare.</td>
         <td class="esito"></td><td></td>
       </tr>
 
-      <tr class="area-row"><td colspan="7">Piano dell'abitazione</td></tr>
+      <tr class="area-row"><td colspan="7">Piano e ombra</td></tr>
       <tr>
-        <td class="id">T27</td><td class="area">Piano</td>
-        <td>Punto analizzato in una zona con edifici (es. centro città).</td>
+        <td class="id">T27 <code>[e2e]</code></td><td class="area">Piano</td>
+        <td>Stanza disegnata in una zona con edifici vicini.</td>
         <td><ol class="steps"><li>Sulla barra in alto al centro, cambia il piano da 🏠 (terra) a 5.</li></ol></td>
-        <td>La "Schermatura rilevata" diminuisce salendo di piano e Comfort Rate/esposizione cambiano di conseguenza.</td>
-        <td class="esito"></td><td></td>
-      </tr>
-
-      <tr>
-        <td class="id">T28</td><td class="area">Ombra</td>
-        <td>Punto analizzato in una zona con edifici alti.</td>
-        <td><ol class="steps"><li>Porta l'ora a mattino presto o tardo pomeriggio (sole basso).</li><li>Guarda "Sole diretto" nei Dati Solari.</li><li>Cambia piano da terra a 5.</li></ol></td>
-        <td>Con sole basso e piano terra compare 🌑 In ombra; salendo di piano passa a ☀️ In sole e la temperatura stimata aumenta.</td>
+        <td>La schermatura diminuisce salendo di piano; Comfort Rate e stima cambiano di conseguenza (aumentano, se prima erano in ombra).</td>
         <td class="esito"></td><td></td>
       </tr>
       <tr>
-        <td class="id">T29</td><td class="area">Ombra</td>
-        <td>Punto analizzato.</td>
-        <td><ol class="steps"><li>Porta l'ora a notte (es. 02:00).</li></ol></td>
-        <td>"Sole diretto" mostra "— Sotto l'orizzonte".</td>
-        <td class="esito"></td><td></td>
-      </tr>
-
-      <tr>
-        <td class="id">T30</td><td class="area">Ombra</td>
-        <td>Punto analizzato; annota l'orientamento della facciata.</td>
-        <td><ol class="steps"><li>Porta l'ora a un momento in cui il sole è dal lato opposto alla facciata (es. facciata a Ovest, ore 09:00).</li><li>Guarda "Sole diretto".</li></ol></td>
-        <td>Mostra 🧭 Sole sull'altro lato (non "In sole"), e la temperatura stimata non aumenta.</td>
+        <td class="id">T28/T29 <code>[e2e]</code></td><td class="area">Ombra</td>
+        <td>Stanza disegnata in una zona con edifici alti.</td>
+        <td><ol class="steps"><li>Porta l'ora a mattino presto o tardo pomeriggio (sole basso). Guarda "Sole diretto".</li><li>Porta l'ora a notte (es. 02:00).</li></ol></td>
+        <td>Con sole basso compare 🌑 In ombra (se una parete esposta è bloccata da un vicino); di notte mostra "— Sotto l'orizzonte".</td>
         <td class="esito"></td><td></td>
       </tr>
 
       <tr class="area-row"><td colspan="7">Comfort Rate e clima</td></tr>
       <tr>
-        <td class="id">T22</td><td class="area">Comfort</td>
-        <td>Punto analizzato.</td>
+        <td class="id">T22 <code>[e2e]</code></td><td class="area">Comfort</td>
+        <td>Stanza disegnata.</td>
         <td><ol class="steps"><li>Tocca il badge a stelle del Comfort Rate.</li></ol></td>
         <td>Si apre il dettaglio: inverno/estate, infissi, isolamento, percepita/umidità/pioggia, esposizione, consiglio.</td>
         <td class="esito"></td><td></td>
@@ -284,14 +298,13 @@
       <tr>
         <td class="id">T23</td><td class="area">Comfort</td>
         <td>App avviata.</td>
-        <td><ol class="steps"><li>Analizza un punto umido del Sud in estate (mese di luglio).</li><li>Apri il dettaglio.</li></ol></td>
+        <td><ol class="steps"><li>Disegna una stanza in una zona umida del Sud in estate (mese di luglio).</li><li>Apri il dettaglio.</li></ol></td>
         <td>"Percepita estate" è maggiore della temperatura; può comparire il consiglio sull'afa.</td>
         <td class="esito"></td><td></td>
       </tr>
-
       <tr>
-        <td class="id">T37</td><td class="area">Clima</td>
-        <td>Punto analizzato in Italia.</td>
+        <td class="id">T37 <code>[e2e]</code></td><td class="area">Clima</td>
+        <td>Stanza disegnata in Italia.</td>
         <td><ol class="steps"><li>Guarda la scheda "Clima del Luogo".</li><li>Sposta il cursore del mese.</li></ol></td>
         <td>Umidità, vento, pioggia e percepita mostrano valori reali e cambiano al variare del mese.</td>
         <td class="esito"></td><td></td>
@@ -299,38 +312,52 @@
 
       <tr class="area-row"><td colspan="7">Lingua e dispositivo</td></tr>
       <tr>
-        <td class="id">T33</td><td class="area">Finestra</td>
+        <td class="id">T33 <code>[e2e]</code></td><td class="area">Finestra</td>
         <td>App aperta a schermo intero.</td>
-        <td><ol class="steps"><li>Restringi la finestra sotto i 768 px (oppure premi Cmd/Ctrl + più volte per zoomare).</li><li>Riporta la finestra alla larghezza iniziale.</li></ol></td>
-        <td>Restringendo compare l'avviso "serve un computer" al posto della mappa senza controlli; riallargando l'app torna completa, bussola e barra piani incluse.</td>
+        <td><ol class="steps"><li>Restringi la finestra sotto i 768 px (oppure premi Cmd/Ctrl + più volte per zoomare).</li><li>Disegna una stanza.</li></ol></td>
+        <td>Compare il layout mobile (barra inferiore, drawer "Imposta", widget ☀️/🌡️); il disegno funziona anche lì e la barra inferiore mostra le temperature stagionali.</td>
         <td class="esito"></td><td></td>
       </tr>
       <tr>
-        <td class="id">T24</td><td class="area">Lingua</td>
-        <td>App avviata.</td>
-        <td><ol class="steps"><li>Clicca "EN" nel selettore in basso a sinistra.</li></ol></td>
+        <td class="id">T34 <code>[e2e]</code></td><td class="area">Finestra</td>
+        <td>—</td>
+        <td><ol class="steps"><li>Apri l'app già in una finestra stretta (&lt;768px) o da smartphone.</li></ol></td>
+        <td>Il layout mobile è presente fin dall'inizio (barra inferiore, pulsante "Imposta", pulsante 🗑️ rimuovi stanza).</td>
+        <td class="esito"></td><td></td>
+      </tr>
+      <tr>
+        <td class="id">T38 <code>[e2e]</code></td><td class="area">Finestra</td>
+        <td>—</td>
+        <td><ol class="steps"><li>Restringi la finestra sotto i 320 px (o zoom estremo del browser).</li></ol></td>
+        <td>Compare l'avviso a schermo intero "Ops! SunTrace 2 ha bisogno di spazio…": l'app non si avvia affatto a questa larghezza.</td>
+        <td class="esito"></td><td></td>
+      </tr>
+      <tr>
+        <td class="id">T24 <code>[e2e]</code></td><td class="area">Lingua</td>
+        <td>Stanza disegnata.</td>
+        <td><ol class="steps"><li>Clicca "EN" nel selettore in alto a sinistra.</li></ol></td>
         <td>Tutta l'interfaccia passa in inglese, testi statici e dinamici (anche col dettaglio aperto).</td>
         <td class="esito"></td><td></td>
       </tr>
       <tr>
-        <td class="id">T25</td><td class="area">Lingua</td>
+        <td class="id">T25 <code>[e2e]</code></td><td class="area">Lingua</td>
         <td>Lingua impostata su EN.</td>
         <td><ol class="steps"><li>Ricarica la pagina.</li></ol></td>
-        <td>L'app resta in inglese (scelta ricordata).</td>
+        <td>L'app resta in inglese (scelta ricordata). Nota: il ricaricamento riparte senza alcuna stanza — è previsto.</td>
         <td class="esito"></td><td></td>
       </tr>
       <tr>
-        <td class="id">T26</td><td class="area">Mobile</td>
-        <td>—</td>
-        <td><ol class="steps"><li>Apri da smartphone o restringi la finestra sotto 768px.</li></ol></td>
-        <td>Compare l'avviso a schermo intero "Ops! SunTrace ha bisogno di spazio…".</td>
+        <td class="id">T36 <code>[e2e]</code></td><td class="area">Errori</td>
+        <td>App avviata.</td>
+        <td><ol class="steps"><li>(Solo da console dev) simula un errore JS imprevisto.</li></ol></td>
+        <td>Compare una notifica leggibile con il dettaglio dell'errore, non una pagina bloccata.</td>
         <td class="esito"></td><td></td>
       </tr>
     </tbody>
   </table>
 
   <footer class="doc">
-    SunTrace — Testbook v2.1.0 · Esiti: P = Superato, F = Fallito, B = Bloccato/N.A. · Riporta i difetti trovati nella colonna Note.
+    SunTrace 2 — Testbook v3.0.0 · Esiti: P = Superato, F = Fallito, B = Bloccato/N.A. · Riporta i difetti trovati nella colonna Note.
   </footer>
 
 </div>

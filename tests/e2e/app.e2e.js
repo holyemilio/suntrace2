@@ -4,7 +4,20 @@
  * Serves the project over HTTP (the app needs http://, not file://) and stubs the
  * three external data APIs so runs are deterministic and don't hammer public
  * services. Leaflet and fonts are self-hosted (vendor/), so no network at all.
- * Cases map to the testbook IDs.
+ * Cases map to the testbook IDs (docs/testbook.html).
+ *
+ * SunTrace 2: the app no longer auto-analyses a clicked point with a
+ * bussola-set facade — the user draws the room's outline (a polygon) on the
+ * map, which locks on closing and is removed via a dedicated button. There is
+ * no analysis at all until a room is drawn, so most cases below draw one
+ * first via drawRoom()/drawAndAnalyse() rather than relying on it happening
+ * automatically at boot.
+ *
+ * Retired (no longer applicable, the underlying UI is gone): the old T16
+ * ("the compass sets the facade") and T31 ("the compass marks the sun") —
+ * there is no compass to click or to show a sun marker on. Their spirit lives
+ * on in T40 (different room shapes give different estimates) and in T28/T29
+ * (the sun readout itself, unrelated to any dial).
  */
 
 import { test, before, after } from 'node:test';
@@ -56,27 +69,47 @@ function climatePayload() {
                     windspeed_10m_mean: wind, precipitation_sum: precip } };
 }
 
-/** A closed courtyard of tall blocks around the point: guarantees real shadow. */
-function overpassPayload(lat, lon, height = 30) {
+const rect = (lat, lon, x0, x1, y0, y1, height) => {
   const mLat = 1 / 111320, mLng = 1 / (111320 * Math.cos(lat * Math.PI / 180));
-  const rect = (x0, x1, y0, y1) => ({
+  return {
     type: 'way', tags: { building: 'yes', 'building:levels': String(height / 3) },
     geometry: [[x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0]]
       .map(([x, y]) => ({ lat: lat + y * mLat, lon: lon + x * mLng })),
-  });
+  };
+};
+
+/** A closed courtyard of tall blocks around the point: guarantees real shadow
+ *  for a small room drawn near the centre (the hollow middle — no building
+ *  contains it, so every drawn wall stays "exterior" via the no-host fallback). */
+function courtyardPayload(lat, lon, height = 30) {
   const d = 12, o = 18, len = 32;
-  return { elements: [rect(-len, len, d, o), rect(-len, len, -o, -d),
-                      rect(d, o, -len, len), rect(-o, -d, -len, len)] };
+  return { elements: [
+    rect(lat, lon, -len, len, d, o, height),
+    rect(lat, lon, -len, len, -o, -d, height),
+    rect(lat, lon, d, o, -len, len, height),
+    rect(lat, lon, -o, -d, -len, len, height),
+  ] };
+}
+
+/** One big building footprint that fully SURROUNDS a small room drawn at its
+ *  centre — every drawn wall sits deep inside it, far from its perimeter, so
+ *  classifyRoomEdges marks every wall interior (no wall faces the sun/exterior). */
+function engulfingPayload(lat, lon, height = 30) {
+  return { elements: [rect(lat, lon, -300, 300, -300, 300, height)] };
 }
 
 const ROME_RESULT = { display_name: 'Via Giusti, Roma', lat: '41.8955', lon: '12.5010' };
 
-async function openApp(t, { buildings = true, buildingHeight = 30, searchResult = ROME_RESULT, viewport = null } = {}) {
+async function openApp(t, { buildings = 'courtyard', buildingHeight = 30, searchResult = ROME_RESULT, viewport = null } = {}) {
   // An Italian locale makes the app start in Italian through its own auto-detect,
   // so the language-persistence test isn't fighting a forced localStorage value.
   const context = await browser.newContext({ locale: 'it-IT', ...(viewport ? { viewport } : {}) });
   t.after(() => context.close());
   const page = await context.newPage();
+
+  const overpassJson = buildings === false ? { elements: [] }
+    : buildings === 'engulf' ? engulfingPayload(41.9028, 12.4964, buildingHeight)
+    : courtyardPayload(41.9028, 12.4964, buildingHeight);
 
   await page.route('**/climate-api.open-meteo.com/**', r =>
     r.fulfill({ json: climatePayload() }));
@@ -84,78 +117,128 @@ async function openApp(t, { buildings = true, buildingHeight = 30, searchResult 
     r.fulfill({ json: { address: { country_code: 'it' } } }));
   await page.route('**/nominatim.openstreetmap.org/search**', r =>
     r.fulfill({ json: [searchResult] }));
-  await page.route('**/overpass-api.de/**', r => r.fulfill({
-    json: buildings ? overpassPayload(41.9028, 12.4964, buildingHeight) : { elements: [] },
-  }));
+  await page.route('**/overpass-api.de/**', r => r.fulfill({ json: overpassJson }));
 
   await page.goto(`${origin}/app.html`);
   // Only a genuinely too-small window (< 320px, MIN_USABLE_WIDTH in ui.js) shows
   // the block instead of starting — desktop and mobile both render normally.
+  // The zoom control is added once, synchronously, inside initMap() at the very
+  // start of startApp() — its presence is "the app actually booted", independent
+  // of any analysis (there is none until a room is drawn).
   if (!viewport || viewport.width >= 320) {
-    await page.waitForFunction(() => document.getElementById('thermal-result').textContent !== '--°C');
+    await page.waitForSelector('.leaflet-control-zoom');
   }
   return page;
 }
 
 const text = (page, id) => page.locator(`#${id}`).textContent();
 
-// ─── T01 — the app boots ──────────────────────────────────────────────────────
+/**
+ * Click the vertices of a room (default: a triangle) around a centre point on
+ * the map, then click back near the first vertex to close the loop and lock
+ * the room. Does not wait for the analysis to settle — see drawAndAnalyse().
+ */
+async function drawRoom(page, { cx, cy, points = [[-40, -30], [40, -30], [0, 40]] } = {}) {
+  const box = await page.locator('#map').boundingBox();
+  const centerX = cx ?? box.x + box.width / 2;
+  const centerY = cy ?? box.y + box.height / 2;
+  for (const [dx, dy] of points) await page.mouse.click(centerX + dx, centerY + dy);
+  await page.mouse.click(centerX + points[0][0], centerY + points[0][1]); // close the loop
+}
 
-test('T01: the app loads and renders an analysis, with no page errors', async (t) => {
+/**
+ * drawRoom() followed by waiting for the room to lock, be analysed, AND for
+ * the async OSM building fetch to resolve and (re)classify exterior/interior
+ * walls — without this second wait, a test reading exterior/interior-derived
+ * output right after locking can race the still-provisional "every wall
+ * exterior" state that renderRoomPolygon()/refreshUI() show optimistically
+ * before Overpass responds.
+ */
+async function drawAndAnalyse(page, opts = {}) {
+  // Short timeout: a room drawn near one already analysed in this same
+  // browser context can hit fetchBuildingContext's localStorage cache (see
+  // ui.js) and never fire a second network request at all — that's correct,
+  // cached behaviour, not something to wait 30s to rule out.
+  const overpassDone = page.waitForResponse('**/overpass-api.de/**', { timeout: 2000 }).catch(() => null);
+  await drawRoom(page, opts);
+  await overpassDone;
+  await page.waitForFunction(() => document.getElementById('thermal-result').textContent !== '--°C', { timeout: 8000 });
+  await page.waitForTimeout(30); // let the post-OSM refreshUI() finish applying
+}
+
+// ─── T01 — the app boots, with no analysis until a room is drawn ─────────────
+
+test('T01: the app loads with no analysis yet; drawing a room produces one, with no page errors', async (t) => {
   const errors = [];
   const page = await openApp(t);
   page.on('pageerror', e => errors.push(e.message));
 
-  assert.match(await text(page, 'thermal-result'), /^-?\d+\.\d°C$/);
   assert.ok(await page.locator('#map').isVisible(), 'the map is visible');
   assert.ok(await page.locator('#sidebar').isVisible(), 'the sidebar is visible');
-  assert.match(await text(page, 'comfort-rate-stars'), /⭐/);
+  assert.equal(await text(page, 'thermal-result'), '--°C', 'no room yet → no estimate');
+  assert.ok(await page.locator('#remove-room-btn').isVisible(), 'the remove-room button is always there');
   assert.equal(await page.locator('#mobile-warning').isVisible(), false, 'no mobile block on desktop');
+
+  await drawAndAnalyse(page);
+  assert.match(await text(page, 'thermal-result'), /^-?\d+\.\d°C$/);
+  assert.match(await text(page, 'comfort-rate-stars'), /⭐/);
   assert.deepEqual(errors, []);
 });
 
-test('T33: shrinking the window activates the mobile layout instead of hiding controls', async (t) => {
+// ─── T02 — different room shapes give different estimates ────────────────────
+
+test('T40: a differently-shaped room gives a different estimate', async (t) => {
+  const page = await openApp(t, { buildings: false }); // open sky: every wall stays exterior
+  // A rectangle stretched east-west: its long walls face north/south.
+  await drawAndAnalyse(page, { points: [[-160, -8], [160, -8], [160, 8], [-160, 8]] });
+  const wideTemp = await text(page, 'thermal-result');
+
+  await page.locator('#remove-room-btn').click();
+  await page.waitForTimeout(100);
+  // A rectangle stretched north-south: its long walls face east/west instead,
+  // catching a very different amount of direct sun at this hour.
+  await drawAndAnalyse(page, { points: [[-8, -160], [8, -160], [8, 160], [-8, 160]] });
+  const tallTemp = await text(page, 'thermal-result');
+
+  assert.notEqual(wideTemp, tallTemp, 'a differently-oriented set of walls must change the estimate');
+});
+
+// ─── T03/T04 — drawing mechanics: closing the loop, and the remove button ────
+
+test('T41: fewer than 3 vertices never closes the loop, even clicking back on the first one', async (t) => {
   const page = await openApp(t);
-  assert.ok(await page.locator('#compass').isVisible(), 'the compass is there to begin with');
-  assert.equal(await page.locator('#mobile-bottom-bar').isVisible(), false, 'no mobile UI yet, at desktop width');
+  const box = await page.locator('#map').boundingBox();
+  const cx = box.x + box.width / 2, cy = box.y + box.height / 2;
 
-  // Narrower than the desktop breakpoint — same as a live window resize or browser zoom.
-  // The mobile layout activates on the spot (see updateMobileBlock in ui.js): the
-  // sidebar's content moves into the mobile bottom bar / drawer / widgets, so
-  // shrinking the window never leaves you with neither UI.
-  //
-  // Wait on the reparenting itself (initMobileLayout, run from the JS resize
-  // handler), not on #mobile-bottom-bar's CSS display: that div is already
-  // display:flex the instant the media query matches, which can beat the JS
-  // handler to it and made this assertion below flaky.
-  await page.setViewportSize({ width: 500, height: 820 });
-  await page.waitForFunction(() => document.querySelector('#mobile-compass-widget #compass'));
-  assert.ok(await page.locator('#mobile-compass-widget #compass').count(), 'the dial moved into the 🧭 widget, not off-screen');
-  assert.match(await text(page, 'val-q-winter'), /°C$/, 'the seasonal reading followed into the bottom bar');
-  assert.equal(await page.locator('#mobile-warning').isVisible(), false, 'this width is usable, not blocked');
+  await page.mouse.click(cx - 40, cy - 30);
+  await page.mouse.click(cx + 40, cy - 30);
+  await page.mouse.click(cx - 40, cy - 30); // back on the first vertex, but only 2 so far
+  await page.waitForTimeout(200);
+  assert.equal(await text(page, 'thermal-result'), '--°C', 'two vertices is not enough to lock');
+  assert.equal(await page.locator('.suntrace-marker').count(), 3, 'the third click added a vertex instead of closing');
 });
 
-test('T34: opening straight into a narrow window starts the mobile layout, not a block', async (t) => {
-  const page = await openApp(t, { viewport: { width: 500, height: 820 } });
-  assert.equal(await page.locator('#mobile-warning').isVisible(), false);
-  assert.ok(await page.locator('#mobile-bottom-bar').isVisible(), 'the seasonal strip is there from the start');
-  assert.ok(await page.locator('#mobile-drawer-toggle').isVisible(), 'so is the settings drawer handle');
-  assert.ok(await page.locator('#mobile-compass-widget #compass').count(), 'the dial moved into the 🧭 widget');
-});
+test('T42: the remove-room button clears a locked room and re-enables drawing', async (t) => {
+  const page = await openApp(t);
+  await drawAndAnalyse(page);
+  assert.notEqual(await text(page, 'thermal-result'), '--°C');
 
-test('T38: an extreme width still gets the explanatory block', async (t) => {
-  const page = await openApp(t, { viewport: { width: 280, height: 700 } });
-  await page.waitForFunction(() =>
-    getComputedStyle(document.getElementById('mobile-warning')).display === 'flex');
-  // The overlay covers the map rather than hiding it, so check that startApp()
-  // never ran instead of checking #map's own (unaffected) visibility.
-  assert.equal(await text(page, 'thermal-result'), '--°C', 'the app never started at this width');
+  await page.locator('#remove-room-btn').click();
+  await page.waitForTimeout(150);
+  assert.equal(await text(page, 'thermal-result'), '--°C', 'removing the room resets the output');
+  assert.equal(await page.locator('.suntrace-marker').count(), 0, 'no leftover vertex markers');
+
+  // Drawing again after removal must work exactly like the first time.
+  await drawAndAnalyse(page);
+  assert.notEqual(await text(page, 'thermal-result'), '--°C', 'a fresh room can be drawn after removal');
 });
 
 // ─── T14 / T15 — time controls ────────────────────────────────────────────────
 
 test('T14: moving the month slider updates the label and the estimate', async (t) => {
-  const page = await openApp(t);
+  const page = await openApp(t, { buildings: false });
+  await drawAndAnalyse(page);
+
   await page.locator('#month-slider').fill('0');
   await page.waitForFunction(() => document.getElementById('month-label').textContent === 'Gennaio');
   const jan = await text(page, 'thermal-result');
@@ -169,7 +252,9 @@ test('T14: moving the month slider updates the label and the estimate', async (t
 });
 
 test('T15: moving the hour slider updates the label and the sun readouts', async (t) => {
-  const page = await openApp(t);
+  const page = await openApp(t, { buildings: false });
+  await drawAndAnalyse(page);
+
   await page.locator('#hour-slider').fill('12');
   await page.waitForFunction(() => document.getElementById('hour-label').textContent === '12:00');
   const noonElevation = await text(page, 'val-sun-elevation');
@@ -181,12 +266,13 @@ test('T15: moving the hour slider updates the label and the sun readouts', async
   assert.notEqual(noonElevation, nightElevation);
 });
 
-// ─── T17 / T18 — building properties ──────────────────────────────────────────
+// ─── T17 / T18 / T32 — building properties ────────────────────────────────────
 
 test('T17: single glazing changes the seasonal figures', async (t) => {
-  // Open sky: the facade keeps its default south orientation and actually gets
-  // sun, so the glazing modifier has something to act on.
+  // Open sky, every wall stays exterior and gets real sun — the glazing
+  // modifier has something to act on.
   const page = await openApp(t, { buildings: false });
+  await drawAndAnalyse(page);
   const before = await text(page, 'val-q-summer');
   await page.locator('input[name="windows"][value="single"]').check();
   await page.waitForFunction(b => document.getElementById('val-q-summer').textContent !== b, before);
@@ -195,19 +281,48 @@ test('T17: single glazing changes the seasonal figures', async (t) => {
 
 test('T18: insulation warms winter and cools summer', async (t) => {
   const page = await openApp(t, { buildings: false });
-  const winterBefore = parseFloat(await text(page, 'val-q-winter'));
+  await drawAndAnalyse(page);
+  const winterBeforeText = await text(page, 'val-q-winter');
+  const winterBefore = parseFloat(winterBeforeText);
   const summerBefore = parseFloat(await text(page, 'val-q-summer'));
 
   await page.locator('input[name="insulation"][value="coat"]').check();
-  await page.waitForFunction(w => document.getElementById('val-q-winter').textContent !== w,
-    `${winterBefore.toFixed(1)}°C`);
+  // Compare against the captured text itself (not a reconstructed "X.X°C"
+  // string) — reconstructing from the parsed float mishandles -0 (JS's
+  // toFixed drops the sign on negative zero), which can make the wait
+  // resolve immediately instead of actually waiting for the change.
+  await page.waitForFunction(w => document.getElementById('val-q-winter').textContent !== w, winterBeforeText);
 
   assert.ok(parseFloat(await text(page, 'val-q-winter')) > winterBefore);
   assert.ok(parseFloat(await text(page, 'val-q-summer')) < summerBefore);
 });
 
+test('T32: the choice cards are single-select and the fortress tier is the strongest', async (t) => {
+  const page = await openApp(t, { buildings: false });
+  await drawAndAnalyse(page);
+  const bareText = await text(page, 'val-q-winter');
+  const bareWinter = parseFloat(bareText);
+
+  await page.locator('input[name="insulation"][value="coat"]').check();
+  await page.waitForFunction(w => document.getElementById('val-q-winter').textContent !== w, bareText);
+  const coatText = await text(page, 'val-q-winter');
+  const coatWinter = parseFloat(coatText);
+
+  await page.locator('input[name="insulation"][value="fortress"]').check();
+  await page.waitForFunction(w => document.getElementById('val-q-winter').textContent !== w, coatText);
+  const fortWinter = parseFloat(await text(page, 'val-q-winter'));
+
+  assert.ok(fortWinter > coatWinter && coatWinter > bareWinter,
+    `winter should rise with insulation: ${bareWinter} < ${coatWinter} < ${fortWinter}`);
+  assert.equal(await page.locator('input[name="insulation"]:checked').count(), 1,
+    'only one wall option can be selected');
+  assert.equal(await page.locator('input[name="windows"]:checked').count(), 1,
+    'only one glazing option can be selected');
+});
+
 test('T37: the local-climate card follows the selected month', async (t) => {
   const page = await openApp(t);
+  await drawAndAnalyse(page);
   await page.waitForFunction(() => document.getElementById('val-humidity').textContent !== '—');
 
   assert.match(await text(page, 'val-humidity'), /^\d+%$/);
@@ -223,28 +338,9 @@ test('T37: the local-climate card follows the selected month', async (t) => {
 
 // ─── T22 — Comfort Rate detail ────────────────────────────────────────────────
 
-test('T32: the choice cards are single-select and the fortress tier is the strongest', async (t) => {
-  const page = await openApp(t, { buildings: false });
-  const bareWinter = parseFloat(await text(page, 'val-q-winter'));
-
-  await page.locator('input[name="insulation"][value="coat"]').check();
-  await page.waitForFunction(w => parseFloat(document.getElementById('val-q-winter').textContent) !== w, bareWinter);
-  const coatWinter = parseFloat(await text(page, 'val-q-winter'));
-
-  await page.locator('input[name="insulation"][value="fortress"]').check();
-  await page.waitForFunction(w => parseFloat(document.getElementById('val-q-winter').textContent) !== w, coatWinter);
-  const fortWinter = parseFloat(await text(page, 'val-q-winter'));
-
-  assert.ok(fortWinter > coatWinter && coatWinter > bareWinter,
-    `winter should rise with insulation: ${bareWinter} < ${coatWinter} < ${fortWinter}`);
-  assert.equal(await page.locator('input[name="insulation"]:checked').count(), 1,
-    'only one wall option can be selected');
-  assert.equal(await page.locator('input[name="windows"]:checked').count(), 1,
-    'only one glazing option can be selected');
-});
-
 test('T22: the Comfort Rate badge opens a populated detail modal', async (t) => {
   const page = await openApp(t);
+  await drawAndAnalyse(page);
   assert.equal(await page.locator('#kpi-modal').isVisible(), false);
 
   await page.locator('#energy-class-field').click();
@@ -266,6 +362,7 @@ test('T22: the Comfort Rate badge opens a populated detail modal', async (t) => 
 
 test('T24: the language switch translates static and dynamic text', async (t) => {
   const page = await openApp(t);
+  await drawAndAnalyse(page);
   assert.equal(await page.locator('#search-btn').textContent(), 'Vai');
 
   await page.locator('.lang-btn[data-lang="en"]').click();
@@ -282,57 +379,69 @@ test('T25: the chosen language survives a reload', async (t) => {
   await page.waitForFunction(() => document.getElementById('search-btn').textContent === 'Go');
 
   await page.reload();
-  await page.waitForFunction(() => document.getElementById('thermal-result').textContent !== '--°C');
+  await page.waitForSelector('.leaflet-control-zoom');
   assert.equal(await page.locator('#search-btn').textContent(), 'Go', 'still English after reload');
 });
 
-// ─── T03–T06 — address search ─────────────────────────────────────────────────
+// ─── T03 (search) — address search ────────────────────────────────────────────
 
-test('T03/T04: suggestions appear and clicking one only fills the field', async (t) => {
-  const page = await openApp(t);
-  const coordBefore = await text(page, 'coord-lat');
+test('T04: suggestions appear and clicking one only fills the field, the map stays put', async (t) => {
+  const page = await openApp(t, { buildings: false });
 
   await page.locator('#search-input').fill('Via Giusti Roma');
   await page.waitForSelector('.preview-item');
   await page.locator('.preview-item').first().click();
-
   assert.equal(await page.locator('#search-input').inputValue(), 'Via Giusti, Roma');
-  assert.equal(await text(page, 'coord-lat'), coordBefore, 'the map must not move yet');
+
+  // Picking a suggestion must not move the map: a room drawn now analyses the
+  // still-default Rome centre, not the (unrelated) suggestion's coordinates.
+  await drawAndAnalyse(page);
+  assert.ok((await text(page, 'coord-lat')).startsWith('41.90'), 'the map never moved to the suggestion');
 });
 
-test('T05/T06: Enter does not search, the Go button does', async (t) => {
-  const page = await openApp(t);
-  const coordBefore = await text(page, 'coord-lat');
+test('T05/T06: Enter does not search, the Go button does move the map', async (t) => {
+  const page = await openApp(t, {
+    buildings: false,
+    searchResult: { display_name: 'Via Giusti, Roma', lat: '45.0', lon: '9.0' }, // far from default Rome centre
+  });
 
   await page.locator('#search-input').fill('Via Giusti Roma');
   await page.locator('#search-input').press('Enter');
-  await page.waitForTimeout(300);
-  assert.equal(await text(page, 'coord-lat'), coordBefore, 'Enter must not trigger a search');
+  await page.waitForTimeout(200);
+  await drawAndAnalyse(page);
+  assert.ok((await text(page, 'coord-lat')).startsWith('41.90'), 'Enter must not trigger a search');
 
+  await page.locator('#remove-room-btn').click();
   await page.locator('#search-btn').click();
-  await page.waitForFunction(c => document.getElementById('coord-lat').textContent !== c, coordBefore);
-  assert.notEqual(await text(page, 'coord-lat'), coordBefore, '"Vai" moves the map');
+  await page.waitForTimeout(200);
+  await drawAndAnalyse(page);
+  assert.ok((await text(page, 'coord-lat')).startsWith('45.0'), '"Vai" moved the map to the searched address');
 });
 
 // ─── T11 — geofencing ─────────────────────────────────────────────────────────
 
-test('T11: a point outside Italy is rejected and recentred on Rome', async (t) => {
-  // Reach a foreign coordinate through the real search flow.
+test('T11: a room drawn outside Italy is rejected and the map recentres on Rome', async (t) => {
   const page = await openApp(t, {
     searchResult: { display_name: 'Paris, France', lat: '48.8566', lon: '2.3522' },
   });
+  await page.route('**/nominatim.openstreetmap.org/reverse**', r =>
+    r.fulfill({ json: { address: { country_code: 'fr' } } }));
+
   await page.locator('#search-input').fill('Paris');
   await page.locator('#search-btn').click();
+  await page.waitForTimeout(200);
+  await drawRoom(page); // locks over Paris — should be rejected
   await page.waitForSelector('.map-error-toast', { state: 'visible' });
   const toast = await text(page, 'map-error-toast');
   assert.match(toast, /Ops! Ci hai scoperto/);
-  await page.waitForFunction(() => document.getElementById('coord-lat').textContent.startsWith('41.90'));
+  assert.equal(await text(page, 'thermal-result'), '--°C', 'the rejected room is removed, not analysed');
 });
 
 test('T35: the Vatican and San Marino count as Italy, not abroad', async (t) => {
   for (const [nome, cc, lat, lon] of [['Vatican', 'va', '41.9022', '12.4539'],
                                       ['San Marino', 'sm', '43.9356', '12.4473']]) {
     const page = await openApp(t, {
+      buildings: false,
       searchResult: { display_name: nome, lat, lon },
     });
     await page.route('**/nominatim.openstreetmap.org/reverse**', r =>
@@ -340,13 +449,13 @@ test('T35: the Vatican and San Marino count as Italy, not abroad', async (t) => 
 
     await page.locator('#search-input').fill(nome);
     await page.locator('#search-btn').click();
-    await page.waitForFunction(la => document.getElementById('coord-lat').textContent.startsWith(la),
-      lat.slice(0, 5));
+    await page.waitForTimeout(200);
+    await drawAndAnalyse(page);
 
     assert.equal(await page.locator('#map-error-toast').isVisible(), false,
       `${nome} (${cc}) must not be rejected as foreign`);
     assert.ok((await text(page, 'coord-lat')).startsWith(lat.slice(0, 5)),
-      'the analysis stays on the clicked point');
+      'the room stays on the drawn location');
   }
 });
 
@@ -360,121 +469,100 @@ test('T36: an unexpected failure surfaces as a message instead of a dead page', 
   assert.match(toast, /guasto simulato/, 'and gets the detail worth reporting');
 });
 
-// ─── T27 / T28 / T29 — floor, shadow ──────────────────────────────────────────
+// ─── T27 / T28 / T29 / T30 / T39 — floor, shadow, orientation ─────────────────
 
 test('T28/T29: the direct-sun readout reflects the sun and the buildings', async (t) => {
-  const page = await openApp(t);
+  const page = await openApp(t); // courtyard: a room at the centre keeps every wall exterior
+  await drawAndAnalyse(page);
 
   await page.locator('#hour-slider').fill('2');            // night
   await page.waitForFunction(() => document.getElementById('hour-label').textContent === '02:00');
   assert.match(await text(page, 'val-sun-direct'), /orizzonte/, 'night → below horizon');
 
-  // Afternoon in January: the sun is low AND on the west-facing wall the stub
-  // produces, so a blocking roof is the only thing between them.
+  // January at midday: Rome's sun barely clears ~27° elevation, well under what
+  // the courtyard's 15-18 m-away, 30 m-tall walls need to stop blocking (~60°+).
   await page.locator('#month-slider').fill('0');
-  await page.locator('#hour-slider').fill('15');
-  await page.waitForFunction(() => document.getElementById('hour-label').textContent === '15:00');
+  await page.locator('#hour-slider').fill('12');
+  await page.waitForFunction(() => document.getElementById('hour-label').textContent === '12:00');
   assert.match(await text(page, 'val-sun-direct'), /ombra/, 'low winter sun in a courtyard → shadow');
 });
 
-test('T16: the compass sets the facade and highlights the chosen direction', async (t) => {
-  const page = await openApp(t, { buildings: false });
-
-  await page.locator('.compass-dir[data-az="90"]').click();   // East
-  await page.waitForFunction(() =>
-    document.getElementById('compass-needle').style.transform === 'rotate(90deg)');
-  assert.equal(await page.locator('.compass-dir.active').textContent(), 'E', 'East is highlighted');
-
-  const eastSummer = await text(page, 'val-q-summer');
-  await page.locator('.compass-dir[data-az="180"]').click();  // South
-  await page.waitForFunction(() =>
-    document.getElementById('compass-needle').style.transform === 'rotate(180deg)');
-  assert.notEqual(await text(page, 'val-q-summer'), eastSummer, 'a different wall gives a different estimate');
-  assert.equal(await page.locator('.compass-dir.active').textContent(), 'S');
-});
-
-test('T31: the compass marks the sun and hides/shows with it', async (t) => {
-  const page = await openApp(t, { buildings: false });
-  await page.locator('#month-slider').fill('6');
-  await page.locator('#hour-slider').fill('2');               // night
-  await page.waitForFunction(() => document.getElementById('hour-label').textContent === '02:00');
-  assert.ok(await page.locator('#compass-sun').evaluate(el => el.classList.contains('hidden')),
-    'the sun marker hides when the sun is down');
-
-  await page.locator('#hour-slider').fill('12');
-  await page.waitForFunction(() => document.getElementById('hour-label').textContent === '12:00');
-  assert.equal(await page.locator('#compass-sun').evaluate(el => el.classList.contains('hidden')), false);
-  // "shaded" tracks the same verdict the sidebar shows in val-sun-direct — the
-  // compass no longer repeats it as text (that duplication was removed), just
-  // as this dimmed/lit marker.
-  const shaded = await page.locator('#compass-sun').evaluate(el => el.classList.contains('shaded'));
-  assert.equal(shaded, !(await text(page, 'val-sun-direct')).includes('sole'),
-    'the sun marker dims exactly when the facade is not lit');
-});
-
-test('T30: a wall facing away reads "sun on the other side", not "in sun"', async (t) => {
-  // The stubbed courtyard yields a west-facing facade. At 09:00 in January the
-  // sun sits in the south-east, so even with a clear line of sight from a high
-  // floor the wall itself gets nothing — and the estimate must not move. Floor 4
-  // (12m) clears the 10m stub buildings; floor 5 is the roof, which has no wall
-  // to face away with, so it doesn't belong in this case.
-  const page = await openApp(t, { buildingHeight: 10 });
-
-  await page.locator('#month-slider').fill('0');
-  await page.locator('#hour-slider').fill('9');
-  await page.waitForFunction(() => document.getElementById('hour-label').textContent === '09:00');
-  await page.waitForFunction(() => document.querySelector('.compass-dir.active')?.textContent === 'O');
-  assert.equal(await page.locator('.compass-dir.active').textContent(), 'O', 'the detected facade faces west');
-
-  const tempBefore = await text(page, 'thermal-result');
-  await page.locator('.floor-btn[data-floor="4"]').click();
+test('T30: a room with no exterior wall reads "sun on the other side"', async (t) => {
+  // A small room drawn deep inside one huge building footprint: every wall
+  // classifies interior (see classifyRoomEdges), so none of them ever faces
+  // the sun/exterior at all, on a normal floor.
+  const page = await openApp(t, { buildings: 'engulf' });
+  await drawAndAnalyse(page);
 
   assert.match(await text(page, 'val-sun-direct'), /altro lato/,
-    'a clear sky on a west wall at 09:00 is not "in sun"');
-  assert.equal(await text(page, 'thermal-result'), tempBefore,
-    'the estimate stays put, matching the label');
+    'no exterior wall at all must read "sun on the other side"');
+  const tempBefore = await text(page, 'thermal-result');
+  await page.locator('#month-slider').fill('6'); // even peak summer sun changes nothing
+  await page.waitForTimeout(150);
+  assert.match(await text(page, 'val-sun-direct'), /altro lato/, 'still no exterior wall to catch it');
 });
 
-test('T39: the roof (floor 5) gets sun regardless of the facade\'s orientation, and disables the compass', async (t) => {
-  // Same west-facing facade and morning sun as T30 — a wall would read "in
-  // altro lato" here. The roof has no facing direction, so it must not.
-  const page = await openApp(t, { buildingHeight: 10 });
-
-  await page.locator('#month-slider').fill('0');
-  await page.locator('#hour-slider').fill('9');
-  await page.waitForFunction(() => document.getElementById('hour-label').textContent === '09:00');
-  await page.waitForFunction(() => document.querySelector('.compass-dir.active')?.textContent === 'O');
+test('T39: the roof (floor 5) gets sun regardless of wall orientation', async (t) => {
+  // Same fully-interior room as T30 — a wall reads "altro lato" here, but the
+  // roof has no facing direction at all, so it must not.
+  const page = await openApp(t, { buildings: 'engulf' });
+  await drawAndAnalyse(page);
+  assert.match(await text(page, 'val-sun-direct'), /altro lato/, 'walls: no exterior wall to catch the sun');
 
   await page.locator('.floor-btn[data-floor="5"]').click();
+  await page.waitForFunction(() => document.getElementById('val-sun-direct').textContent.includes('sole'));
+  assert.match(await text(page, 'val-sun-direct'), /sole/, 'the roof catches the sun even with zero exterior walls');
 
-  assert.match(await text(page, 'val-sun-direct'), /sole/,
-    'the roof catches the sun even though every wall faces away from it');
-  assert.ok(await page.locator('#compass').evaluate(el => el.classList.contains('roof-disabled')),
-    'the compass is dimmed and inert once orientation stops mattering');
-
-  // Switching back off the roof restores normal wall behaviour.
-  await page.locator('.floor-btn[data-floor="4"]').click();
+  await page.locator('.floor-btn[data-floor="0"]').click();
   assert.match(await text(page, 'val-sun-direct'), /altro lato/, 'leaving the roof brings the wall verdict back');
-  assert.ok(!(await page.locator('#compass').evaluate(el => el.classList.contains('roof-disabled'))),
-    'the compass is interactive again off the roof');
 });
 
 test('T27: choosing a higher floor escapes the shadow and changes the reading', async (t) => {
   const page = await openApp(t, { buildingHeight: 15 });
+  await drawAndAnalyse(page);
 
-  // Afternoon, when the sun is on the west-facing wall the stub produces.
   await page.locator('#month-slider').fill('0');
-  await page.locator('#hour-slider').fill('15');
-  await page.waitForFunction(() => document.getElementById('hour-label').textContent === '15:00');
+  await page.locator('#hour-slider').fill('12');
+  await page.waitForFunction(() => document.getElementById('hour-label').textContent === '12:00');
   await page.waitForFunction(() => document.getElementById('val-sun-direct').textContent.includes('ombra'));
 
   const groundTemp = await text(page, 'thermal-result');
   assert.match(await text(page, 'val-sun-direct'), /ombra/, 'ground floor starts in shadow');
 
   await page.locator('.floor-btn[data-floor="5"]').click();
-  await page.waitForFunction(() => document.getElementById('val-sun-direct').textContent.includes('sole'));
+  await page.waitForFunction(() => !document.getElementById('val-sun-direct').textContent.includes('ombra'));
 
-  assert.match(await text(page, 'val-sun-direct'), /sole/, 'the 5th floor sees the sun');
   assert.ok(parseFloat(await text(page, 'thermal-result')) > parseFloat(groundTemp),
     'escaping the shadow warms the room');
+});
+
+// ─── T33 / T34 / T38 — window size / mobile layout ────────────────────────────
+
+test('T33: shrinking the window activates the mobile layout instead of hiding controls', async (t) => {
+  const page = await openApp(t, { buildings: false });
+  assert.equal(await page.locator('#mobile-bottom-bar').isVisible(), false, 'no mobile UI yet, at desktop width');
+
+  // Narrower than the desktop breakpoint — same as a live window resize or browser zoom.
+  // The bar is `position: fixed` — offsetParent stays null even when visible for
+  // fixed-position elements, so wait on visibility itself, not offsetParent.
+  await page.setViewportSize({ width: 500, height: 820 });
+  await page.locator('#mobile-bottom-bar').waitFor({ state: 'visible' });
+  await drawAndAnalyse(page);
+  assert.match(await text(page, 'val-q-winter'), /°C$/, 'the seasonal reading followed into the bottom bar');
+  assert.equal(await page.locator('#mobile-warning').isVisible(), false, 'this width is usable, not blocked');
+});
+
+test('T34: opening straight into a narrow window starts the mobile layout, not a block', async (t) => {
+  const page = await openApp(t, { viewport: { width: 500, height: 820 } });
+  assert.equal(await page.locator('#mobile-warning').isVisible(), false);
+  assert.ok(await page.locator('#mobile-bottom-bar').isVisible(), 'the seasonal strip is there from the start');
+  assert.ok(await page.locator('#mobile-drawer-toggle').isVisible(), 'so is the settings drawer handle');
+  assert.ok(await page.locator('#remove-room-btn').isVisible(), 'drawing is available on mobile too');
+});
+
+test('T38: an extreme width still gets the explanatory block', async (t) => {
+  const page = await openApp(t, { viewport: { width: 280, height: 700 } });
+  await page.waitForFunction(() =>
+    getComputedStyle(document.getElementById('mobile-warning')).display === 'flex');
+  assert.equal(await page.locator('.leaflet-control-zoom').count(), 0, 'the app never started at this width');
 });

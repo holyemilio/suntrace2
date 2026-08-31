@@ -5,6 +5,40 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) — [Semantic V
 
 ---
 
+## [3.1.1] — 2026-08-31
+
+Tolleranza di classificazione esterno/interno abbassata da 2.5 a 1.0 m.
+
+- 📏 **`EDGE_TOLERANCE_M`: 2.5 m → 1.0 m** — a 2.5 m, una stanza disegnata vicino a uno spigolo dell'edificio poteva avere più lati classificati "esposti" da muri diversi, indipendentemente da come era orientata (il controllo misura solo la distanza, non l'allineamento). Verificato con un caso concreto: una stanza ruotata di 25° vicino a uno spigolo passava da 3 lati esposti su 4 (a 2.5m) a 1 solo, quello vero (a 1.0m). Resta comunque abbastanza largo da assorbire un normale errore di disegno.
+
+---
+
+## [3.1.0] — 2026-08-31
+
+Colorazione per-parete di sole/ombra, geolocalizzazione anche in home, e un bug di sovrapposizione corretto.
+
+- 🟢⬜ **Ogni parete esposta mostra se prende sole *ora***, non solo il totale della stanza: verde = sole diretto, grigio = bloccata da un edificio vicino in questo momento. Riusa lo stesso calcolo già fatto per il valore aggregato "Sole diretto", non una seconda passata. Le pareti verso un altro vano restano com'erano: solo il contorno sottile del poligono, mai un colore proprio — ed è ora spiegato in legenda, non solo deducibile dallo spessore.
+- 📌 **Icona posizione cambiata** da 🎯 a 📌 (il classico segnaposto), ovunque appare.
+- 🏠📌 **Geolocalizzazione anche sulla landing page** — un pulsante accanto alla ricerca porta dritto su `app.html` centrato sulla propria posizione reale (nuovi parametri `?lat=&lng=`), senza passare dalla ricerca testuale.
+- 🐛 **Bug: il pulsante "rimuovi stanza" copriva il pannello istruzioni** — entrambi occupavano lo stesso rettangolo (42×42 px) quando il pannello 💡 era compresso, quindi chiuderlo lo rendeva irriapribile: il click ci andava sopra al pulsante nuovo, non al toggle sotto. Spostato oltre l'altezza massima che il pannello raggiunge da aperto (118px, misurata dal vivo — non a occhio).
+- 📐 **Metratura della stanza mostrata** — la superficie disegnata (già usata internamente per lo smorzamento stagionale) ora si vede anche in sidebar accanto alle coordinate e nel dettaglio del Comfort Rate, non solo nel calcolo interno.
+- 📝 **Legenda: aggiunta la voce mancante** — il contorno sottile (parete verso un altro vano) non era spiegato da nessuna parte, solo deducibile per differenza con quello spesso.
+
+---
+
+## [3.0.0] — 2026-08-30
+
+SunTrace 2.0: si disegna la stanza, non più un punto. Via la bussola, dentro un modello climatico a livello di stanza.
+
+- 🖊️ **Disegno del perimetro della stanza** — l'interazione cambia radicalmente: invece di cliccare un punto sulla mappa, si clicca un vertice per parete e si chiude l'anello tornando vicino al primo punto. La stanza si **blocca** istantaneamente alla chiusura (nessun editing successivo, per evitare tocchi accidentali) e un nuovo pulsante 🗑️ (accanto a quello di geolocalizzazione) la rimuove per permettere di ridisegnare da zero. Non c'è più alcuna analisi finché non si disegna una stanza — anche al primo avvio.
+- 🧭 **Bussola rimossa** — l'orientamento di ogni parete non si sceglie più a mano: deriva geometricamente dai lati del poligono disegnato. Sparisce il quadrante, i suoi 8 pulsanti cardinali, il drag-to-rotate e il relativo widget mobile.
+- 🏘️ **Classificazione automatica delle pareti** — ogni lato disegnato viene confrontato con il perimetro reale dell'edificio OSM che contiene la stanza: se è a ridosso del muro esterno (entro ~2.5 m) è **esposto al sole** (variabile, stagionale), altrimenti è **verso un altro vano** (valore fisso e neutro, nessun guadagno solare). Senza un edificio OSM disponibile, ogni parete resta prudenzialmente esposta.
+- 🌡️ **Modello climatico a livello di stanza** — un solo risultato combinato invece di N pannelli per N pareti: le pareti esterne pesano per la propria lunghezza, quelle interne tirano verso il valore neutro, e l'intera escursione stagionale viene smorzata o amplificata in base alla superficie della stanza (una stanza piccola scalda/raffredda più in fretta di una grande).
+- 🗺️ **Legenda aggiornata** — "Punto analizzato"/"Orientamento facciata" diventano "Perimetro stanza"/"Parete esposta al sole"; "Area di analisi" (il vecchio cerchio di 35 m) sparisce, sostituita dal perimetro stesso.
+- ✅ **Suite e2e riscritta** (25 casi) per il nuovo flusso — disegno via click sulla mappa, chiusura del poligono, rimozione, e gli stessi controlli di prima (mese/ora, infissi/isolamento, lingua, confini, piano/ombra) riletti sul modello a stanza.
+
+---
+
 ## [2.6.2] — 2026-08-28
 
 Rotazione libera della bussola, e il tetto come vera e propria superficie.

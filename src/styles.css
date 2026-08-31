@@ -888,7 +888,7 @@ button:active { transform: translateY(1px); }
 .loading-pulse { animation: slowPulse 1.1s ease-in-out infinite; }
 
 /* ─── glass panels on the map ────────────────────────────────────────────── */
-.lang-switch, .floor-bar, .map-legend, .compass, .map-hint {
+.lang-switch, .floor-bar, .map-legend, .map-hint {
   background: var(--glass);
   border: 1px solid var(--stroke-2);
   box-shadow: var(--shadow-card);
@@ -926,105 +926,13 @@ button:active { transform: translateY(1px); }
   color: var(--accent-ink);
 }
 
-/* ─── facade compass (bottom-right of the map) ───────────────────────────── */
-.compass {
-  position: absolute;
-  bottom: 26px;
-  right: 14px;
-  z-index: 1100;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 10px;
-  border-radius: var(--radius-lg);
-}
-
-.compass-dial {
-  position: relative;
-  width: 104px;
-  height: 104px;
-  border-radius: 50%;
-  border: 1px solid var(--stroke-2);
-  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.035), transparent 70%);
-  cursor: grab;
-  touch-action: none;   /* dragging rotates the facade, not the page/map */
-}
-.compass-dial.dragging { cursor: grabbing; }
-.compass-dial.dragging .compass-needle { transition: none; }
-
-/* The roof has no facing direction — freeze and dim the dial rather than
-   leave it clickable with no effect on the result. */
-.compass.roof-disabled { opacity: 0.4; pointer-events: none; }
-
-/* the eight direction buttons, laid out around the rim */
-.compass-dir {
-  position: absolute;
-  width: 26px;
-  height: 18px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  border-radius: var(--pill);
-  color: var(--text-muted);
-  font-family: var(--mono);
-  font-size: 0.58rem;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: none;
-  transition: color 0.15s, background 0.15s;
-  pointer-events: auto;
-}
-.compass-dir:hover { color: var(--text-strong); background: rgba(255, 255, 255, 0.08); filter: none; }
-.compass-dir.active { background: var(--accent); color: var(--accent-ink); }
-
-/* needle: points at the exact facade azimuth (0° = north = up) */
-.compass-needle {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 3px;
-  height: 30px;
-  margin: -30px 0 0 -1.5px;
-  transform-origin: 50% 100%;
-  border-radius: 2px;
-  background: linear-gradient(to top, var(--green), rgba(53, 208, 127, 0.15));
-  transform: rotate(0deg);
-  transition: transform 0.35s ease;
-}
-.compass-hub {
-  position: absolute;
-  top: 50%; left: 50%;
-  width: 8px; height: 8px;
-  margin: -4px 0 0 -4px;
-  border-radius: 50%;
-  background: var(--green);
-  box-shadow: 0 0 0 3px rgba(53, 208, 127, 0.2);
-}
-
-/* sun marker: sits on the rim at the solar azimuth */
-.compass-sun {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 18px;
-  height: 18px;
-  margin: -9px 0 0 -9px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
-  color: var(--accent);
-  text-shadow: 0 0 12px rgba(245, 179, 1, 0.6);
-  transform: rotate(var(--sun-a, 0deg)) translateY(-50px) rotate(calc(-1 * var(--sun-a, 0deg)));
-  transition: transform 0.35s ease, opacity 0.2s;
-}
-.compass-sun.hidden { opacity: 0; }
-.compass-sun.shaded { color: var(--text-muted); opacity: 0.55; text-shadow: none; }
-
-@media (max-width: 768px) { .compass { display: none; } }
+/* ─── remove-room button ─────────────────────────────────────────────────── */
+/* Below #map-hint (top:66px), clear of its fully-EXPANDED height (118px) —
+   not just its collapsed 42px icon. Placing it at 66px looked fine collapsed
+   but sat exactly on top of the hint's collapsed icon (same 42×42 box),
+   silently eating every click meant to reopen the hint. Measured live via
+   Playwright before picking this offset — don't eyeball it next time either. */
+#remove-room-btn { top: 194px; left: 14px; }
 
 /* ─── floor selector (top-center of the map) ─────────────────────────────── */
 .floor-bar {
@@ -1180,6 +1088,8 @@ button:active { transform: translateY(1px); }
   box-shadow: 0 0 0 1px var(--green);
 }
 .lg-facade { height: 4px; background: var(--green); border-radius: 2px; }
+.lg-facade-dim { height: 4px; background: #64748b; border-radius: 2px; }
+.lg-facade-interior { height: 2px; background: var(--green); border-radius: 1px; opacity: 0.6; }
 .lg-sun { height: 0; border-top: 2px dashed var(--accent); }
 .lg-shadow { height: 12px; background: rgba(148, 163, 184, 0.35); border-radius: 3px; }
 .lg-area {
@@ -1711,23 +1621,6 @@ button:active { transform: translateY(1px); }
     padding: 0;
     background: transparent;
     border: none;
-  }
-
-  /* The compass dial reparented into the 🧭 widget: shed the absolute
-     positioning and glass shell (the widget already provides both), and
-     override the bare `.compass { display: none }` mobile rule above. */
-  .mobile-widget .compass {
-    display: flex;
-    position: static;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    backdrop-filter: none;
-    padding: 4px 0 2px;
-  }
-  #mobile-compass-body {
-    display: flex;
-    justify-content: center;
   }
 
   /* ── persistent bottom bar: the seasons, and the comfort badge ─────────── */
