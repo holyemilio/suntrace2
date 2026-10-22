@@ -4,16 +4,18 @@
 
 <p align="center"><strong>Italiano</strong> · <a href="README.en.md">English</a></p>
 
-# SunTrace — Simulatore Microclimatico Urbano
+# SunTrace 2 — Simulatore Microclimatico Urbano
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-60%20unit%20%2B%2023%20e2e-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-72%20unit%20%2B%2025%20e2e-brightgreen)]()
 [![Engine](https://img.shields.io/badge/solar%20engine-Meeus%20%2F%20SPA-blue)]()
-[![Live Demo](https://img.shields.io/badge/demo-live-f5b301)](https://holyemilio.github.io/Suntrace/)
+[![Live Demo](https://img.shields.io/badge/demo-live-f5b301)](https://holyemilio.github.io/suntrace2/)
 
-**[🌐 Prova SunTrace live](https://holyemilio.github.io/Suntrace/)** — nessuna installazione richiesta.
+**[🌐 Prova SunTrace 2 live](https://holyemilio.github.io/suntrace2/)** — nessuna installazione richiesta.
 
-**SunTrace** è un simulatore microclimatico urbano che analizza l'esposizione solare di facciate e locali in qualsiasi punto d'Italia. Seleziona un punto sulla mappa, scegli mese e ora, e ottieni in tempo reale: posizione solare corretta (Meeus/SPA), medie climatiche reali del luogo (Open-Meteo), stima termica stagionale e un **Comfort Rate** a stelle con consigli. Interfaccia bilingue **IT/EN**.
+**SunTrace 2** è un simulatore microclimatico urbano: invece di analizzare un singolo punto, **disegni il perimetro della tua stanza** sulla mappa. Ogni lato del poligono diventa una parete, con orientamento derivato geometricamente e classificata automaticamente come esposta al sole o rivolta verso un altro vano dell'edificio (confronto con il perimetro OSM reale). Il risultato è un unico modello climatico "a livello di stanza": posizione solare corretta (Meeus/SPA), medie climatiche reali del luogo (Open-Meteo), stima termica stagionale pesata per parete e area, e un **Comfort Rate** a stelle con consigli. Interfaccia bilingue **IT/EN**, layout mobile dedicato.
+
+> È il fork architetturale di **SunTrace 1** ([holyemilio/Suntrace](https://github.com/holyemilio/Suntrace), live su GitHub Pages), che invece si basava su un punto singolo + bussola per l'orientamento facciata. Il perché del cambio è nel [CHANGELOG](CHANGELOG.md#300--2026-08-30).
 
 ---
 
@@ -21,24 +23,22 @@
 
 | Feature | Dettaglio |
 |---|---|
-| **Arco solare dinamico** | Cupola celeste parabolica (Sky Dome) in SVG con punto solare in tempo reale, alba/tramonto e griglia bento telemetrica. |
-| **Brand Icon vettoriale** | Nuova icona a 1024×1024 con sole, traiettoria, facciata architettonica, finestra calda e cuneo d'ombra. |
+| **Disegno del perimetro stanza** | Click per vertice sulla mappa, chiusura dell'anello vicino al primo vertice blocca istantaneamente la stanza; un bottone 🗑️ la rimuove per ridisegnare da zero. Nessuna analisi finché non si disegna. |
+| **Classificazione automatica delle pareti** | Ogni lato è confrontato col perimetro OSM reale dell'edificio: a ridosso del muro esterno → **esposto al sole** (stagionale, variabile); altrimenti → **verso un altro vano** (valore fisso, neutro). Senza edificio OSM disponibile, fallback prudenziale: tutto esposto. |
+| **Sole diretto per parete, in tempo reale** | Ogni parete esposta mostra se in questo momento prende sole diretto (verde) o è in ombra di un edificio vicino (grigio), non solo il totale della stanza. |
+| **Modello climatico a livello di stanza** | Le pareti esterne pesano per la propria lunghezza, quelle interne tirano verso un valore neutro, l'intera escursione stagionale si smorza o amplifica in base alla superficie della stanza (mostrata in sidebar e nel dettaglio Comfort Rate). |
 | **Motore solare Meeus/SPA** | Declinazione, Equazione del Tempo, rifrazione atmosferica (Bennet). Errore < 0.5° su elevazione e azimut rispetto a SunCalc. |
-| **Alba / tramonto precisi** | Calcolo con angolo di depressione −0.833° (rifrazione + disco solare). |
-| **Fuso orario + ora legale** | Usa `Intl.DateTimeFormat / Europe/Rome` — nessun offset hardcoded. |
-| **Dati climatici reali (Open-Meteo)** | Medie mensili 1991–2020 del punto cliccato, cache in `localStorage`, fallback su Roma. |
-| **Fattori atmosferici** | Umidità e vento reali → temperatura percepita (*feels-like*) integrata nel Comfort Rate; umidità e pioggia annua nel dettaglio. |
+| **Il 5° piano è il tetto** | Superficie orizzontale, non una parete: il guadagno solare dipende solo dall'elevazione del sole, mai da un orientamento. |
+| **Dati climatici reali (Open-Meteo)** | Medie mensili 1991–2020 del punto disegnato, cache in `localStorage`, fallback su Roma. |
 | **Comfort Rate** | Indice a 5 stelle (orientamento, sole, ostruzioni, infissi, isolamento) con dettaglio, esposizione solare e consigli. |
-| **Bussola facciata** | Selettore circolare sulla mappa con le 8 direzioni: mostra l'ago della facciata, la posizione del sole e se lo riceve davvero. |
-| **Stima termica stagionale** | Ciclo diurno sinusoidale con guadagno solare sulla facciata; modificatori per infissi e isolamento. |
-| **Geofencing Italia** | Reverse-geocoding: distingue terraferma IT, acque nazionali ed estero, con messaggi dedicati. |
-| **Ombre reali (OSM)** | Facciata dal muro più vicino e ombre calcolate tracciando un raggio verso il sole attraverso gli edifici vicini, dall'altezza del piano scelto. |
+| **Ombre reali (OSM)** | Ray-casting verso il sole attraverso gli edifici OSM vicini, dall'altezza del piano scelto. |
+| **Geofencing Italia** | Reverse-geocoding: distingue terraferma IT (incluse le enclavi Vaticano/San Marino), acque nazionali ed estero, con messaggi dedicati. |
+| **Geolocalizzazione** | Anche dalla landing page (porta dritto su `app.html` centrato sulla propria posizione), oltre che nel simulatore. |
+| **Landing + simulatore** | Due pagine separate: `index.html` (missione, ricerca) e `app.html` (il simulatore vero e proprio). |
+| **Layout mobile dedicato** | Sotto i 768px: barra inferiore, drawer "Impostazioni", foglio "Info", due widget solare/clima — niente sidebar bloccata. |
 | **Bilingue IT/EN** | Selettore in-app, rilevamento automatico della lingua del browser, scelta memorizzata. |
-| **Autocomplete Nominatim** | Debounce 420ms, limitato all'Italia; la ricerca parte solo col pulsante «Vai». |
-| **Geolocalizzazione** | Messaggi di errore specifici per PERMISSION_DENIED / POSITION_UNAVAILABLE / TIMEOUT. |
-| **Zero dipendenze di runtime** | Leaflet e font serviti in locale (`vendor/`), nessun CDN: le uniche richieste esterne vanno alle API pubbliche senza chiave — OpenStreetMap (mappa e edifici), Nominatim, Open-Meteo. Nessun bundler. |
-| **Clima del luogo** | Umidità, vento, pioggia e percepita del mese scelto, dalle normali reali del punto. |
-| **60 unit + 23 e2e** | `node --test` per motore solare, modello termico e geometria delle ombre; Playwright guida l'app in un browser vero. |
+| **Zero dipendenze di runtime** | Leaflet e font serviti in locale (`vendor/`), nessun CDN: le uniche richieste esterne vanno alle API pubbliche senza chiave — OpenStreetMap, Nominatim, Overpass, Open-Meteo. Nessun bundler. |
+| **72 unit + 25 e2e** | `node --test` per motore solare, modello termico e geometria/ombre; Playwright guida l'app in un browser vero. |
 
 ---
 
@@ -48,6 +48,7 @@
 - **[Testbook](docs/testbook.html)** — piano di test in tabella, con esito da compilare, per verificare tutte le funzioni.
 - **[Testbook (CSV)](docs/testbook.csv)** — la stessa checklist, scaricabile e apribile in Excel (separatore `;`, UTF-8).
 - **[Stato dei lavori](docs/stato-lavori.md)** — dove siamo, cosa è in sospeso e le trappole già incontrate.
+- **[Privacy](privacy.html)** — quali servizi esterni contatta il browser e perché.
 
 ---
 
@@ -67,6 +68,10 @@ Basato su **Meeus, "Astronomical Algorithms" 2nd ed. (1998), cap. 25–27**:
 8. **Azimut** con la formula corretta `cos Az = (sin δ − sin elev·sin lat)/(cos elev·cos lat)`
 
 **Target di accuratezza**: < 0.5° su elevazione, < 1° su azimut — verificato contro SunCalc su 23 casi di test.
+
+### Geometria stanza (`src/shadow.js`)
+
+Ogni lato del poligono disegnato diventa una parete: `outwardNormalAz` ne deriva l'azimut, `classifyRoomEdges` lo confronta col perimetro OSM dell'edificio ospite (tolleranza `EDGE_TOLERANCE_M`) per decidere se è esposto o interno, `polygonArea`/`polygonCentroid` calcolano superficie e centro per il modello climatico.
 
 ---
 
@@ -97,7 +102,7 @@ premi `Ctrl+C` nella finestra del Terminale che si apre.
 **Da terminale:**
 
 ```bash
-cd "SunTrace"
+cd suntrace2
 python3 -m http.server 8000
 # poi apri http://localhost:8000
 ```
@@ -110,34 +115,34 @@ python3 -m http.server 8000
 > oppure scarica il pacchetto ufficiale da [nodejs.org](https://nodejs.org).
 
 ```bash
-# Installa suncalc (solo devDependency per i test)
+# Installa suncalc e Playwright (solo devDependency per i test)
 npm install
 
-# Esegui i 60 unit test (Node 18+)
+# Esegui i 72 unit test (Node 18+)
 npm test
-# oppure: node --test tests/solar.test.js
 ```
 
-**Output atteso**: 60 pass, 0 fail.
+**Output atteso**: 72 pass, 0 fail.
 
 ### Test end-to-end (browser reale)
 
 Guidano l'app in un browser headless, con le API esterne simulate per risultati
-deterministici: avvio, ricerca, geofencing, cursori, infissi/isolamento, Comfort
-Rate, lingua, bussola, piani, ombre, clima e finestra stretta.
+deterministici: avvio, disegno del perimetro stanza, geofencing, cursori,
+infissi/isolamento, Comfort Rate, lingua, piani, ombre, clima e finestra stretta
+(layout mobile).
 
 ```bash
 npx playwright install chromium   # una sola volta (~95 MB)
 npm run test:e2e
 ```
 
-**Output atteso**: 22 pass, 0 fail.
+**Output atteso**: 25 pass, 0 fail.
 
 ---
 
 ## 🌍 Deploy su GitHub Pages
 
-**Live su <https://holyemilio.github.io/Suntrace/>** — Source: **Deploy from
+**Live su <https://holyemilio.github.io/suntrace2/>** — Source: **Deploy from
 a branch** → `main` → `/` (root), da **Settings → Pages** nel repository.
 Essendo `index.html` la landing page, il dominio radice mostra quella; il
 simulatore è su `/app.html`.
@@ -147,37 +152,44 @@ simulatore è su `/app.html`.
 ## 📁 Struttura
 
 ```
-SunTrace/
+suntrace2/
 ├── index.html          # Landing page: missione del progetto + ricerca
-├── app.html            # Simulatore vero e proprio (ex entry point)
+├── app.html            # Simulatore vero e proprio
+├── privacy.html         # Informativa privacy (IT/EN)
 ├── src/
 │   ├── solar.js        # Motore astronomico puro (Meeus/SPA) — senza DOM
-│   ├── climate.js      # Modello termico stagionale e Comfort Rate
-│   ├── shadow.js       # Geometria: orientamento facciata e ombre (line-of-sight)
-│   ├── ui.js           # Logica del simulatore, Leaflet, modal, geofencing
-│   ├── landing.js      # Logica della landing: lingua, ricerca → app.html, reveal
-│   ├── i18n.js         # Dizionario IT/EN e motore di traduzione (condiviso)
-│   ├── tokens.css      # Design token (:root) condivisi da entrambe le pagine
-│   ├── styles.css      # Stili del simulatore (mobile-first, WCAG AA)
-│   └── landing.css     # Stili della landing page
+│   ├── climate.js      # Modello termico stagionale a livello di stanza
+│   ├── shadow.js        # Geometria: pareti stanza, classificazione, ombre reali
+│   ├── ui.js            # Logica del simulatore, Leaflet, disegno stanza, layout mobile
+│   ├── landing.js       # Logica della landing: lingua, ricerca → app.html, reveal
+│   ├── legal.js          # Logica della pagina privacy
+│   ├── i18n.js           # Dizionario IT/EN e motore di traduzione (condiviso)
+│   ├── tokens.css        # Design token (:root) condivisi da tutte le pagine
+│   ├── styles.css        # Stili del simulatore (mobile-first)
+│   ├── landing.css       # Stili della landing page
+│   └── legal.css         # Stili della pagina privacy
 ├── vendor/
-│   ├── fonts/          # Space Grotesk + IBM Plex Mono self-hostati (niente Google Fonts)
-│   └── leaflet/        # Leaflet 1.9.4 self-hostato (niente CDN)
+│   ├── fonts/           # Space Grotesk + IBM Plex Mono self-hostati (niente Google Fonts)
+│   └── leaflet/         # Leaflet 1.9.4 self-hostato (niente CDN)
 ├── server/
-│   └── overpass-cache/ # Cloudflare Worker: cache 30gg davanti a Overpass (opzionale)
+│   └── overpass-cache/ # Cloudflare Worker: cache 30gg davanti a Overpass (opzionale, non deployato)
 ├── tests/
-│   ├── solar.test.js   # 23 test — motore astronomico (oracle SunCalc)
-│   ├── climate.test.js # 21 test — modello termico e Comfort Rate
-│   ├── shadow.test.js  # 16 test — geometria facciate e ombre
-│   └── e2e/app.e2e.js  # 22 test end-to-end (Playwright, browser headless)
+│   ├── solar.test.js    # 23 test — motore astronomico (oracle SunCalc)
+│   ├── climate.test.js  # modello termico, Comfort Rate e roomSeasonalTemperatures
+│   ├── shadow.test.js   # geometria stanza, classificazione pareti, ombre
+│   └── e2e/app.e2e.js   # 25 test end-to-end (Playwright, browser headless)
 ├── .github/
 │   └── workflows/ci.yml # CI: unit + parità i18n + e2e a ogni push
 ├── docs/
-│   └── case-study.md   # Case study tecnico
-├── CLAUDE.md           # Contesto di progetto per le sessioni AI
+│   ├── case-study.md    # Case study tecnico
+│   ├── stato-lavori.md  # Stato lavori, pendenze, trappole già pagate
+│   ├── manuale-utente.html
+│   └── testbook.html / testbook.csv
+├── CLAUDE.md            # Contesto di progetto per le sessioni AI
 ├── README.md
+├── README.en.md
 ├── CHANGELOG.md
-├── LICENSE             # MIT
+├── LICENSE              # MIT
 ├── .gitignore
 └── package.json
 ```
@@ -186,20 +198,24 @@ SunTrace/
 
 ## 🏗 How it was built
 
-SunTrace è stato progettato per essere **zero-dependency** e **deployabile senza build step**. Il codice è suddiviso in moduli ES nativi (`type="module"`) importati direttamente dall'HTML.
+SunTrace 2 è stato progettato per essere **zero-dependency** e **deployabile senza build step**. Il codice è suddiviso in moduli ES nativi (`type="module"`) importati direttamente dall'HTML.
 
 Il motore astronomico (`solar.js`) è interamente **puro** (nessun accesso al DOM, nessuna variabile globale), il che lo rende:
 - Testabile con `node --test` senza browser
 - Riutilizzabile in altri contesti (worker, server-side)
 
-L'interfaccia usa Leaflet 1.9.4 (self-hosted in `vendor/leaflet/`, hash verificato contro leafletjs.com) per la mappa e l'API pubblica Nominatim per il geocoding, rispettando i [termini di utilizzo](https://operations.osmfoundation.org/policies/nominatim/) con debounce ≥ 420ms e `countrycodes=it`. Anche i font (Space Grotesk, IBM Plex Mono) sono self-hostati in `vendor/fonts/`: nessuna richiesta dei visitatori raggiunge Google o altri CDN.
+La geometria della stanza (`shadow.js`) è altrettanto pura: prende in input i vertici disegnati e il perimetro OSM dell'edificio, non tocca il DOM.
+
+L'interfaccia usa Leaflet 1.9.4 (self-hosted in `vendor/leaflet/`, hash verificato contro leafletjs.com) per la mappa, l'API pubblica Overpass per il perimetro degli edifici e Nominatim per il geocoding, rispettando i [termini di utilizzo](https://operations.osmfoundation.org/policies/nominatim/) con debounce ≥ 420ms e `countrycodes=it,va,sm`. Anche i font (Space Grotesk, IBM Plex Mono) sono self-hostati in `vendor/fonts/`: nessuna richiesta dei visitatori raggiunge Google o altri CDN.
 
 ---
 
 ## ⚠️ Limitazioni
 
-- Le temperature usano le **medie climatiche reali** del punto selezionato (Open-Meteo, normali 1991–2020), con la tabella di Roma solo come *fallback* offline in caso di errore di rete. Il modello termico dell'edificio resta però **euristico** e non sostituisce un APE (Attestato di Prestazione Energetica) certificato.
-- Orientamento e ombre sono **calcolati sugli edifici reali di OpenStreetMap** (via Overpass): l'orientamento dal muro più vicino, l'ombra tracciando un raggio verso il sole e verificando se un tetto lo intercetta, all'altezza del piano scelto. Le altezze OSM spesso mancano: in tal caso si assumono 3 piani (9 m), e si considerano solo gli edifici entro 90 m.
+- Le temperature usano le **medie climatiche reali** del punto disegnato (Open-Meteo, normali 1991–2020), con la tabella di Roma solo come *fallback* offline in caso di errore di rete. Il modello termico dell'edificio resta però **euristico** e non sostituisce un APE (Attestato di Prestazione Energetica) certificato.
+- Orientamento e classificazione delle pareti sono **calcolati sugli edifici reali di OpenStreetMap** (via Overpass): senza un edificio OSM disponibile, ogni parete resta prudenzialmente "esposta". Le altezze OSM spesso mancano: in tal caso si assumono 3 piani (9 m), e si considerano solo gli edifici entro 90 m.
+- Nessuna validazione contro poligoni auto-intersecanti o degeneri in fase di disegno.
+- Il cuneo d'ombra sulla mappa resta uno solo, disegnato dal centroide della stanza — non uno per parete.
 - Il modello non include: massa termica, infiltrazioni, apporti interni, ponti termici.
 
 ---

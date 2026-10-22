@@ -5,6 +5,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) — [Semantic V
 
 ---
 
+## [3.1.2] — 2026-09-02
+
+Deploy live su GitHub Pages e riallineamento della documentazione a SunTrace 2.
+
+- 🌍 **Deploy live** — pubblicato su GitHub Pages: <https://holyemilio.github.io/suntrace2/> (root → `index.html` landing, simulatore su `/app.html`).
+- 🐛 **Fix: link GitHub nel footer del simulatore** puntava ancora al repository di SunTrace 1 (`holyemilio/Suntrace`) invece che a `holyemilio/suntrace2` — copiato all'epoca del fork architetturale e mai aggiornato.
+- 📝 **README (IT/EN) e case study riscritti** — descrivevano ancora l'interazione di SunTrace 1 (bussola/punto singolo, 60 unit + 22/23 e2e, link di deploy v1): aggiornati al disegno del perimetro stanza, classificazione per-parete, modello climatico d'ambiente, layout mobile, 72 unit + 25 e2e.
+- 📝 **`CLAUDE.md` disallineato**: dichiarava ancora versione 3.0.0 e repo "non ancora deployata" nonostante 3.1.0/3.1.1 fossero già in `CHANGELOG.md`; pendenze riallineate a `docs/stato-lavori.md` (rimossa quella sulla metratura stanza, già risolta in 3.1.0).
+- 📋 **Rischi da deploy pubblico + multi-dispositivo analizzati** (`docs/stato-lavori.md`, voce 15) — nessun codice cambiato, solo documentazione: Overpass sotto carico reale, cache statica di GitHub Pages senza `no-store`, `localStorage` non sincronizzato tra dispositivi, degrado silenzioso senza UI di errore. Priorità del deploy del worker Cloudflare (cache Overpass, mai attivato) alzata di conseguenza.
+
+---
+
 ## [3.1.1] — 2026-08-31
 
 Tolleranza di classificazione esterno/interno abbassata da 2.5 a 1.0 m.

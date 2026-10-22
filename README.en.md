@@ -4,16 +4,18 @@
 
 <p align="center"><a href="README.md">Italiano</a> · <strong>English</strong></p>
 
-# SunTrace — Urban Microclimate Simulator
+# SunTrace 2 — Urban Microclimate Simulator
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-60%20unit%20%2B%2023%20e2e-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-72%20unit%20%2B%2025%20e2e-brightgreen)]()
 [![Engine](https://img.shields.io/badge/solar%20engine-Meeus%20%2F%20SPA-blue)]()
-[![Live Demo](https://img.shields.io/badge/demo-live-f5b301)](https://holyemilio.github.io/Suntrace/)
+[![Live Demo](https://img.shields.io/badge/demo-live-f5b301)](https://holyemilio.github.io/suntrace2/)
 
-**[🌐 Try SunTrace live](https://holyemilio.github.io/Suntrace/)** — no install needed.
+**[🌐 Try SunTrace 2 live](https://holyemilio.github.io/suntrace2/)** — no install needed.
 
-**SunTrace** is an urban microclimate simulator that analyses the solar exposure of facades and rooms anywhere in Italy. Pick a point on the map, choose a month and hour, and get in real time: an accurate solar position (Meeus/SPA), real local climate normals (Open-Meteo), a seasonal thermal estimate and a star-based **Comfort Rate** with tips. Bilingual **IT/EN** interface.
+**SunTrace 2** is an urban microclimate simulator: instead of analysing a single point, you **draw your room's perimeter** on the map. Every edge of the polygon becomes a wall, with its orientation derived geometrically and automatically classified as exposed to the sun or facing another room of the building (compared against the real OSM building outline). The result is a single "room-level" climate model: accurate solar position (Meeus/SPA), real local climate normals (Open-Meteo), a seasonal thermal estimate weighted by wall and room size, and a star-based **Comfort Rate** with tips. Bilingual **IT/EN** interface, with a dedicated mobile layout.
+
+> This is the architectural fork of **SunTrace 1** ([holyemilio/Suntrace](https://github.com/holyemilio/Suntrace), live on GitHub Pages), which relied on a single point plus a compass for facade orientation. The reasoning behind the change is in the [CHANGELOG](CHANGELOG.md#300--2026-08-30).
 
 ---
 
@@ -21,24 +23,22 @@
 
 | Feature | Detail |
 |---|---|
-| **Dynamic solar arc** | Parabolic sky dome in SVG with real-time solar orb tracking, sunrise/sunset times, and bento telemetry grid. |
-| **Vector Brand Icon** | New 1024×1024 vector icon with sun, trajectory, architectural facade, warm glowing window, and cast shadow wedge. |
+| **Room perimeter drawing** | Click a vertex per wall on the map; closing the loop near the first vertex locks the room instantly. A 🗑️ button removes it to redraw from scratch. No analysis runs until a room is drawn. |
+| **Automatic wall classification** | Each edge is compared against the real OSM outline of the building: close to the outer wall → **exposed to the sun** (seasonal, variable); otherwise → **facing another room** (fixed, neutral value). With no OSM building found, a conservative fallback treats every wall as exposed. |
+| **Live per-wall sun state** | Each exposed wall shows whether it gets direct sun right now (green) or is shadowed by a nearby building (grey) — not just the room's aggregate total. |
+| **Room-level climate model** | Exterior walls are weighted by their own length, interior walls pull toward a neutral value, and the whole seasonal swing is damped or amplified based on the room's floor area (shown in the sidebar and in the Comfort Rate detail). |
 | **Meeus/SPA solar engine** | Declination, Equation of Time, atmospheric refraction (Bennet). Error < 0.5° on elevation and azimuth vs SunCalc. |
-| **Accurate sunrise / sunset** | Computed with the −0.833° depression angle (refraction + solar disc). |
-| **Time zone + DST** | Uses `Intl.DateTimeFormat / Europe/Rome` — no hardcoded offset. |
-| **Real climate data (Open-Meteo)** | 1991–2020 monthly normals for the clicked point, cached in `localStorage`, with a Rome fallback. |
-| **Atmospheric factors** | Real humidity and wind → a *feels-like* temperature in the Comfort Rate; humidity and annual rainfall in the detail. |
+| **The 5th floor is the roof** | A horizontal surface, not a wall: solar gain depends only on the sun's elevation, never on an orientation. |
+| **Real climate data (Open-Meteo)** | 1991–2020 monthly normals for the drawn point, cached in `localStorage`, with a Rome fallback. |
 | **Comfort Rate** | 5-star index (orientation, sun, obstructions, glazing, insulation) with a detail view, sun exposure and tips. |
-| **Facade compass** | A circular selector on the map with the eight directions: shows the facade needle, where the sun is, and whether it actually reaches the wall. |
-| **Seasonal thermal estimate** | Sinusoidal diurnal cycle with solar gain on the facade; modifiers for glazing and insulation. |
-| **Italy geofencing** | Reverse geocoding distinguishes Italian land, national waters and abroad, each with its own message. |
-| **Real shadows (OSM)** | Facade from the nearest wall, and shadows cast by ray-tracing to the sun through nearby buildings from your floor height. |
+| **Real shadows (OSM)** | Ray-tracing toward the sun through nearby OSM buildings, from the selected floor's height. |
+| **Italy geofencing** | Reverse geocoding distinguishes Italian land (Vatican/San Marino enclaves included), national waters and abroad, each with its own message. |
+| **Geolocation** | Available from the landing page too (jumps straight into `app.html` centred on your position), as well as inside the simulator. |
+| **Landing + simulator** | Two separate pages: `index.html` (mission, search) and `app.html` (the actual simulator). |
+| **Dedicated mobile layout** | Below 768px: a bottom bar, a "Settings" drawer, an "Info" sheet, two pop-up widgets for sun/climate — no locked sidebar. |
 | **Bilingual IT/EN** | In-app switcher, automatic browser-language detection, remembered choice. |
-| **Nominatim autocomplete** | 420 ms debounce, restricted to Italy; search runs only via the “Go” button. |
-| **Geolocation** | Specific error messages for PERMISSION_DENIED / POSITION_UNAVAILABLE / TIMEOUT. |
-| **Zero runtime dependencies** | Leaflet and fonts served locally (`vendor/`), no CDNs: the only external requests go to key-free public APIs — OpenStreetMap (tiles and buildings), Nominatim, Open-Meteo. No bundler. |
-| **Local climate** | Humidity, wind, rainfall and feels-like for the selected month, from the point's real normals. |
-| **60 unit + 23 e2e** | `node --test` for the solar engine, thermal model and shadow geometry; Playwright drives the app in a real browser. |
+| **Zero runtime dependencies** | Leaflet and fonts served locally (`vendor/`), no CDNs: the only external requests go to key-free public APIs — OpenStreetMap, Nominatim, Overpass, Open-Meteo. No bundler. |
+| **72 unit + 25 e2e** | `node --test` for the solar engine, thermal model and shadow/room geometry; Playwright drives the app in a real browser. |
 
 ---
 
@@ -48,6 +48,7 @@
 - **[Testbook](docs/testbook.html)** (Italian) — a table-based test plan with a blank outcome column to run through every feature.
 - **[Testbook (CSV)](docs/testbook.csv)** (Italian) — the same checklist, downloadable and Excel-ready (`;` separator, UTF-8).
 - **[Project status](docs/stato-lavori.md)** (Italian) — where things stand, what is pending, and the traps already hit.
+- **[Privacy](privacy.html)** — which external services the browser contacts, and why.
 
 ---
 
@@ -67,6 +68,10 @@ Based on **Meeus, "Astronomical Algorithms" 2nd ed. (1998), ch. 25–27**:
 8. **Azimuth** with the correct formula `cos Az = (sin δ − sin elev·sin lat)/(cos elev·cos lat)`
 
 **Accuracy target**: < 0.5° on elevation, < 1° on azimuth — verified against SunCalc across 23 test cases.
+
+### Room geometry (`src/shadow.js`)
+
+Every edge of the drawn polygon becomes a wall: `outwardNormalAz` derives its azimuth, `classifyRoomEdges` compares it against the host building's OSM outline (tolerance `EDGE_TOLERANCE_M`) to decide whether it's exposed or interior, and `polygonArea`/`polygonCentroid` compute the room's area and centre for the climate model.
 
 ---
 
@@ -98,7 +103,7 @@ in the Terminal window that opens.
 **From a terminal:**
 
 ```bash
-cd "SunTrace"
+cd suntrace2
 python3 -m http.server 8000
 # then open http://localhost:8000
 ```
@@ -111,34 +116,34 @@ python3 -m http.server 8000
 > easiest route, or grab the official package from [nodejs.org](https://nodejs.org).
 
 ```bash
-# Install suncalc (test-only devDependency)
+# Install suncalc and Playwright (test-only devDependencies)
 npm install
 
-# Run the 60 unit tests (Node 18+)
+# Run the 72 unit tests (Node 18+)
 npm test
-# or: node --test tests/solar.test.js
 ```
 
-**Expected output**: 60 pass, 0 fail.
+**Expected output**: 72 pass, 0 fail.
 
 ### End-to-end tests (real browser)
 
 These drive the app in a headless browser with the external APIs stubbed for
-deterministic runs: boot, search, geofencing, sliders, glazing/insulation,
-Comfort Rate, language, compass, floors, shadows, climate and narrow windows.
+deterministic runs: boot, drawing the room perimeter, geofencing, sliders,
+glazing/insulation, Comfort Rate, language, floors, shadows, climate and
+narrow windows (mobile layout).
 
 ```bash
 npx playwright install chromium   # once (~95 MB)
 npm run test:e2e
 ```
 
-**Expected output**: 22 pass, 0 fail.
+**Expected output**: 25 pass, 0 fail.
 
 ---
 
 ## 🌍 Deploy to GitHub Pages
 
-**Live at <https://holyemilio.github.io/Suntrace/>** — Source: **Deploy from
+**Live at <https://holyemilio.github.io/suntrace2/>** — Source: **Deploy from
 a branch** → `main` → `/` (root), from **Settings → Pages** in the
 repository. Since `index.html` is the landing page, the root domain shows
 that; the simulator lives at `/app.html`.
@@ -148,38 +153,44 @@ that; the simulator lives at `/app.html`.
 ## 📁 Structure
 
 ```
-SunTrace/
+suntrace2/
 ├── index.html          # Landing page: the project's mission + search
-├── app.html            # The actual simulator (former entry point)
+├── app.html            # The actual simulator
+├── privacy.html        # Privacy policy (IT/EN)
 ├── src/
 │   ├── solar.js        # Pure astronomical engine (Meeus/SPA) — no DOM
-│   ├── climate.js      # Seasonal thermal model and Comfort Rate
-│   ├── shadow.js       # Geometry: facade orientation and shadows (line-of-sight)
-│   ├── ui.js           # Simulator logic, Leaflet, modal, geofencing
-│   ├── landing.js      # Landing logic: language, search → app.html, reveal
-│   ├── i18n.js         # IT/EN dictionary and translation engine (shared)
-│   ├── tokens.css      # Design tokens (:root) shared by both pages
-│   ├── styles.css      # Simulator styles (mobile-first, WCAG AA)
-│   └── landing.css     # Landing page styles
+│   ├── climate.js      # Room-level seasonal thermal model
+│   ├── shadow.js        # Geometry: room walls, classification, real shadows
+│   ├── ui.js             # Simulator logic, Leaflet, room drawing, mobile layout
+│   ├── landing.js        # Landing logic: language, search → app.html, reveal
+│   ├── legal.js           # Privacy page logic
+│   ├── i18n.js            # IT/EN dictionary and translation engine (shared)
+│   ├── tokens.css         # Design tokens (:root) shared by every page
+│   ├── styles.css         # Simulator styles (mobile-first)
+│   ├── landing.css        # Landing page styles
+│   └── legal.css          # Privacy page styles
 ├── vendor/
-│   ├── fonts/          # Self-hosted Space Grotesk + IBM Plex Mono (no Google Fonts)
-│   └── leaflet/        # Self-hosted Leaflet 1.9.4 (no CDN)
+│   ├── fonts/           # Self-hosted Space Grotesk + IBM Plex Mono (no Google Fonts)
+│   └── leaflet/         # Self-hosted Leaflet 1.9.4 (no CDN)
 ├── server/
-│   └── overpass-cache/ # Cloudflare Worker: 30-day cache in front of Overpass (optional)
+│   └── overpass-cache/ # Cloudflare Worker: 30-day cache in front of Overpass (optional, not deployed)
 ├── tests/
-│   ├── solar.test.js   # 23 tests — astronomical engine (SunCalc oracle)
-│   ├── climate.test.js # 21 tests — thermal model and Comfort Rate
-│   ├── shadow.test.js  # 16 tests — facade geometry and shadows
-│   └── e2e/app.e2e.js  # 23 end-to-end tests (Playwright, headless browser)
+│   ├── solar.test.js    # 23 tests — astronomical engine (SunCalc oracle)
+│   ├── climate.test.js  # thermal model, Comfort Rate and roomSeasonalTemperatures
+│   ├── shadow.test.js   # room geometry, wall classification, shadows
+│   └── e2e/app.e2e.js   # 25 end-to-end tests (Playwright, headless browser)
 ├── .github/
 │   └── workflows/ci.yml # CI: unit + i18n parity + e2e on every push
 ├── docs/
-│   └── case-study.md   # Technical case study
-├── CLAUDE.md           # Project brief for AI coding sessions
-├── README.md           # Italian
-├── README.en.md        # English
+│   ├── case-study.md    # Technical case study
+│   ├── stato-lavori.md  # Project status, pending items, traps already hit
+│   ├── manuale-utente.html
+│   └── testbook.html / testbook.csv
+├── CLAUDE.md            # Project brief for AI coding sessions
+├── README.md            # Italian
+├── README.en.md         # English
 ├── CHANGELOG.md
-├── LICENSE             # MIT
+├── LICENSE              # MIT
 ├── .gitignore
 └── package.json
 ```
@@ -188,20 +199,24 @@ SunTrace/
 
 ## 🏗 How it was built
 
-SunTrace is designed to be **zero-dependency** and **deployable with no build step**. The code is split into native ES modules (`type="module"`) imported directly from the HTML.
+SunTrace 2 is designed to be **zero-dependency** and **deployable with no build step**. The code is split into native ES modules (`type="module"`) imported directly from the HTML.
 
 The astronomical engine (`solar.js`) is entirely **pure** (no DOM access, no globals), which makes it:
 - Testable with `node --test`, no browser required
 - Reusable in other contexts (workers, server-side)
 
-The interface uses Leaflet 1.9.4 (self-hosted in `vendor/leaflet/`, hash verified against leafletjs.com) for the map and the public Nominatim API for geocoding, honouring its [usage policy](https://operations.osmfoundation.org/policies/nominatim/) with a ≥ 420 ms debounce and `countrycodes=it`. The fonts (Space Grotesk, IBM Plex Mono) are self-hosted in `vendor/fonts/` too: no visitor request ever reaches Google or any other CDN.
+The room geometry (`shadow.js`) is just as pure: it takes the drawn vertices and the building's OSM outline as input, never touching the DOM.
+
+The interface uses Leaflet 1.9.4 (self-hosted in `vendor/leaflet/`, hash verified against leafletjs.com) for the map, the public Overpass API for building outlines and Nominatim for geocoding, honouring its [usage policy](https://operations.osmfoundation.org/policies/nominatim/) with a ≥ 420 ms debounce and `countrycodes=it,va,sm`. The fonts (Space Grotesk, IBM Plex Mono) are self-hosted in `vendor/fonts/` too: no visitor request ever reaches Google or any other CDN.
 
 ---
 
 ## ⚠️ Limitations
 
-- Temperatures use the **real climate normals** of the selected point (Open-Meteo, 1991–2020), with the Rome table only as an offline *fallback* on network errors. The building's thermal model is however **heuristic** and is not a certified energy performance assessment (APE).
-- Orientation and shadows are **computed on real OpenStreetMap buildings** (via Overpass): orientation from the nearest wall, shadow by casting a ray toward the sun and checking whether a roof intercepts it at the selected floor height. OSM heights are often missing: 3 storeys (9 m) are assumed, and only buildings within 90 m are considered.
+- Temperatures use the **real climate normals** of the drawn point (Open-Meteo, 1991–2020), with the Rome table only as an offline *fallback* on network errors. The building's thermal model is however **heuristic** and is not a certified energy performance assessment (APE).
+- Orientation and wall classification are **computed on real OpenStreetMap buildings** (via Overpass): with no OSM building found, every wall conservatively stays "exposed". OSM heights are often missing: 3 storeys (9 m) are assumed, and only buildings within 90 m are considered.
+- No validation against self-intersecting or degenerate polygons while drawing.
+- The shadow wedge on the map stays a single one, cast from the room's centroid — not one per wall.
 - The model does not include: thermal mass, infiltration, internal gains, thermal bridges.
 
 ---

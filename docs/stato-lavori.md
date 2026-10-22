@@ -1,7 +1,7 @@
 # Stato dei lavori — SunTrace 2
 
-Ultimo aggiornamento: **31 agosto 2026** · versione **3.1.1** · repo:
-`holyemilio/suntrace2` (privata, non ancora deployata)
+Ultimo aggiornamento: **2 settembre 2026** · versione **3.1.2** · repo:
+`holyemilio/suntrace2` · **live su <https://holyemilio.github.io/suntrace2/>**
 
 Documento di passaggio di consegne: cosa è fatto, cosa è in sospeso e cosa
 sapere prima di rimettere le mani al progetto.
@@ -202,8 +202,14 @@ print('ok' if ki==ke else sorted(ki^ke))"
    simulatore per tornare indietro. **Non ancora testata con Playwright**
    (nessun e2e sulla landing: solo verificata a occhio via screenshot
    headless).
-7. ~~**Deploy live**~~ — vero per SunTrace 1 (<https://holyemilio.github.io/Suntrace/>).
-   **SunTrace 2 non è ancora deployata** (repo privata, vedi intestazione).
+7. ~~**Deploy live**~~ — **completato il 02/09/2026**: SunTrace 2 è live su
+   <https://holyemilio.github.io/suntrace2/> (GitHub Pages, root → `index.html`
+   la landing, simulatore su `/app.html`). Corretto di conseguenza un link
+   rimasto copiato da SunTrace 1: il footer di `app.html` puntava al GitHub di
+   `holyemilio/Suntrace` (repo v1) invece che a `holyemilio/suntrace2`.
+   SunTrace 1 resta separatamente live su <https://holyemilio.github.io/Suntrace/>.
+   **Non ancora verificato con traffico reale multi-dispositivo** — vedi voce 15
+   sui rischi da monitorare ora che il deploy è pubblico.
 8. ~~**Pannelli comprimibili mappa (legenda + suggerimento)**~~ — **completato**
    il 27/08/2026: entrambi collassano in un bottone 42×42 (stessa misura del
    pulsante di geolocalizzazione) con animazione fluida; il testo del
@@ -242,6 +248,40 @@ print('ok' if ki==ke else sorted(ki^ke))"
     separata futura (concordato con l'utente). Il lavoro mobile di questa
     sessione è stato costruito con attenzione ad aria-label/ruoli/focus, ma
     non è un audit completo.
+15. **Rischi da deploy pubblico + uso multi-dispositivo** (nessun codice
+    cambiato per questa voce, solo analisi — da tenere d'occhio ora che il
+    sito è live):
+    - **Overpass sotto carico reale**: è il servizio più fragile della
+      pipeline (voce 3/11) e finora è sempre stato testato con un solo
+      utente alla volta. Con più visitatori simultanei, i mirror pubblici
+      possono rate-limitare l'IP del cliente (non condiviso tra dispositivi
+      diversi, quindi il rischio è "tanti utenti lenti", non un utente che ne
+      blocca altri) — l'effetto visibile è il fallback conservativo (ogni
+      parete resta "esterna") che si attiva silenziosamente, senza errore in
+      UI, mascherando un problema di rete da presunto errore di modello.
+      **Mitigazione pronta ma non attivata**: il Cloudflare Worker in
+      `server/overpass-cache/` (cache KV 30gg) — finché `OVERPASS_PROXY_URL`
+      resta vuota in `ui.js` il rischio è intatto. Priorità alzata in
+      CLAUDE.md ora che l'app è pubblica.
+    - **Cache statica su GitHub Pages**: a differenza di `start.command`
+      (`Cache-Control: no-store`), GitHub Pages non garantisce header
+      no-cache sugli asset — browser e CDN possono servire JS/CSS vecchi
+      dopo un deploy. Nessun cache-busting oggi (niente hash nei nomi file,
+      niente `?v=` sugli script). Se un utente segnala "vedo la versione
+      vecchia" dopo un aggiornamento pubblicato, è quasi certamente questo,
+      non un bug applicativo — verificare prima con un reload forzato
+      (svuota cache) prima di investigare altrove.
+    - **`localStorage` è per-dispositivo, non sincronizzato**: la cache
+      Overpass/Open-Meteo e la lingua salvata restano isolate per browser.
+      Non è un bug (nessuno stato utente da sincronizzare, l'app non ha
+      account) ma va tenuto a mente se un utente segnala comportamento
+      diverso tra telefono e desktop: è normale, non è uno stato condiviso
+      che si è disallineato.
+    - **Nessuna UI per errori di rete/rate-limit**: se Overpass o Open-Meteo
+      falliscono sotto carico, l'app degrada silenziosamente (fallback
+      conservativo o tabella di Roma) invece di segnalarlo esplicitamente —
+      con più utenti reali questo scenario diventa più probabile che in
+      sviluppo locale.
 
 ---
 

@@ -13,8 +13,9 @@ sole o verso un altro vano, e il risultato è un unico modello climatico "a
 livello di stanza" (non una bussola/facciata singola — vedi `docs/CHANGELOG.md`
 [3.0.0] per il perché). Vanilla JS, moduli ES nativi, **nessun build step, zero
 dipendenze di runtime**. Due pagine: `index.html` (landing) e `app.html`
-(simulatore, con layout mobile dedicato sotto i 768px). Repo privata, non ancora
-deployata pubblicamente · versione **3.0.0**.
+(simulatore, con layout mobile dedicato sotto i 768px). **Live su
+<https://holyemilio.github.io/suntrace2/>** (GitHub Pages, root → `index.html`)
+· versione **3.1.2**.
 
 ## Comandi
 
@@ -64,16 +65,18 @@ elenco — se cambi i servizi contattati, aggiorna anche lei, in entrambe le lin
   — consultarlo prima di toccare layout o mappa.
 - A fine release: aggiornare `CHANGELOG.md`, `docs/stato-lavori.md` e la
   versione in `package.json`, poi commit + push sul repo del progetto
-  (`holyemilio/suntrace2`, privata).
+  (`holyemilio/suntrace2`, live su GitHub Pages).
 
-## Pendenze note (agosto 2026)
+## Pendenze note (settembre 2026)
 
-1. Deploy del worker Overpass (azione manuale utente — README in `server/overpass-cache/`).
+1. **Deploy del worker Overpass** (azione manuale utente — README in
+   `server/overpass-cache/`) — **priorità alzata** ora che l'app è live: senza
+   la cache KV, traffico reale multi-utente concentra le richieste sui mirror
+   Overpass pubblici, il servizio già più fragile della pipeline (vedi anche
+   la risposta sui rischi multi-dispositivo in `docs/stato-lavori.md`).
 2. Nessun e2e sulla landing (`landing.js` verificata solo via screenshot).
 3. Fallback mirror Overpass mai provato end-to-end.
-4. Nessuna UI mostra esplicitamente l'area della stanza (mq) — usata internamente
-   per lo smorzamento stagionale ma non esposta all'utente.
-5. Il cuneo d'ombra sulla mappa resta uno solo, disegnato dal centroide della
+4. Il cuneo d'ombra sulla mappa resta uno solo, disegnato dal centroide della
    stanza — non uno per parete (semplificazione dichiarata).
-6. Nessuna validazione esplicita contro poligoni auto-intersecanti o degeneri
+5. Nessuna validazione esplicita contro poligoni auto-intersecanti o degeneri
    in fase di disegno.
