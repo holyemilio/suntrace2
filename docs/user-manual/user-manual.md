@@ -1,8 +1,8 @@
 
 
-# SunTrace 2 — User manual
+# SunTrace — User manual
 
-SunTrace 2 tells you what it will cost to heat the room you're about to rent,
+SunTrace tells you what it will cost to heat the room you're about to rent,
 in euro a month, before you sign. This manual follows the app step by step,
 with a screenshot for each step. The screenshots show the Italian interface;
 switch to English with **IT / EN** in the app.
@@ -10,7 +10,7 @@ switch to English with **IT / EN** in the app.
 **Open the app:** <https://holyemilio.github.io/suntrace2/>
 
 1. [Who it's for](#1-whos-it-for)
-2. [Opening SunTrace 2](#2-opening-suntrace-2)
+2. [Opening SunTrace](#2-opening-suntrace)
 3. [The first-visit guide](#3-the-first-visit-guide)
 4. [Finding the home and drawing the room](#4-finding-the-home-and-drawing-the-room)
 5. [Reading the estimate](#5-reading-the-estimate)
@@ -24,7 +24,7 @@ switch to English with **IT / EN** in the app.
 
 ## 1. Who it's for
 
-SunTrace 2 is for people renting in Italy: students, working students,
+SunTrace is for people renting in Italy: students, working students,
 workers away from home. In a minute you get:
 
 - **the most likely figure** for heating each month, with the range from best to worst case;
@@ -37,11 +37,11 @@ workers away from home. In a minute you get:
 All you need is a browser, on a computer or a phone. No install, no account.
 It only works in Italy. If your device is in dark mode, so is the app.
 
-## 2. Opening SunTrace 2
+## 2. Opening SunTrace
 
 The home page explains in brief what the app does and already has the search bar.
 
-![The SunTrace 2 home page](01-landing.jpg)
+![The SunTrace home page](01-landing.jpg)
 
 1. Type the address of the home and press **Vai** (Go).
 2. If you're already outside the home, press the **crosshair** button: the app uses your location.

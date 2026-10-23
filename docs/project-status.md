@@ -1,6 +1,6 @@
-# Project status — SunTrace 2
+# Project status — SunTrace
 
-Last updated: **23 October 2026** · version **4.7.0** · repo
+Last updated: **23 October 2026** · version **4.7.1** · repo
 `holyemilio/suntrace2` · **live at <https://holyemilio.github.io/suntrace2/>**
 
 Handover document: what's done, what's open and what to know before working on
@@ -9,11 +9,10 @@ the project again. The method, formula by formula, is in
 [development.md](development.md); every release in the
 [CHANGELOG](../CHANGELOG.md).
 
-**SunTrace 2 is an architectural fork of SunTrace 1** (`holyemilio/Suntrace`,
-also live on GitHub Pages): same technical base (vanilla JS, Meeus/SPA, zero
-runtime dependencies), but the core interaction is drawing the room. **Since
-v4.0.0 the output is the heating cost in euro** (it used to be a "Comfort
-Rate"), for people renting (students, workers away from home).
+**SunTrace** draws the room on the map and, since v4.0.0, estimates the heating
+cost in euro (it used to give a "Comfort Rate"), for people renting (students,
+workers away from home). The earlier single-point SunTrace (repository
+`holyemilio/Suntrace`) is discontinued: this is the only SunTrace.
 
 ---
 

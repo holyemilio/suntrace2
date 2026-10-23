@@ -6,7 +6,7 @@
  * services. Leaflet and fonts are self-hosted (vendor/), so no network at all.
  * Case IDs (T01…) continue the numbering of the old v3 test book.
  *
- * SunTrace 2: the app no longer auto-analyses a clicked point with a
+ * The app doesn't auto-analyse a clicked point with a
  * bussola-set facade — the user draws the room's outline (a polygon) on the
  * map, which locks on closing and is removed via a dedicated button. There is
  * no analysis at all until a room is drawn, so most cases below draw one

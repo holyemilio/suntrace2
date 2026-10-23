@@ -1,6 +1,6 @@
-# How SunTrace 2 estimates the heating cost
+# How SunTrace estimates the heating cost
 
-SunTrace 2 estimates what it costs to heat the room you drew, in euro a month,
+SunTrace estimates what it costs to heat the room you drew, in euro a month,
 over the heating season. It shows a **most likely figure** and a **range**:
 the low end takes the best case of every uncertain value, the high end the
 worst. Every answer to the viewing questions narrows the range; every "Don't

@@ -1,4 +1,4 @@
-# CLAUDE.md — SunTrace 2
+# CLAUDE.md — SunTrace
 
 Project context for Claude Code sessions. The full detail (history, pitfalls,
 open items) is in `docs/project-status.md` — read it before large changes.
@@ -16,7 +16,7 @@ verified source**, otherwise it doesn't enter the calculation.
 Vanilla JS, native ES modules, **no build step, zero runtime dependencies**.
 Pages: `index.html` (landing), `app.html` (the app, mobile layout below 768px),
 `privacy.html`. **Live at <https://holyemilio.github.io/suntrace2/>** (GitHub
-Pages from `main`, root → `index.html`) · version **4.7.0**.
+Pages from `main`, root → `index.html`) · version **4.7.1**.
 
 **Language:** the app is bilingual (Italian/English, `src/i18n.js`); everything
 in the repository — README, docs, code comments, commit messages — is **in

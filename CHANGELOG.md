@@ -5,6 +5,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) — [Semantic V
 
 ---
 
+## [4.7.1] — 2026-10-23
+
+- **"SunTrace", not "SunTrace 2".** The earlier single-point SunTrace is
+  discontinued, so the "2" is gone from the app, the landing, the privacy page
+  and the documentation. Historical entries below keep their original names.
+  The repository and site address (`suntrace2`) are unchanged.
+
+---
+
 ## [4.7.0] — 2026-10-23
 
 - **Repository in English.** README, method, developer guide, project status,

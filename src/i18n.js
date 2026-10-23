@@ -12,7 +12,7 @@
 const STRINGS = {
   it: {
     'app-title': 'SunTrace — Quanto costa scaldare questa stanza',
-    'sidebar-aria': 'Pannello di SunTrace 2',
+    'sidebar-aria': 'Pannello di SunTrace',
     'back-home': 'Home',
     'back-home-aria': 'Torna alla home',
 
@@ -125,7 +125,7 @@ const STRINGS = {
     // Share
     'share-btn': 'Condividi la scheda',
     'share-note': 'Il link contiene la posizione della stanza e le tue risposte: mandalo solo a chi vuoi.',
-    'share-title': 'SunTrace 2 — la scheda di questa stanza',
+    'share-title': 'SunTrace — la scheda di questa stanza',
     'share-copied': 'Link copiato: incollalo dove vuoi.',
 
     // Technical details
@@ -171,7 +171,7 @@ const STRINGS = {
     'footer-docs': 'Metodo e fonti',
     'footer-github': 'GitHub',
     'footer-privacy': 'Privacy',
-    'footer-copy': 'SunTrace 2 · stime indicative, non una certificazione energetica.',
+    'footer-copy': 'SunTrace · stime indicative, non una certificazione energetica.',
 
     // Map
     'map-aria': 'Mappa: disegna qui la stanza',
@@ -204,7 +204,7 @@ const STRINGS = {
     'close-aria': 'Chiudi',
 
     // Geofencing
-    'geo-foreign': 'SunTrace 2 funziona solo in Italia, isole comprese. Ti abbiamo riportato su Roma.',
+    'geo-foreign': 'SunTrace funziona solo in Italia, isole comprese. Ti abbiamo riportato su Roma.',
     'shape-crossing': 'Le linee della stanza si incrociano, quindi non è una stanza vera. L\'abbiamo cancellata: ridisegnala cliccando gli angoli in ordine, girando intorno alla stanza.',
     'shape-tiny': 'La stanza disegnata è troppo piccola (meno di 2 m²). L\'abbiamo cancellata: ingrandisci la mappa e ridisegnala.',
     'water-checking': 'Controllo che la stanza non sia sull\'acqua e scarico gli edifici intorno…',
@@ -257,7 +257,7 @@ const STRINGS = {
 
     // Too-narrow block
     'mobile-title': 'La finestra è troppo stretta',
-    'mobile-p1': 'SunTrace 2 ha bisogno di almeno 320 pixel di larghezza per mostrare mappa e risultati.',
+    'mobile-p1': 'SunTrace ha bisogno di almeno 320 pixel di larghezza per mostrare mappa e risultati.',
     'mobile-p2': 'Allarga la finestra o riduci lo zoom del browser.',
 
     'months': ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'],
@@ -267,7 +267,7 @@ const STRINGS = {
     'landing-nav-method': 'Metodo e fonti',
     'landing-hero-title': 'Prima di firmare l\'affitto,',
     'landing-hero-title-em': 'guarda da dove arriva il sole.',
-    'landing-hero-sub': 'Disegni la stanza sulla mappa, rispondi a sei domande che puoi verificare durante la visita, e SunTrace 2 ti dice quanto costerà scaldarla, in euro al mese. Usa le ombre vere dei palazzi vicini e i prezzi ARERA del mese.',
+    'landing-hero-sub': 'Disegni la stanza sulla mappa, rispondi a sei domande che puoi verificare durante la visita, e SunTrace ti dice quanto costerà scaldarla, in euro al mese. Usa le ombre vere dei palazzi vicini e i prezzi ARERA del mese.',
     'landing-search-aria': 'Cerca un indirizzo per iniziare',
     'landing-fig1': 'Fig. 1 — Il percorso del sole visto da Roma il 21 dicembre e il 21 giugno, calcolato con lo stesso motore dell\'app. Al centro il sole sarebbe allo zenit; il bordo è l\'orizzonte. D\'inverno resta basso a sud: un palazzo di fronte basta a toglierlo.',
     'landing-s1-num': '§ 1',
@@ -279,7 +279,7 @@ const STRINGS = {
     'landing-s1-gas-single': 'Caldaia a gas, vetro singolo',
     'landing-s1-heatpump': 'Pompa di calore, doppio vetro',
     'landing-s1-electric': 'Stufetta elettrica, doppio vetro',
-    'landing-s1-caption': 'Calcolato con il metodo di SunTrace 2 sul clima medio 1991–2020 di Milano (Open-Meteo), senza palazzi vicini, con i prezzi ARERA in vigore: gas {gas} €/Smc ({gasPeriod}), luce {el} €/kWh ({elPeriod}). La forbice va dal caso migliore al caso peggiore dei valori tecnici di quell\'epoca di costruzione.',
+    'landing-s1-caption': 'Calcolato con il metodo di SunTrace sul clima medio 1991–2020 di Milano (Open-Meteo), senza palazzi vicini, con i prezzi ARERA in vigore: gas {gas} €/Smc ({gasPeriod}), luce {el} €/kWh ({elPeriod}). La forbice va dal caso migliore al caso peggiore dei valori tecnici di quell\'epoca di costruzione.',
     'landing-s2-num': '§ 2',
     'landing-s2-title': 'Sei domande che puoi verificare tu',
     'landing-s2-lead': 'Chi affitta non sceglie gli infissi o il cappotto. Però può guardare e chiedere. Le domande dell\'app sono queste, e per ognuna puoi rispondere «Non so».',
@@ -305,24 +305,24 @@ const STRINGS = {
 
     // Privacy page
     'privacy-title': 'Privacy — SunTrace',
-    'privacy-back': '← Torna a SunTrace 2',
+    'privacy-back': '← Torna a SunTrace',
     'privacy-h1': 'Privacy',
-    'privacy-lead': 'In breve: SunTrace 2 non ha un server, non ha account, non usa cookie di profilazione e non ti traccia. Qui sotto trovi esattamente cosa succede quando usi il sito.',
+    'privacy-lead': 'In breve: SunTrace non ha un server, non ha account, non usa cookie di profilazione e non ti traccia. Qui sotto trovi esattamente cosa succede quando usi il sito.',
     'privacy-s1-title': 'Nessun server, nessun account',
-    'privacy-s1-body': 'SunTrace 2 è un sito statico: non esiste un server che riceve o conserva i tuoi dati, non c\'è registrazione, non c\'è login. Il calcolo (sole, ombre, costo del riscaldamento) avviene nel tuo browser.',
+    'privacy-s1-body': 'SunTrace è un sito statico: non esiste un server che riceve o conserva i tuoi dati, non c\'è registrazione, non c\'è login. Il calcolo (sole, ombre, costo del riscaldamento) avviene nel tuo browser.',
     'privacy-s2-title': 'Cosa resta nel tuo browser',
     'privacy-s2-body': 'Due cose, salvate solo sul tuo dispositivo: la lingua scelta (IT/EN) e una copia dei dati climatici e degli edifici già scaricati, per non ripetere le stesse richieste. Puoi cancellarle quando vuoi dalle impostazioni del browser ("cancella dati del sito") o usando una finestra privata.',
     'privacy-s5-title': 'Il link della scheda',
     'privacy-s5-body': 'Se usi «Condividi la scheda», il link contiene la posizione della stanza disegnata e le tue risposte. Non passa da nessun server nostro: decidi tu a chi mandarlo.',
     'privacy-s3-title': 'Servizi di terze parti',
-    'privacy-s3-body': 'Per funzionare, il tuo browser contatta direttamente questi servizi esterni, ciascuno con la propria informativa: OpenStreetMap (mappa), Nominatim (ricerca indirizzi), Overpass (dati sugli edifici) e Open-Meteo (clima). Questi servizi vedono la richiesta e il tuo indirizzo IP, come per qualunque sito che li usa; SunTrace 2 non aggiunge altro tracciamento. Caratteri e libreria della mappa (Leaflet) sono serviti dal nostro sito: nessuna richiesta parte verso Google o altri CDN.',
+    'privacy-s3-body': 'Per funzionare, il tuo browser contatta direttamente questi servizi esterni, ciascuno con la propria informativa: OpenStreetMap (mappa), Nominatim (ricerca indirizzi), Overpass (dati sugli edifici) e Open-Meteo (clima). Questi servizi vedono la richiesta e il tuo indirizzo IP, come per qualunque sito che li usa; SunTrace non aggiunge altro tracciamento. Caratteri e libreria della mappa (Leaflet) sono serviti dal nostro sito: nessuna richiesta parte verso Google o altri CDN.',
     'privacy-s4-title': 'Nessuna analytics, nessuna pubblicità',
     'privacy-s4-body': 'Non usiamo Google Analytics né strumenti simili, non ci sono pixel di tracciamento, non vendiamo né condividiamo dati con terzi per pubblicità, semplicemente perché non ne raccogliamo.',
   },
 
   en: {
     'app-title': 'SunTrace — What it costs to heat this room',
-    'sidebar-aria': 'SunTrace 2 panel',
+    'sidebar-aria': 'SunTrace panel',
     'back-home': 'Home',
     'back-home-aria': 'Back to home',
 
@@ -430,7 +430,7 @@ const STRINGS = {
 
     'share-btn': 'Share this sheet',
     'share-note': 'The link contains the room\'s location and your answers: only send it to people you choose.',
-    'share-title': 'SunTrace 2 — this room\'s sheet',
+    'share-title': 'SunTrace — this room\'s sheet',
     'share-copied': 'Link copied: paste it wherever you like.',
 
     'tech-summary': 'Technical details: sun, shadows and climate',
@@ -474,7 +474,7 @@ const STRINGS = {
     'footer-docs': 'Method and sources',
     'footer-github': 'GitHub',
     'footer-privacy': 'Privacy',
-    'footer-copy': 'SunTrace 2 · indicative estimates, not an energy certificate.',
+    'footer-copy': 'SunTrace · indicative estimates, not an energy certificate.',
 
     'map-aria': 'Map: draw the room here',
     'geo-aria': 'Use my location',
@@ -505,7 +505,7 @@ const STRINGS = {
     'mobile-climate-aria': 'Local climate',
     'close-aria': 'Close',
 
-    'geo-foreign': 'SunTrace 2 only works in Italy, islands included. We moved you back to Rome.',
+    'geo-foreign': 'SunTrace only works in Italy, islands included. We moved you back to Rome.',
     'shape-crossing': 'The room\'s lines cross, so it isn\'t a real room. We cleared it: draw it again clicking the corners in order, going round the room.',
     'shape-tiny': 'The drawn room is too small (under 2 m²). We cleared it: zoom in and draw it again.',
     'water-checking': 'Checking the room isn\'t on water and loading the buildings around it…',
@@ -555,7 +555,7 @@ const STRINGS = {
     'tour-info-body': 'What the colours on the map mean. The guide reopens from "Guide", at the bottom of the questions panel.',
 
     'mobile-title': 'The window is too narrow',
-    'mobile-p1': 'SunTrace 2 needs at least 320 pixels of width to show the map and the results.',
+    'mobile-p1': 'SunTrace needs at least 320 pixels of width to show the map and the results.',
     'mobile-p2': 'Widen the window or zoom the browser out.',
 
     'months': ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
@@ -564,7 +564,7 @@ const STRINGS = {
     'landing-nav-method': 'Method and sources',
     'landing-hero-title': 'Before you sign the lease,',
     'landing-hero-title-em': 'check where the sun comes from.',
-    'landing-hero-sub': 'Draw the room on the map, answer six questions you can check at the viewing, and SunTrace 2 tells you what it will cost to heat, in euro a month. It uses the real shadows of nearby buildings and this month\'s ARERA prices.',
+    'landing-hero-sub': 'Draw the room on the map, answer six questions you can check at the viewing, and SunTrace tells you what it will cost to heat, in euro a month. It uses the real shadows of nearby buildings and this month\'s ARERA prices.',
     'landing-search-aria': 'Search an address to begin',
     'landing-fig1': 'Fig. 1 — The sun\'s path seen from Rome on 21 December and 21 June, computed with the same engine as the app. The centre would be the sun overhead; the edge is the horizon. In winter it stays low in the south: one building opposite is enough to take it away.',
     'landing-s1-num': '§ 1',
@@ -576,7 +576,7 @@ const STRINGS = {
     'landing-s1-gas-single': 'Gas boiler, single glazing',
     'landing-s1-heatpump': 'Heat pump, double glazing',
     'landing-s1-electric': 'Plug-in electric heater, double glazing',
-    'landing-s1-caption': 'Computed with SunTrace 2\'s method on Milan\'s average 1991–2020 climate (Open-Meteo), with no nearby buildings, at current ARERA prices: gas €{gas}/Smc ({gasPeriod}), electricity €{el}/kWh ({elPeriod}). The range runs from the best to the worst case of that period\'s building values.',
+    'landing-s1-caption': 'Computed with SunTrace\'s method on Milan\'s average 1991–2020 climate (Open-Meteo), with no nearby buildings, at current ARERA prices: gas €{gas}/Smc ({gasPeriod}), electricity €{el}/kWh ({elPeriod}). The range runs from the best to the worst case of that period\'s building values.',
     'landing-s2-num': '§ 2',
     'landing-s2-title': 'Six questions you can check yourself',
     'landing-s2-lead': 'Renters don\'t choose the windows or the insulation. They can look and ask, though. These are the app\'s questions, and each one accepts "Don\'t know".',
@@ -601,17 +601,17 @@ const STRINGS = {
     'landing-cta-btn': 'Start',
 
     'privacy-title': 'Privacy — SunTrace',
-    'privacy-back': '← Back to SunTrace 2',
+    'privacy-back': '← Back to SunTrace',
     'privacy-h1': 'Privacy',
-    'privacy-lead': 'Short version: SunTrace 2 has no server, no accounts, no tracking cookies, and doesn\'t track you. Below is exactly what happens when you use the site.',
+    'privacy-lead': 'Short version: SunTrace has no server, no accounts, no tracking cookies, and doesn\'t track you. Below is exactly what happens when you use the site.',
     'privacy-s1-title': 'No server, no account',
-    'privacy-s1-body': 'SunTrace 2 is a static site: there is no server receiving or storing your data, no sign-up, no login. The computation (sun, shadows, heating cost) happens in your browser.',
+    'privacy-s1-body': 'SunTrace is a static site: there is no server receiving or storing your data, no sign-up, no login. The computation (sun, shadows, heating cost) happens in your browser.',
     'privacy-s2-title': 'What stays in your browser',
     'privacy-s2-body': 'Two things, saved only on your device: your chosen language (IT/EN) and a copy of the climate and building data already downloaded, so the same requests aren\'t repeated. You can clear them any time from your browser settings ("clear site data") or by using a private window.',
     'privacy-s5-title': 'The sheet\'s link',
     'privacy-s5-body': 'If you use "Share this sheet", the link contains the drawn room\'s location and your answers. It goes through no server of ours: you decide who gets it.',
     'privacy-s3-title': 'Third-party services',
-    'privacy-s3-body': 'To work, your browser talks directly to these external services, each under its own policy: OpenStreetMap (map), Nominatim (address search), Overpass (building data) and Open-Meteo (climate). These services see the request and your IP address, as with any site that uses them; SunTrace 2 adds no further tracking. Typefaces and the map library (Leaflet) are served from our own site: no request goes to Google or other CDNs.',
+    'privacy-s3-body': 'To work, your browser talks directly to these external services, each under its own policy: OpenStreetMap (map), Nominatim (address search), Overpass (building data) and Open-Meteo (climate). These services see the request and your IP address, as with any site that uses them; SunTrace adds no further tracking. Typefaces and the map library (Leaflet) are served from our own site: no request goes to Google or other CDNs.',
     'privacy-s4-title': 'No analytics, no ads',
     'privacy-s4-body': 'We don\'t use Google Analytics or similar tools, there are no tracking pixels, and we don\'t sell or share data with third parties for advertising, simply because we don\'t collect any.',
   },

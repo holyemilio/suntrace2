@@ -1,4 +1,4 @@
-# SunTrace 2 — for developers
+# SunTrace — for developers
 
 This page is for people changing the code. How the app works for its users is
 in the [README](../README.md) and the [user manual](user-manual/user-manual.md);

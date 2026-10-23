@@ -2,12 +2,12 @@
   <img src="docs/brand/logo.png" alt="SunTrace" width="220">
 </p>
 
-# SunTrace 2
+# SunTrace
 
 **What will it cost to heat the room you're about to rent?**
-SunTrace 2 tells you in euro a month, before you sign.
+SunTrace tells you in euro a month, before you sign.
 
-**[Open SunTrace 2](https://holyemilio.github.io/suntrace2/)** — free, no
+**[Open SunTrace](https://holyemilio.github.io/suntrace2/)** — free, no
 account, works on your phone too. The app is in Italian and English.
 
 It's made for people renting in Italy: students, working students, workers
