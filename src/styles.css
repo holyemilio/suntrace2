@@ -742,3 +742,39 @@ input[type="range"]::-moz-range-thumb { width: 12px; height: 12px; border-radius
 .mobile-warning-card { max-width: 420px; display: flex; flex-direction: column; gap: 10px; }
 .mobile-warning-card h2 { font-family: var(--serif); font-size: var(--fs-lg); font-weight: 600; }
 .mobile-warning-card p { font-size: var(--fs-sm); color: var(--ink-2); }
+
+/* ─── first-visit tour (tour.js) ─────────────────────────────────────────────
+   The overlay takes every click: during the tour nothing underneath responds.
+   The ring is a transparent box whose huge shadow dims everything around it. */
+.tour-overlay { position: fixed; inset: 0; z-index: 6000; }
+.tour-ring {
+  position: fixed;
+  border: 2px solid var(--sun);
+  border-radius: var(--radius);
+  box-shadow: 0 0 0 9999px rgba(28, 26, 22, 0.62);
+  pointer-events: none;
+  transition: left 0.25s ease, top 0.25s ease, width 0.25s ease, height 0.25s ease;
+}
+.tour-card {
+  position: fixed;
+  background: var(--sheet);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: left 0.25s ease, top 0.25s ease;
+}
+.tour-count { font-family: var(--mono); font-size: var(--fs-xs); color: var(--ink-muted); }
+.tour-title { font-family: var(--serif); font-size: var(--fs-lg); font-weight: 600; line-height: 1.25; }
+.tour-body { font-size: var(--fs-sm); color: var(--ink-2); }
+.tour-actions { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.tour-spacer { flex: 1; }
+.tour-actions button { padding: 8px 14px; border-radius: var(--radius); font-size: var(--fs-sm); }
+.tour-actions button[hidden] { display: none; }
+.tour-next { background: var(--ink); color: var(--paper); border: 1px solid var(--ink); }
+.tour-back { background: transparent; border: 1px solid var(--rule-strong); }
+.tour-skip { background: transparent; border: none; color: var(--ink-muted); padding-left: 0 !important; text-decoration: underline; text-underline-offset: 3px; }
+
+.link-button { background: none; border: none; padding: 0; font-size: var(--fs-sm); color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; }

@@ -106,11 +106,13 @@ function engulfingPayload(lat, lon, height = 30) {
 
 const ROME_RESULT = { display_name: 'Via Giusti, Roma', lat: '41.8955', lon: '12.5010' };
 
-async function openApp(t, { buildings = 'courtyard', buildingHeight = 30, searchResult = ROME_RESULT, viewport = null, url = '/app.html' } = {}) {
+async function openApp(t, { buildings = 'courtyard', buildingHeight = 30, searchResult = ROME_RESULT, viewport = null, url = '/app.html', tour = false } = {}) {
   // An Italian locale makes the app start in Italian through its own auto-detect,
   // so the language-persistence test isn't fighting a forced localStorage value.
   const context = await browser.newContext({ locale: 'it-IT', ...(viewport ? { viewport } : {}) });
   await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin });
+  // The first-visit tour covers the app: every test but the tour's own skips it.
+  if (!tour) await context.addInitScript(() => localStorage.setItem('suntrace_tour_done', '1'));
   t.after(() => context.close());
   const page = await context.newPage();
 
@@ -279,6 +281,24 @@ test('T46: a room whose sides cross is cleared, with a message to redraw it', as
   assert.match(await text(page, 'map-error-toast'), /si incrociano/);
   assert.equal(await text(page, 'cost-mid'), '—');
   assert.equal(await page.locator('.suntrace-marker').count(), 0, 'drawing starts over');
+});
+
+test('T51: the first visit opens a guided tour that blocks the app until it ends', async (t) => {
+  const page = await openApp(t, { tour: true });
+  await page.waitForSelector('.tour-overlay');
+  assert.match(await page.locator('.tour-count').textContent(), /^1 di \d+$/);
+  const first = await page.locator('.tour-title').textContent();
+  await page.locator('.tour-next').click();
+  assert.notEqual(await page.locator('.tour-title').textContent(), first, 'Avanti moves on');
+  await page.locator('.tour-skip').click();
+  await page.waitForSelector('.tour-overlay', { state: 'detached' });
+
+  await page.reload();
+  await page.waitForSelector('.leaflet-control-zoom');
+  await page.waitForTimeout(600);
+  assert.equal(await page.locator('.tour-overlay').count(), 0, 'only once');
+  await page.locator('#tour-replay').click();
+  await page.waitForSelector('.tour-overlay');
 });
 
 test('T50: closing a room says the water check is running, then clears it', async (t) => {

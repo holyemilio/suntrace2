@@ -36,6 +36,7 @@ import { PRICES } from './prices.js';
 import { gasPriceForRegion } from './ambiti.js';
 
 import { t, monthName, getLang, setLang, applyTranslations } from './i18n.js';
+import { startTour, tourDone } from './tour.js';
 
 // ─── constants ────────────────────────────────────────────────────────────────
 
@@ -1275,6 +1276,7 @@ function initMobileLayout() {
   move($('checklist-card'), drawerBody);
   move($('share-block'), drawerBody);
   move($('tech-details'), drawerBody);
+  move(document.querySelector('.sidebar-footer'), drawerBody);
 
   move(document.querySelector('.solar-card'), $('mobile-solar-body'));
   move(document.querySelector('.climate-card'), $('mobile-climate-body'));
@@ -1338,6 +1340,43 @@ function initMobileSheet(toggleId, sheetId, overlayId, closeId) {
   return setOpen;
 }
 
+// ─── first-visit tour ─────────────────────────────────────────────────────────
+
+const TOUR_DESKTOP = [
+  { target: '.search-card', key: 'tour-search' },
+  { target: '#map-hint', key: 'tour-draw' },
+  { target: '#floor-bar', key: 'tour-floor' },
+  { target: '#remove-room-btn', key: 'tour-remove' },
+  { target: '#result-card', key: 'tour-result' },
+  { target: '#visit-card', key: 'tour-questions' },
+  { target: '#checklist-card', key: 'tour-checklist' },
+  { target: '#share-block', key: 'tour-share' },
+  { target: '#lang-switch', key: 'tour-lang' },
+];
+
+const TOUR_MOBILE = [
+  { target: '#map', key: 'tour-draw-mobile' },
+  { target: '#floor-bar', key: 'tour-floor' },
+  { target: '#remove-room-btn', key: 'tour-remove' },
+  { target: '#mobile-bottom-bar', key: 'tour-result-mobile' },
+  { target: '#mobile-drawer-toggle', key: 'tour-drawer' },
+  { target: '#mobile-widgets', key: 'tour-widgets' },
+  { target: '#mobile-info-btn', key: 'tour-info' },
+];
+
+function runTour() {
+  startTour(mobileLayoutActive ? TOUR_MOBILE : TOUR_DESKTOP);
+}
+
+function initTour() {
+  $('tour-replay')?.addEventListener('click', () => {
+    if (mobileLayoutActive) $('mobile-drawer-close')?.click();
+    runTour();
+  });
+  // First visit only, once the layout (and the map) has settled.
+  if (!tourDone()) setTimeout(runTour, 400);
+}
+
 // ─── app bootstrap ────────────────────────────────────────────────────────────
 
 let appStarted = false;
@@ -1375,6 +1414,7 @@ function startApp() {
   initFloorBar();
   initRemoveRoomButton();
   initShare();
+  initTour();
 
   if (isMobileLayout()) {
     initMobileLayout();

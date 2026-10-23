@@ -1,6 +1,6 @@
 # Stato dei lavori — SunTrace 2
 
-Ultimo aggiornamento: **23 ottobre 2026** · versione **4.3.1** · repo:
+Ultimo aggiornamento: **23 ottobre 2026** · versione **4.4.0** · repo:
 `holyemilio/suntrace2` · **live su <https://holyemilio.github.io/suntrace2/>**
 
 Documento di passaggio di consegne: cosa è fatto, cosa è in sospeso e cosa
@@ -25,7 +25,7 @@ sviluppa in [`docs/sviluppo.md`](sviluppo.md).
 
 # test
 npm test                             # 73 unit  — motore solare, costo, geometria/pareti/ombre
-npm run test:e2e                     # 32 e2e   — Playwright guida app.html in un browser vero
+npm run test:e2e                     # 33 e2e   — Playwright guida app.html in un browser vero
 ```
 
 Su questo Mac **Node è installato** (verificato in questa sessione: `node
@@ -449,4 +449,8 @@ print('ok' if ki==ke else sorted(ki^ke))"
 - **Link `.md` su GitHub Pages**: Pages (Jekyll) trasforma `docs/metodo.md` in
   `docs/metodo.html`, quindi un link relativo al `.md` si rompe online. App e
   landing linkano la versione su github.com, che rende anche le formule.
+- **La guida della prima visita copre tutta l'app (v4.4.0)**: un test e2e che
+  apre un contesto pulito trova l'overlay sopra la mappa e ogni clic va a
+  vuoto. `openApp()` in `app.e2e.js` imposta `suntrace_tour_done` con
+  `addInitScript` prima del caricamento; solo T51 passa `tour: true`.
 

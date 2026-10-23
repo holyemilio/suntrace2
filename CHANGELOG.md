@@ -5,6 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) — [Semantic V
 
 ---
 
+## [4.4.0] — 2026-10-23
+
+- **Guida alla prima visita** (`src/tour.js`). Uno schermo scuro copre l'app e un riquadro ambra cerchia un elemento alla volta, con una scheda che spiega a cosa serve e i pulsanti Avanti, Indietro e Salta (anche da tastiera). Durante la guida non si può interagire con l'app. Nove passi su computer, sette su telefono; compare una volta sola e si riapre dal link «Guida» in fondo alla colonna (su telefono, in fondo al pannello domande, dove ora ci sono anche i link Metodo, GitHub e Privacy).
+- Gli e2e segnano la guida come già vista (`addInitScript`), tranne il test che la verifica.
+
+---
+
 ## [4.3.1] — 2026-10-23
 
 - **Messaggio durante il controllo dell'acqua.** Appena chiudi la stanza compare «Controllo che la stanza non sia sull'acqua e scarico gli edifici intorno…», che sparisce quando arrivano i dati: una stanza cancellata qualche secondo dopo non sembra più un errore.
