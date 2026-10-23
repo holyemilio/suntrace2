@@ -17,6 +17,7 @@ import {
   classifyRoomEdges,
   sunBlocked,
   sunAccessFraction,
+  roomShapeProblem,
 } from '../src/shadow.js';
 
 const LAT = 41.9028, LNG = 12.4964;      // Rome
@@ -213,4 +214,20 @@ test('sunAccessFraction: a taller courtyard shades the ground floor more', () =>
   const low = sunAccessFraction(LAT, LNG, courtyard, 0, 0, 2026, 'Europe/Rome');
   const high = sunAccessFraction(LAT, LNG, tall, 0, 0, 2026, 'Europe/Rome');
   assert.ok(high <= low, `40 m walls (${high}) must not beat 15 m walls (${low})`);
+});
+
+// ─── roomShapeProblem ─────────────────────────────────────────────────────────
+
+test('roomShapeProblem accepts a plain room and an L-shaped one', () => {
+  const square = [{ x: 0, y: 0 }, { x: 4, y: 0 }, { x: 4, y: 4 }, { x: 0, y: 4 }];
+  const ell = [{ x: 0, y: 0 }, { x: 6, y: 0 }, { x: 6, y: 3 }, { x: 3, y: 3 }, { x: 3, y: 6 }, { x: 0, y: 6 }];
+  assert.equal(roomShapeProblem(square), null);
+  assert.equal(roomShapeProblem(ell), null);
+});
+
+test('roomShapeProblem flags crossing sides and slivers', () => {
+  const bowTie = [{ x: 0, y: 0 }, { x: 4, y: 4 }, { x: 4, y: 0 }, { x: 0, y: 4 }];
+  const sliver = [{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 0.1 }];
+  assert.equal(roomShapeProblem(bowTie), 'crossing');
+  assert.equal(roomShapeProblem(sliver), 'tiny');
 });

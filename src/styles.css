@@ -22,7 +22,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-body { display: flex; height: 100vh; overflow: hidden; }
+body { display: flex; height: 100vh; overflow: hidden; overscroll-behavior: none; }
 
 ::selection { background: var(--sun-soft); color: var(--ink); }
 
@@ -252,7 +252,7 @@ input[type="text"]:focus { border-color: var(--ink); }
 /* ─── visit questions ────────────────────────────────────────────────────── */
 .field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .field label { font-size: var(--fs-sm); font-weight: 500; }
-.field-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.field-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
 .field-help { font-size: var(--fs-xs); color: var(--ink-muted); line-height: 1.45; }
 
 select {
@@ -330,6 +330,8 @@ select:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .readings > div:last-child { border-bottom: none; }
 .readings dt { color: var(--ink-muted); }
 .readings dd { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; }
+
+.readings-help { font-size: var(--fs-xs); color: var(--ink-muted); padding: 6px 0 8px; border-bottom: 1px solid var(--rule); }
 
 .room-facts {
   display: flex;
@@ -637,8 +639,14 @@ input[type="range"]::-moz-range-thumb { width: 12px; height: 12px; border-radius
     padding: 12px 16px calc(20px + env(safe-area-inset-bottom, 0px));
     transform: translateY(100%);
     transition: transform 0.3s ease;
+    /* Vertical scrolling only: on iOS a scrollable fixed panel otherwise also
+       pans sideways under the finger, as if the content were off-centre. */
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
   }
   .mobile-sheet.open { transform: translateY(0); }
+  .mobile-sheet-body, .mobile-sheet-body > * { min-width: 0; max-width: 100%; }
   .mobile-sheet-handle { width: 40px; height: 3px; margin: 0 auto 12px; background: var(--rule-strong); }
   .mobile-sheet-close {
     position: absolute;

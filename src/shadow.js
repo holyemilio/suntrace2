@@ -64,6 +64,31 @@ export function polygonArea(ring) {
   return Math.abs(sum) / 2;
 }
 
+/**
+ * Why a drawn ring can't be a room, or null if it can: two non-adjacent sides
+ * cross ('crossing'), or the area is too small to be a room ('tiny', under
+ * MIN_ROOM_AREA_M2). Ring is open (n distinct vertices, in click order).
+ */
+export const MIN_ROOM_AREA_M2 = 2;
+
+export function roomShapeProblem(ring) {
+  const n = ring.length;
+  if (n < 3) return 'tiny';
+  const cross = (o, a, b) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+  const intersects = (p1, p2, p3, p4) => {
+    const d1 = cross(p3, p4, p1), d2 = cross(p3, p4, p2);
+    const d3 = cross(p1, p2, p3), d4 = cross(p1, p2, p4);
+    return ((d1 > 0) !== (d2 > 0)) && ((d3 > 0) !== (d4 > 0)) && d1 && d2 && d3 && d4;
+  };
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 2; j < n; j++) {
+      if (i === 0 && j === n - 1) continue; // these two sides share the first vertex
+      if (intersects(ring[i], ring[(i + 1) % n], ring[j], ring[(j + 1) % n])) return 'crossing';
+    }
+  }
+  return polygonArea(ring) < MIN_ROOM_AREA_M2 ? 'tiny' : null;
+}
+
 /** Centroid (vertex average) of a ring in local metres. */
 export function polygonCentroid(ring) {
   const sx = ring.reduce((s, p) => s + p.x, 0);

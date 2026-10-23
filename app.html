@@ -80,11 +80,12 @@
     <section class="card result-card" id="result-card" aria-labelledby="result-title" aria-live="polite">
       <h2 class="eyebrow" id="result-title" data-i18n="result-title">Scaldare questa stanza</h2>
       <p class="result-figure">
-        <span class="result-range" id="cost-range">—</span>
+        <span class="result-range" id="cost-mid">—</span>
         <span class="result-unit" data-i18n="result-unit">€ al mese</span>
       </p>
       <p class="result-state" id="cost-state" data-i18n="cost-empty">Disegna la stanza sulla mappa per vedere quanto costa scaldarla.</p>
       <dl class="result-lines" id="cost-lines" hidden>
+        <div><dt data-i18n="line-range">Forbice</dt><dd><span id="cost-range">—</span> <span data-i18n="result-unit">€ al mese</span></dd></div>
         <div><dt data-i18n="line-season">Quando</dt><dd id="cost-season"></dd></div>
         <div id="cost-split-row"><dt data-i18n="line-split">A testa</dt><dd id="cost-split"></dd></div>
         <div id="cost-sun-row"><dt data-i18n="line-sun">Il sole</dt><dd id="cost-sun"></dd></div>
@@ -223,6 +224,8 @@
           <div><dt data-i18n="climate-wind">Vento medio del mese</dt><dd id="val-wind">—</dd></div>
           <div><dt data-i18n="climate-rain">Pioggia del mese</dt><dd id="val-rain">—</dd></div>
         </dl>
+        <p class="readings-help" data-i18n="climate-gg-help">Gradi giorno: quanto freddo fa in tutta la stagione di riscaldamento. Più è alto, più si spende. Li calcoliamo dal clima 1991–2020 del punto disegnato; il valore di legge del comune (DPR 412/93) può essere un po' diverso.</p>
+
         <div class="room-facts">
           <span id="coord-lat">--°N</span>
           <span id="coord-lng">--°E</span>

@@ -21,6 +21,7 @@ import {
   polygonCentroid,
   classifyRoomEdges,
   sunBlocked,
+  roomShapeProblem,
 } from './shadow.js';
 
 import {
@@ -160,7 +161,9 @@ function getSelectedLocalHour() { return parseInt($('hour-slider').value); }
 // ─── map initialisation ───────────────────────────────────────────────────────
 
 function initMap() {
-  map = L.map('map', { zoomControl: false, maxZoom: 19 }).setView([41.9028, 12.4964], 17);
+  // OSM serves tiles up to z19; Leaflet enlarges them for two more levels, so a
+  // fingertip can still hit the corners of a small room on a phone.
+  map = L.map('map', { zoomControl: false, maxZoom: 21 }).setView([41.9028, 12.4964], 17);
   L.control.zoom({ position: 'topright' }).addTo(map);
   // Standard OpenStreetMap tiles: free, no API key, and legible — CARTO's
   // basemaps now stamp "API KEY REQUIRED" over every style without a key.
@@ -168,7 +171,8 @@ function initMap() {
     'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     {
       attribution: '©<a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19,          // the OSM tile server serves up to z19
+      maxNativeZoom: 19,    // the OSM tile server serves up to z19…
+      maxZoom: 21,          // …beyond that the z19 tiles are scaled up
     }
   ).addTo(map);
 
@@ -546,6 +550,15 @@ function lockRoom() {
   const xy = localXY(cLat, cLng);
   const toLatLng = localToLatLng(cLat, cLng);
   const ring = verts.map(v => xy(v.lat, v.lng));
+
+  // Crossing sides or a sliver aren't a room: clear it and say why.
+  const problem = roomShapeProblem(ring);
+  if (problem) {
+    removeRoom();
+    showToast(t('shape-' + problem), 'warn', 12000);
+    return;
+  }
+
   const centroidLocal = polygonCentroid(ring);
   const n = ring.length;
 
@@ -698,6 +711,7 @@ function wallIrradiance(exteriorWalls, days) {
 }
 
 function showCostState(key) {
+  setText('cost-mid', '—');
   setText('cost-range', '—');
   setText('mobile-cost-range', '—');
   setText('cost-state', t(key));
@@ -747,9 +761,10 @@ function refreshCost() {
   const southOrWestExterior = exteriorWalls.some(w => w.azDeg >= 135 && w.azDeg <= 315);
   renderChecklist(visitChecklist(answers, r, { southOrWestExterior }));
 
-  const text = range(r.perMonth.lo, r.perMonth.hi);
-  setText('cost-range', text);
-  setText('mobile-cost-range', text);
+  const central = t('range-approx', { eur: euro(r.perMonth.mid) });
+  setText('cost-mid', central);
+  setText('mobile-cost-range', central);
+  setText('cost-range', range(r.perMonth.lo, r.perMonth.hi));
 
   const area = euro(currentRoom.areaM2);
   const notes = [
@@ -765,7 +780,7 @@ function refreshCost() {
   setText('cost-season', t('season-' + zone, { zone }));
 
   $('cost-split-row').hidden = !r.perPerson;
-  if (r.perPerson) setText('cost-split', t('split-value', { n: r.perPerson.people, range: range(r.perPerson.lo, r.perPerson.hi) }));
+  if (r.perPerson) setText('cost-split', t('split-value', { n: r.perPerson.people, mid: euro(r.perPerson.mid), range: range(r.perPerson.lo, r.perPerson.hi) }));
 
   const saving = r.sunSavingPerMonth;
   setText('cost-sun', exteriorWalls.length === 0 ? t('sun-none-interior')
@@ -940,7 +955,8 @@ function initShare() {
 // draws the room next. Any room already there (mid-drawing or locked) is
 // cleared so the map is ready to draw at the new location.
 function goToAddress(lat, lng, zoom) {
-  map.setView([lat, lng], zoom);
+  // On a phone the room is drawn with a finger: start one level closer.
+  map.setView([lat, lng], isMobileLayout() ? zoom + 1 : zoom);
   removeRoom();
 }
 
@@ -1249,13 +1265,21 @@ function initMobileLayout() {
     ['mobile-solar-widget', 'mobile-solar-toggle'],
     ['mobile-climate-widget', 'mobile-climate-toggle'],
   ];
+  const collapse = (panelId, toggleId) => {
+    $(panelId)?.classList.add('collapsed');
+    $(toggleId)?.setAttribute('aria-expanded', 'false');
+  };
   widgets.forEach(([, toggleId]) => {
     $(toggleId)?.addEventListener('click', () => {
       widgets.forEach(([otherPanel, otherToggle]) => {
-        if (otherToggle === toggleId) return;
-        $(otherPanel)?.classList.add('collapsed');
-        $(otherToggle)?.setAttribute('aria-expanded', 'false');
+        if (otherToggle !== toggleId) collapse(otherPanel, otherToggle);
       });
+    });
+  });
+  // A tap anywhere outside an open widget (the map included) closes it.
+  document.addEventListener('click', e => {
+    widgets.forEach(([panelId, toggleId]) => {
+      if (!$(panelId)?.contains(e.target)) collapse(panelId, toggleId);
     });
   });
 }

@@ -43,6 +43,8 @@ const STRINGS = {
     'cost-wide': 'La forbice è ampia perché mancano risposte: rispondi alle domande qui sotto per stringerla.',
     'cost-assumed-gas': 'Non sapendo come si scalda la casa, abbiamo calcolato con una caldaia a gas.',
     'cost-big-room': 'Hai disegnato {area} m²: è più di una stanza. Ingrandisci la mappa e disegna solo la stanza che ti interessa.',
+    'line-range': 'Forbice',
+    'range-approx': 'circa {eur}',
     'line-season': 'Quando',
     'line-split': 'A testa',
     'line-sun': 'Il sole',
@@ -54,7 +56,7 @@ const STRINGS = {
     'season-D': 'dal 1° novembre al 15 aprile (zona {zone})',
     'season-E': 'dal 15 ottobre al 15 aprile (zona {zone})',
     'season-F': 'tutto l\'anno, quando serve (zona {zone}, nessun limite di legge)',
-    'split-value': 'in {n} persone: {range} € al mese ciascuno',
+    'split-value': 'in {n} persone: circa {mid} € al mese ciascuno ({range} €)',
     'sun-value': 'entra dalle finestre e ti fa risparmiare fino a {eur} € al mese',
     'sun-little': 'questa stanza ne prende poco d\'inverno: meno di 1 € al mese',
     'sun-no-data': 'dati sul sole non disponibili per questo luogo',
@@ -139,6 +141,7 @@ const STRINGS = {
     'climate-card-aria': 'Clima del luogo',
     'climate-zone': 'Zona climatica',
     'climate-gg': 'Gradi giorno',
+    'climate-gg-help': 'Gradi giorno: quanto freddo fa in tutta la stagione di riscaldamento. Più è alto, più si spende. Li calcoliamo dal clima 1991–2020 del punto disegnato; il valore di legge del comune (DPR 412/93) può essere un po\' diverso.',
     'climate-humidity': 'Umidità media del mese',
     'climate-wind': 'Vento medio del mese',
     'climate-rain': 'Pioggia del mese',
@@ -192,6 +195,8 @@ const STRINGS = {
 
     // Geofencing
     'geo-foreign': 'SunTrace 2 funziona solo in Italia, isole comprese. Ti abbiamo riportato su Roma.',
+    'shape-crossing': 'Le linee della stanza si incrociano, quindi non è una stanza vera. L\'abbiamo cancellata: ridisegnala cliccando gli angoli in ordine, girando intorno alla stanza.',
+    'shape-tiny': 'La stanza disegnata è troppo piccola (meno di 2 m²). L\'abbiamo cancellata: ingrandisci la mappa e ridisegnala.',
     'geo-water': 'Qui c\'è solo acqua: disegna la stanza su un edificio. Ti abbiamo riportato su Roma.',
 
     // Geolocation
@@ -298,6 +303,8 @@ const STRINGS = {
     'cost-wide': 'The range is wide because answers are missing: answer the questions below to narrow it.',
     'cost-assumed-gas': 'Not knowing how the home is heated, we assumed a gas boiler.',
     'cost-big-room': 'You drew {area} m²: that\'s more than a room. Zoom in on the map and draw just the room you care about.',
+    'line-range': 'Range',
+    'range-approx': 'about {eur}',
     'line-season': 'When',
     'line-split': 'Each',
     'line-sun': 'The sun',
@@ -309,7 +316,7 @@ const STRINGS = {
     'season-D': '1 November to 15 April (zone {zone})',
     'season-E': '15 October to 15 April (zone {zone})',
     'season-F': 'all year, when needed (zone {zone}, no legal limit)',
-    'split-value': 'split {n} ways: €{range} a month each',
+    'split-value': 'split {n} ways: about €{mid} a month each (€{range})',
     'sun-value': 'comes in through the windows and saves you up to €{eur} a month',
     'sun-little': 'this room gets little of it in winter: under €1 a month',
     'sun-no-data': 'no sun data available for this place',
@@ -390,6 +397,7 @@ const STRINGS = {
     'climate-card-aria': 'Local climate',
     'climate-zone': 'Climate zone',
     'climate-gg': 'Degree days',
+    'climate-gg-help': 'Degree days: how cold the whole heating season is. The higher, the more you spend. We compute them from the 1991–2020 climate at the drawn spot; the municipality\'s legal value (DPR 412/93) can differ a little.',
     'climate-humidity': 'Average humidity this month',
     'climate-wind': 'Average wind this month',
     'climate-rain': 'Rain this month',
@@ -440,6 +448,8 @@ const STRINGS = {
     'close-aria': 'Close',
 
     'geo-foreign': 'SunTrace 2 only works in Italy, islands included. We moved you back to Rome.',
+    'shape-crossing': 'The room\'s lines cross, so it isn\'t a real room. We cleared it: draw it again clicking the corners in order, going round the room.',
+    'shape-tiny': 'The drawn room is too small (under 2 m²). We cleared it: zoom in and draw it again.',
     'geo-water': 'That\'s open water: draw the room on a building. We moved you back to Rome.',
 
     'geoloc-unsupported': 'Your browser doesn\'t support geolocation.',

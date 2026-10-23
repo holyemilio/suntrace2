@@ -172,7 +172,7 @@ async function drawAndAnalyse(page, opts = {}) {
   // The explicit `undefined` matters: waitForFunction(fn, options) without it
   // treats `options` as the page function's arg instead, silently discarding
   // the timeout override and falling back to Playwright's 30s default.
-  await page.waitForFunction(() => document.getElementById('cost-range').textContent !== '—', undefined, { timeout: 8000 });
+  await page.waitForFunction(() => document.getElementById('cost-mid').textContent !== '—', undefined, { timeout: 8000 });
   await page.waitForTimeout(30); // let the post-OSM refreshUI() finish applying
 }
 
@@ -270,6 +270,32 @@ test('T42: the remove-room button clears a locked room and re-enables drawing', 
 
   await drawAndAnalyse(page);
   assert.notEqual(await text(page, 'cost-range'), '—', 'a fresh room can be drawn after removal');
+});
+
+test('T46: a room whose sides cross is cleared, with a message to redraw it', async (t) => {
+  const page = await openApp(t);
+  await drawRoom(page, { points: [[-40, -30], [40, 30], [40, -30], [-40, 30]] }); // a bow tie
+  await page.waitForSelector('.map-error-toast', { state: 'visible' });
+  assert.match(await text(page, 'map-error-toast'), /si incrociano/);
+  assert.equal(await text(page, 'cost-mid'), '—');
+  assert.equal(await page.locator('.suntrace-marker').count(), 0, 'drawing starts over');
+});
+
+test('T47: the big number is the most likely figure, inside its range', async (t) => {
+  const page = await openApp(t, { buildings: false });
+  await drawAndAnalyse(page);
+  const mid = Number((await text(page, 'cost-mid')).replace(/[^\d]/g, ''));
+  const r = await costRange(page);
+  assert.match(await text(page, 'cost-mid'), /^circa /);
+  assert.ok(mid >= r.lo && mid <= r.hi, `${mid} within ${r.lo}–${r.hi}`);
+});
+
+test('T48: on a phone, tapping outside an open widget closes it', async (t) => {
+  const page = await openApp(t, { viewport: { width: 390, height: 844 } });
+  await page.locator('#mobile-solar-toggle').click();
+  assert.equal(await page.locator('#mobile-solar-widget.collapsed').count(), 0, 'the widget opened');
+  await page.mouse.click(120, 400); // on the map
+  await page.waitForSelector('#mobile-solar-widget.collapsed', { state: 'attached' });
 });
 
 // ─── T14 / T15 — time controls move the sun, not the cost ─────────────────────

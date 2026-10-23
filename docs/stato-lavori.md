@@ -1,6 +1,6 @@
 # Stato dei lavori — SunTrace 2
 
-Ultimo aggiornamento: **23 ottobre 2026** · versione **4.1.0** · repo:
+Ultimo aggiornamento: **23 ottobre 2026** · versione **4.2.0** · repo:
 `holyemilio/suntrace2` · **live su <https://holyemilio.github.io/suntrace2/>**
 
 Documento di passaggio di consegne: cosa è fatto, cosa è in sospeso e cosa
@@ -24,8 +24,8 @@ sviluppa in [`docs/sviluppo.md`](sviluppo.md).
 ./start.command                      # poi http://localhost:8000 (landing page)
 
 # test
-npm test                             # 67 unit  — motore solare, costo, geometria/pareti/ombre
-npm run test:e2e                     # 27 e2e   — Playwright guida app.html in un browser vero
+npm test                             # 69 unit  — motore solare, costo, geometria/pareti/ombre
+npm run test:e2e                     # 30 e2e   — Playwright guida app.html in un browser vero
 ```
 
 Su questo Mac **Node è installato** (verificato in questa sessione: `node

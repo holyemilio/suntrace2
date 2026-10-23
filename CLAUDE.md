@@ -17,14 +17,14 @@ verificata**, altrimenti non entra nel calcolo.
 Vanilla JS, moduli ES nativi, **nessun build step, zero dipendenze di runtime**.
 Pagine: `index.html` (landing), `app.html` (l'app, layout mobile sotto i 768px),
 `privacy.html`. **Live su <https://holyemilio.github.io/suntrace2/>** (GitHub
-Pages da `main`, root → `index.html`) · versione **4.1.0**.
+Pages da `main`, root → `index.html`) · versione **4.2.0**.
 
 ## Comandi
 
 ```bash
 ./start.command      # server locale su :8000 (Cache-Control: no-store)
-npm test             # 67 unit test (motore solare, costo, geometria/ombre, prezzi)
-npm run test:e2e     # 27 e2e Playwright (API esterne mockate)
+npm test             # 69 unit test (motore solare, costo, geometria/ombre, prezzi)
+npm run test:e2e     # 30 e2e Playwright (API esterne mockate)
 ```
 
 Node **è installato** su questo Mac — i test girano localmente. La CI
@@ -83,4 +83,3 @@ contattati, aggiorna anche lei, in entrambe le lingue.
 3. La forbice con tutti «Non so» è molto ampia: onesta ma poco utile.
 4. Nessun e2e sulla landing (verificata solo via screenshot).
 5. Fallback mirror Overpass mai provato end-to-end.
-6. Nessuna validazione contro poligoni auto-intersecanti o degeneri.

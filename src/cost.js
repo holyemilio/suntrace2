@@ -292,6 +292,9 @@ export function estimateHeating({ areaM2, exteriorWalls, monthlyTemps, answers, 
 
   const lo = perMonth(toEuro(kWh.lo, system, 'lo'));
   const hi = perMonth(toEuro(kWh.hi, system, 'hi'));
+  // The most likely figure: typical values for everything still unknown, the
+  // sun counted in full (the same "mid" case the sun line uses).
+  const mid = perMonth(toEuro(kWh.midSun, system, 'mid'));
   const sunSaving = perMonth(toEuro(kWh.midNoSun, system, 'mid') - toEuro(kWh.midSun, system, 'mid'));
 
   return {
@@ -299,8 +302,8 @@ export function estimateHeating({ areaM2, exteriorWalls, monthlyTemps, answers, 
     assumedGas: answers.heating === 'unknown',
     central: answers.heating === 'central',
     kWh,
-    perMonth: { lo, hi },
-    perPerson: people === 1 ? null : { lo: lo / people, hi: hi / people, people },
+    perMonth: { lo, mid, hi },
+    perPerson: people === 1 ? null : { lo: lo / people, mid: mid / people, hi: hi / people, people },
     perSeason: { lo: lo * months, hi: hi * months },
     sunSavingPerMonth: sunSaving,
     electricPerMonth: system === 'electric' ? null

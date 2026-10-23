@@ -5,6 +5,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) — [Semantic V
 
 ---
 
+## [4.2.0] — 2026-10-23
+
+Correzioni dai test dell'utente.
+
+- **Una cifra principale, non solo una forbice.** Il numero grande è ora la stima più probabile («circa 812 € al mese»), con i valori tipici per tutto quello che non sai; la forbice resta sotto, alla riga «Forbice». Prima, senza risposte, si vedeva solo un intervallo come 55–2.254 €, poco utile.
+- **Stanze impossibili rifiutate.** Se i lati del disegno si incrociano, o la stanza è sotto i 2 m², l'app la cancella e spiega come ridisegnarla (`roomShapeProblem` in `shadow.js`).
+- **Mobile: i pannelli sole e clima si chiudono toccando fuori.**
+- **Mobile: il pannello delle domande non scivola più di lato** mentre scorri (scorrimento solo verticale).
+- **Zoom più vicino:** la mappa arriva al livello 21 (le tessere OSM del livello 19 ingrandite) e da telefono la ricerca atterra un livello più vicino, per toccare gli angoli con il dito.
+- **Gradi giorno spiegati** nel pannello clima, con la differenza dal valore di legge del comune.
+
+---
+
 ## [4.1.0] — 2026-10-23
 
 - **Prezzi aggiornati da soli ogni mese.** `scripts/update_prices.py` legge i file ufficiali ARERA (`G<anno>_stv.xlsx` per il gas, `E<anno>-smt.xlsx` per la luce) e rigenera `src/prices.js`; un'azione GitHub lo esegue i giorni 3, 5 e 8 del mese, lancia i test e pubblica. Se un file non si legge o un prezzo cambia più del 40%, non pubblica e apre una segnalazione.
