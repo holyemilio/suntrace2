@@ -1,66 +1,47 @@
 /* ─────────────────────────────────────────────────────────────────────────────
    SunTrace — shared design tokens.
 
+   Paper and ink, like a printed practical guide: warm off-white ground (the
+   same cream as the app icon), near-black warm ink, one amber reserved for
+   the sun and for money, a muted red and blue for heat and cold. No glows,
+   no gradients, hairline rules instead of shadows.
+
    Pulled out of styles.css so the landing page (a separate document, with its
-   own layout rules) can reuse the same palette without inheriting the app
-   shell's body/height rules. No build step, so this stays a plain @import.
+   own layout rules) shares the palette without the app shell's body rules.
    ──────────────────────────────────────────────────────────────────────────── */
 
 :root {
-  /* surfaces — each step is a real elevation, not just a shade */
-  --bg:            #080a0d;   /* app ground */
-  --bg-elev:       #0e1116;   /* sidebar */
-  --card:          #151a21;   /* card surface */
-  --card-2:        #1c222b;   /* tile inside a card */
-  --track:         #262d38;   /* slider / bar track */
-  --glass:         rgba(14, 17, 22, 0.78);
+  /* surfaces */
+  --paper:       #f3eee4;   /* page ground — the app icon's cream */
+  --paper-2:     #ebe4d6;   /* a quieter band inside the page */
+  --sheet:       #fbf8f2;   /* a card lifted off the page */
+  --ink:         #1c1a16;   /* text, rules, the primary button */
+  --ink-2:       #3b372f;   /* secondary text that still has to read */
+  --ink-muted:   #6b645a;   /* captions, labels (5:1 on --paper) */
+  --rule:        rgba(28, 26, 22, 0.14);
+  --rule-strong: rgba(28, 26, 22, 0.32);
 
-  --stroke:        rgba(255, 255, 255, 0.06);
-  --stroke-2:      rgba(255, 255, 255, 0.11);
-  --highlight:     inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  /* accents — each one means something */
+  --sun:         #d08a00;   /* the sun on the map and in charts */
+  --sun-ink:     #8a5600;   /* sun / money as text (4.9:1 on --paper) */
+  --sun-soft:    #f4e3bf;
+  --heat:        #a33a20;
+  --cold:        #2f5d7c;
+  --ok:          #3f6b3a;
 
-  /* text */
-  --text:          #dfe6f0;
-  --text-strong:   #ffffff;
-  --text-muted:    #7d8798;
+  /* type */
+  --serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --sans:  'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --mono:  'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
-  /* accents */
-  --accent:        #f5b301;   /* solar amber — the brand */
-  --accent-hover:  #ffc534;
-  --accent-soft:   rgba(245, 179, 1, 0.13);
-  --accent-ink:    #0b0f14;
-  --cool:          #4c8dff;   /* ambience only, never a control colour */
+  /* one fixed scale — nothing outside it */
+  --fs-xs:      0.75rem;   /* 12px: captions, sources */
+  --fs-sm:      0.875rem;  /* 14px: UI labels, secondary text */
+  --fs-md:      1rem;      /* 16px: body */
+  --fs-lg:      1.25rem;   /* 20px: card titles */
+  --fs-xl:      1.75rem;   /* 28px: section titles */
+  --fs-display: clamp(2.5rem, 6vw, 4.25rem);
 
-  /* semantic / seasonal */
-  --red:    #f0555a;
-  --orange: #f8913a;
-  --yellow: #f5c443;
-  --green:  #35d07f;
-
-  /* legacy tokens kept pointing at the new palette */
-  --panel:         var(--bg-elev);
-  --panel-2:       var(--card-2);
-  --border:        var(--stroke);
-  --border-strong: var(--stroke-2);
-  --primary:       var(--accent);
-  --primary-hover: var(--accent-hover);
-  --border-focus:  var(--accent);
-  --sidebar-bg:    var(--bg-elev);
-  --input-bg:      var(--card-2);
-  --dark:          var(--bg);
-
-  --radius-xl: 26px;
-  --radius-lg: 20px;
-  --radius-md: 16px;
-  --radius-sm: 12px;
-  --pill:      999px;
-
-  --shadow-card: 0 20px 44px -26px rgba(0, 0, 0, 0.95);
-  --shadow-pop:  0 24px 50px -18px rgba(0, 0, 0, 0.85);
-
+  --radius: 3px;
   --sidebar-width: 420px;
-
-  /* Space Grotesk carries the voice, IBM Plex Mono keeps the numbers legible. */
-  --sans: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
-  --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 }

@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SunTrace 2 — Simulatore Microclimatico Urbano</title>
+  <title>SunTrace 2 — Quanto costa scaldare questa stanza</title>
 
   <link rel="icon" type="image/svg+xml" href="docs/app-icon.svg">
 
-  <!-- Type: Space Grotesk for the voice, IBM Plex Mono for readings (self-hosted) -->
+  <!-- Type: Newsreader for titles and figures, IBM Plex Sans for the interface,
+       IBM Plex Mono for readings (all self-hosted) -->
   <link rel="stylesheet" href="vendor/fonts/fonts.css">
 
   <!-- Leaflet 1.9.4 (self-hosted — sha256 verificato contro leafletjs.com) -->
@@ -18,85 +19,46 @@
 </head>
 <body>
 
+  <!-- One small icon set, drawn for this app: referenced with <use>, so every
+       button carries the same 1.5px line instead of a platform emoji. -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-locate" viewBox="0 0 20 20"><circle cx="10" cy="10" r="6"/><circle cx="10" cy="10" r="1.6"/><path d="M10 1.5v3M10 15.5v3M1.5 10h3M15.5 10h3"/></symbol>
+      <symbol id="i-trash" viewBox="0 0 20 20"><path d="M3.5 5.5h13M8 5.5V3.5h4v2M5.5 5.5l.8 11h7.4l.8-11M8.5 8.5v5M11.5 8.5v5"/></symbol>
+      <symbol id="i-info" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.5"/><path d="M10 9v5"/><path d="M10 6.2v.1"/></symbol>
+      <symbol id="i-legend" viewBox="0 0 20 20"><path d="M3 5h3M9 5h8M3 10h3M9 10h8M3 15h3M9 15h8"/></symbol>
+      <symbol id="i-pencil" viewBox="0 0 20 20"><path d="M4 16l.9-3.6L13 4.3l2.7 2.7-8.1 8.1L4 16zM11.5 5.8l2.7 2.7"/></symbol>
+      <symbol id="i-sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="3.5"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.3 4.3l1.4 1.4M14.3 14.3l1.4 1.4M15.7 4.3l-1.4 1.4M5.7 14.3l-1.4 1.4"/></symbol>
+      <symbol id="i-drop" viewBox="0 0 20 20"><path d="M10 2.5s-5 5.6-5 9a5 5 0 0 0 10 0c0-3.4-5-9-5-9z"/></symbol>
+      <symbol id="i-list" viewBox="0 0 20 20"><path d="M7 5h10M7 10h10M7 15h10"/><path d="M3 5h.1M3 10h.1M3 15h.1"/></symbol>
+      <symbol id="i-close" viewBox="0 0 20 20"><path d="M5 5l10 10M15 5L5 15"/></symbol>
+      <symbol id="i-share" viewBox="0 0 20 20"><path d="M10 12.5V3M6.5 6.5L10 3l3.5 3.5M4.5 10v6.5h11V10"/></symbol>
+    </defs>
+  </svg>
+
   <!-- ── Sidebar ─────────────────────────────────────────────────────────── -->
-  <aside id="sidebar" data-i18n-aria="sidebar-aria" aria-label="Pannello di Controllo SunTrace 2">
+  <aside id="sidebar" data-i18n-aria="sidebar-aria" aria-label="Pannello di SunTrace 2">
 
     <a href="index.html" class="back-home-link" data-i18n-aria="back-home-aria" aria-label="Torna alla home">
       <span aria-hidden="true">←</span>
       <span data-i18n="back-home">Home</span>
     </a>
 
-    <!-- Brand -->
-    <header class="brand-container">
-      <div class="logo-wrapper">
-        <span class="logo-mark" aria-hidden="true">
-          <svg width="28" height="28" viewBox="0 0 1024 1024" fill="none">
-            <defs>
-              <clipPath id="hdr-sq"><rect x="0" y="0" width="1024" height="1024" rx="228"/></clipPath>
-              <linearGradient id="hdr-gSun" gradientUnits="userSpaceOnUse" x1="252" y1="118" x2="560" y2="520">
-                <stop offset="0" stop-color="#FFD75E"/>
-                <stop offset="0.55" stop-color="#FFA22B"/>
-                <stop offset="1" stop-color="#FF6B1A"/>
-              </linearGradient>
-              <linearGradient id="hdr-gBld" gradientUnits="userSpaceOnUse" x1="546" y1="402" x2="826" y2="776">
-                <stop offset="0" stop-color="#33495F"/>
-                <stop offset="1" stop-color="#1A2938"/>
-              </linearGradient>
-              <linearGradient id="hdr-gWin" gradientUnits="userSpaceOnUse" x1="606" y1="462" x2="766" y2="622">
-                <stop offset="0" stop-color="#FFE3AE"/>
-                <stop offset="1" stop-color="#FFB25C"/>
-              </linearGradient>
-              <linearGradient id="hdr-gBgWarm" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1024" y2="1024">
-                <stop offset="0" stop-color="#FFF8EC"/>
-                <stop offset="1" stop-color="#FFE7C6"/>
-              </linearGradient>
-              <linearGradient id="hdr-gShad" gradientUnits="userSpaceOnUse" x1="600" y1="776" x2="1024" y2="860">
-                <stop offset="0" stop-color="#E8620C" stop-opacity="0.34"/>
-                <stop offset="1" stop-color="#E8620C" stop-opacity="0"/>
-              </linearGradient>
-              <linearGradient id="hdr-gArc" gradientUnits="userSpaceOnUse" x1="60" y1="0" x2="596" y2="0">
-                <stop offset="0" stop-color="#FF8A2E" stop-opacity="0"/>
-                <stop offset="0.5" stop-color="#FF8A2E" stop-opacity="0.5"/>
-                <stop offset="0.94" stop-color="#FF8A2E" stop-opacity="0"/>
-              </linearGradient>
-            </defs>
-            <rect x="0" y="0" width="1024" height="1024" rx="228" fill="url(#hdr-gBgWarm)"/>
-            <g clip-path="url(#hdr-sq)">
-              <path d="M60,760 Q392,-124 724,760" fill="none" stroke="url(#hdr-gArc)" stroke-width="16" stroke-linecap="round"/>
-              <path d="M546,776 L826,776 L1014,840 L734,840 Z" fill="url(#hdr-gShad)"/>
-              <circle cx="392" cy="318" r="122" fill="url(#hdr-gSun)"/>
-              <g fill="url(#hdr-gSun)">
-                <rect x="375" y="71" width="34" height="74" rx="17"/>
-                <rect x="375" y="71" width="34" height="74" rx="17" transform="rotate(45 392 318)"/>
-                <rect x="375" y="71" width="34" height="74" rx="17" transform="rotate(90 392 318)"/>
-                <rect x="375" y="71" width="34" height="74" rx="17" transform="rotate(135 392 318)"/>
-                <rect x="375" y="71" width="34" height="74" rx="17" transform="rotate(180 392 318)"/>
-                <rect x="375" y="71" width="34" height="74" rx="17" transform="rotate(225 392 318)"/>
-                <rect x="375" y="71" width="34" height="74" rx="17" transform="rotate(270 392 318)"/>
-                <rect x="375" y="71" width="34" height="74" rx="17" transform="rotate(315 392 318)"/>
-              </g>
-              <rect x="546" y="402" width="280" height="374" rx="10" fill="url(#hdr-gBld)"/>
-              <rect x="606" y="462" width="160" height="160" rx="22" fill="url(#hdr-gWin)"/>
-            </g>
-          </svg>
-        </span>
-        <h1 class="logo-text">Sun<span>Trace</span> 2</h1>
-      </div>
-      <div class="scanner-badge">
-        <svg width="7" height="7" viewBox="0 0 8 8" aria-hidden="true"><circle cx="4" cy="4" r="4" fill="#22c55e"/></svg>
-        v4.0 Meeus
-      </div>
+    <header class="brand">
+      <img class="brand-mark" src="docs/app-icon.svg" alt="" width="32" height="32">
+      <p class="brand-word">SunTrace <span>2</span></p>
     </header>
 
-    <!-- Address search (primo passo: scegli il luogo da analizzare) -->
-    <section class="card search-card" data-i18n-aria="search-card-aria" aria-label="Ricerca Geografica">
+    <ol class="steps">
+      <li data-i18n="step-1">Cerca l'indirizzo della casa.</li>
+      <li data-i18n="step-2">Disegna la stanza sulla mappa, un punto per angolo.</li>
+      <li data-i18n="step-3">Rispondi alle domande: la stima si stringe.</li>
+    </ol>
+
+    <!-- Address search -->
+    <section class="card search-card" data-i18n-aria="search-card-aria" aria-label="Cerca un indirizzo">
       <div class="flex-group">
         <div class="search-wrapper">
-          <span class="search-icon" aria-hidden="true">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-              <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/>
-            </svg>
-          </span>
           <input
             type="text"
             id="search-input"
@@ -110,312 +72,191 @@
           >
           <div id="autocomplete-preview" class="autocomplete-preview-box" role="listbox" data-i18n-aria="search-suggestions-aria" aria-label="Suggerimenti indirizzo"></div>
         </div>
-        <button id="search-btn" data-i18n="search-go" data-i18n-aria="search-go-aria" aria-label="Cerca indirizzo">Vai</button>
+        <button id="search-btn" class="btn-ink" data-i18n="search-go" data-i18n-aria="search-go-aria" aria-label="Cerca indirizzo">Vai</button>
       </div>
-      <p class="search-hint" data-i18n="search-hint">Cerca un indirizzo per iniziare, poi premi «Vai».</p>
     </section>
 
-    <!-- Main output -->
-    <section class="output-box" aria-labelledby="main-output-title">
-      <div class="hero-glow" aria-hidden="true"></div>
+    <!-- The answer: what it costs to heat this room -->
+    <section class="card result-card" id="result-card" aria-labelledby="result-title" aria-live="polite">
+      <h2 class="eyebrow" id="result-title" data-i18n="result-title">Scaldare questa stanza</h2>
+      <p class="result-figure">
+        <span class="result-range" id="cost-range">—</span>
+        <span class="result-unit" data-i18n="result-unit">€ al mese</span>
+      </p>
+      <p class="result-state" id="cost-state" data-i18n="cost-empty">Disegna la stanza sulla mappa per vedere quanto costa scaldarla.</p>
+      <dl class="result-lines" id="cost-lines" hidden>
+        <div><dt data-i18n="line-season">Quando</dt><dd id="cost-season"></dd></div>
+        <div id="cost-split-row"><dt data-i18n="line-split">A testa</dt><dd id="cost-split"></dd></div>
+        <div id="cost-sun-row"><dt data-i18n="line-sun">Il sole</dt><dd id="cost-sun"></dd></div>
+        <div id="cost-electric-row"><dt data-i18n="line-electric">Con una stufetta</dt><dd id="cost-electric"></dd></div>
+        <div><dt data-i18n="line-why">Perché</dt><dd id="cost-why"></dd></div>
+      </dl>
+      <p class="result-source" id="cost-source"></p>
+      <p class="result-caveat" data-i18n="result-caveat">È una stima per confrontare case, non un preventivo: la bolletta vera dipende da come scaldi.</p>
+    </section>
 
-      <div class="hero-top">
-        <p class="output-subtitle" id="main-output-title" data-i18n="output-initial">Stima temperatura vano</p>
-        <div class="coord-row">
+    <!-- What the renter can observe or ask at the viewing -->
+    <section class="card visit-card" id="visit-card" aria-labelledby="visit-title">
+      <h2 class="card-title" id="visit-title" data-i18n="visit-title">Le domande della visita</h2>
+      <p class="card-lead" data-i18n="visit-lead">Ogni risposta stringe la forbice. Se non lo sai, lascia «Non so»: la stima resta prudente.</p>
+
+      <div class="field">
+        <label for="q-heating" data-i18n="q-heating">Come si scalda la casa?</label>
+        <select id="q-heating" data-answer="heating">
+          <option value="unknown" data-i18n="opt-unknown">Non so</option>
+          <option value="gas" data-i18n="heating-gas">Caldaia a gas della casa</option>
+          <option value="central" data-i18n="heating-central">Riscaldamento centralizzato</option>
+          <option value="heatpump" data-i18n="heating-heatpump">Pompa di calore o condizionatore</option>
+          <option value="electric" data-i18n="heating-electric">Stufetta elettrica</option>
+        </select>
+        <p class="field-help" data-i18n="help-heating">Chiedi al proprietario. La caldaia di solito è in cucina, in bagno o sul balcone.</p>
+      </div>
+
+      <div class="field">
+        <label for="q-glass" data-i18n="q-glass">Che vetri hanno le finestre?</label>
+        <select id="q-glass" data-answer="glass">
+          <option value="unknown" data-i18n="opt-unknown">Non so</option>
+          <option value="single" data-i18n="glass-single">Vetro singolo</option>
+          <option value="double" data-i18n="glass-double">Doppio vetro</option>
+          <option value="lowe" data-i18n="glass-lowe">Doppio vetro basso emissivo</option>
+        </select>
+        <p class="field-help" data-i18n="help-glass">Avvicina al vetro la torcia del telefono e conta i riflessi: 2 vuol dire vetro singolo, 4 doppio vetro. Se uno dei riflessi è violaceo, il vetro è basso emissivo.</p>
+      </div>
+
+      <div class="field">
+        <label for="q-epoch" data-i18n="q-epoch">Quando è stato costruito il palazzo?</label>
+        <select id="q-epoch" data-answer="epoch">
+          <option value="unknown" data-i18n="opt-unknown">Non so</option>
+          <option value="pre1950" data-i18n="epoch-pre1950">Prima del 1950</option>
+          <option value="y1950" data-i18n="epoch-1950">1950–1975</option>
+          <option value="y1976" data-i18n="epoch-1976">1976–1990</option>
+          <option value="y1991" data-i18n="epoch-1991">1991–2005</option>
+          <option value="post2005" data-i18n="epoch-2005">Dopo il 2005</option>
+        </select>
+        <p class="field-help" data-i18n="help-epoch">Spesso è scritto nell'annuncio o nell'attestato energetico (APE).</p>
+      </div>
+
+      <div class="field-pair">
+        <div class="field">
+          <label for="q-above" data-i18n="q-above">Sopra la stanza c'è…</label>
+          <select id="q-above" data-answer="above">
+            <option value="unknown" data-i18n="opt-unknown">Non so</option>
+            <option value="flat" data-i18n="above-flat">Un altro appartamento</option>
+            <option value="roof" data-i18n="above-roof">Il tetto o un sottotetto</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="q-below" data-i18n="q-below">Sotto la stanza c'è…</label>
+          <select id="q-below" data-answer="below">
+            <option value="unknown" data-i18n="opt-unknown">Non so</option>
+            <option value="flat" data-i18n="below-flat">Un altro appartamento</option>
+            <option value="ground" data-i18n="below-ground">Cantina, garage o terreno</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="q-people" data-i18n="q-people">Quante persone dividono le bollette?</label>
+        <select id="q-people" data-answer="people">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- What to check and ask, generated from the answers and the estimate -->
+    <section class="card checklist-card" id="checklist-card" aria-labelledby="checklist-title">
+      <h2 class="card-title" id="checklist-title" data-i18n="checklist-title">Alla visita: controlla e chiedi</h2>
+      <ol class="checklist" id="checklist"><li data-i18n="checklist-empty">La lista compare quando disegni la stanza.</li></ol>
+    </section>
+
+    <section class="share-block" id="share-block">
+      <button type="button" id="share-btn" class="btn-ink" disabled>
+        <svg class="icon" aria-hidden="true"><use href="#i-share"/></svg>
+        <span data-i18n="share-btn">Condividi la scheda</span>
+      </button>
+      <p class="field-help" data-i18n="share-note">Il link contiene la posizione della stanza e le tue risposte: mandalo solo a chi vuoi.</p>
+    </section>
+
+    <!-- Everything technical, folded away: the sun, the shadows, the climate -->
+    <details class="tech-details" id="tech-details">
+      <summary data-i18n="tech-summary">Dettagli tecnici: sole, ombre e clima</summary>
+
+      <section class="card time-card" data-i18n-aria="time-card-aria" aria-label="Mese e ora sulla mappa">
+        <p class="card-lead" data-i18n="time-lead">Questi due cursori muovono solo il sole sulla mappa: la stima dei costi usa sempre tutta la stagione.</p>
+        <div class="slider-row">
+          <div class="slider-header">
+            <label for="month-slider" data-i18n="time-month">Mese</label>
+            <strong id="month-label">Giugno</strong>
+          </div>
+          <input type="range" id="month-slider" min="0" max="11" value="0" data-i18n-aria="month-slider-aria" aria-label="Seleziona mese">
+        </div>
+        <div class="slider-row">
+          <div class="slider-header">
+            <label for="hour-slider" data-i18n="time-hour">Ora</label>
+            <strong id="hour-label">12:00</strong>
+          </div>
+          <input type="range" id="hour-slider" min="0" max="23" value="12" data-i18n-aria="hour-slider-aria" aria-label="Seleziona ora">
+        </div>
+      </section>
+
+      <section class="card solar-card" data-i18n-aria="solar-card-aria" aria-label="Il sole adesso">
+        <dl class="readings">
+          <div><dt data-i18n="solar-sunrise">Alba</dt><dd id="val-sunrise">--:--</dd></div>
+          <div><dt data-i18n="solar-sunset">Tramonto</dt><dd id="val-sunset">--:--</dd></div>
+          <div><dt data-i18n="solar-daylength">Ore di luce</dt><dd id="val-day-length">--</dd></div>
+          <div><dt data-i18n="solar-elevation">Altezza del sole</dt><dd id="val-sun-elevation">--°</dd></div>
+          <div><dt data-i18n="solar-azimuth">Direzione del sole</dt><dd id="val-sun-azimuth">--°</dd></div>
+          <div><dt data-i18n="solar-direct">Sole sulle pareti</dt><dd id="val-sun-direct">--</dd></div>
+        </dl>
+      </section>
+
+      <section class="card climate-card" data-i18n-aria="climate-card-aria" aria-label="Clima del luogo">
+        <dl class="readings">
+          <div><dt data-i18n="climate-zone">Zona climatica</dt><dd id="val-zone">—</dd></div>
+          <div><dt data-i18n="climate-gg">Gradi giorno</dt><dd id="val-gg">—</dd></div>
+          <div><dt data-i18n="climate-humidity">Umidità media del mese</dt><dd id="val-humidity">—</dd></div>
+          <div><dt data-i18n="climate-wind">Vento medio del mese</dt><dd id="val-wind">—</dd></div>
+          <div><dt data-i18n="climate-rain">Pioggia del mese</dt><dd id="val-rain">—</dd></div>
+        </dl>
+        <div class="room-facts">
           <span id="coord-lat">--°N</span>
           <span id="coord-lng">--°E</span>
           <span id="room-area">-- m²</span>
         </div>
-      </div>
+      </section>
 
-      <div class="hero-main">
-        <div class="hero-figure">
-          <div class="output-temp" id="thermal-result" aria-live="polite">--°C</div>
-          <p class="hero-range" aria-hidden="true">
-            <span class="hr-item"><span class="hr-ico cold">❄</span><span id="hero-lo">--°</span></span>
-            <span class="hr-sep"></span>
-            <span class="hr-item"><span class="hr-ico warm">☀</span><span id="hero-hi">--°</span></span>
-          </p>
-        </div>
+      <p class="method-link"><a href="https://github.com/holyemilio/suntrace2/blob/main/docs/metodo.md" data-i18n="method-link">Come calcoliamo la stima, con tutte le fonti</a></p>
+    </details>
 
-        <!-- Soft solar glyph: dims when the sun is below the horizon -->
-        <div class="hero-sun" id="hero-sun" aria-hidden="true">
-          <svg viewBox="0 0 120 120" fill="none">
-            <defs>
-              <radialGradient id="sunCore" cx="50%" cy="45%" r="55%">
-                <stop offset="0%" stop-color="#ffe9a8"/>
-                <stop offset="55%" stop-color="#f5b301"/>
-                <stop offset="100%" stop-color="#e07b00"/>
-              </radialGradient>
-              <radialGradient id="sunHalo" cx="50%" cy="50%" r="50%">
-                <stop offset="35%" stop-color="rgba(245,179,1,0.34)"/>
-                <stop offset="100%" stop-color="rgba(245,179,1,0)"/>
-              </radialGradient>
-            </defs>
-            <circle cx="60" cy="60" r="58" fill="url(#sunHalo)"/>
-            <circle cx="60" cy="60" r="27" fill="url(#sunCore)"/>
-            <g stroke="#f5b301" stroke-width="4.5" stroke-linecap="round" opacity="0.75">
-              <path d="M60 12v11M60 97v11M12 60h11M97 60h11"/>
-              <path d="M26 26l7.8 7.8M86.2 86.2L94 94M94 26l-7.8 7.8M33.8 86.2L26 94" opacity="0.6"/>
-            </g>
-          </svg>
-        </div>
-      </div>
-
-      <div class="comfort-rate-wrapper">
-        <div class="comfort-rate-caption" data-i18n="comfort-estimated">Comfort Rate Stimato</div>
-        <div
-          class="comfort-rate-badge"
-          id="energy-class-field"
-          role="button"
-          tabindex="0"
-          data-i18n-aria="comfort-open-aria"
-          aria-label="Apri dettaglio comfort"
-        >
-          <span id="comfort-rate-stars">⭐⭐⭐⭐⭐</span>
-          <span id="comfort-rate-label">--</span>
-          <!-- GitHub-style Tooltip -->
-          <div class="comfort-rate-tooltip" role="tooltip" data-i18n="comfort-tooltip">
-            Comfort Rate: indice di comfort termico stimato per l'abitazione basato su orientamento, sole e ostruzioni.
-          </div>
-        </div>
-        <span class="kpi-hint" data-i18n="comfort-hint">tocca per i dettagli sul comfort</span>
-      </div>
-
-      <!-- Seasonal grid -->
-      <div class="quadrant-grid" role="region" data-i18n-aria="seasonal-aria" aria-label="Temperature Stagionali">
-        <div class="quadrant-card" id="quad-winter">
-          <span class="q-ico" aria-hidden="true">❄️</span>
-          <span class="q-label" data-i18n="season-winter">Inverno</span>
-          <strong class="q-value" id="val-q-winter">--°C</strong>
-        </div>
-        <div class="quadrant-card" id="quad-spring">
-          <span class="q-ico" aria-hidden="true">🌱</span>
-          <span class="q-label" data-i18n="season-spring">Primavera</span>
-          <strong class="q-value" id="val-q-spring">--°C</strong>
-        </div>
-        <div class="quadrant-card" id="quad-summer">
-          <span class="q-ico" aria-hidden="true">🔆</span>
-          <span class="q-label" data-i18n="season-summer">Estate</span>
-          <strong class="q-value" id="val-q-summer">--°C</strong>
-        </div>
-        <div class="quadrant-card" id="quad-autumn">
-          <span class="q-ico" aria-hidden="true">🍂</span>
-          <span class="q-label" data-i18n="season-autumn">Autunno</span>
-          <strong class="q-value" id="val-q-autumn">--°C</strong>
-        </div>
-      </div>
-
-      <div class="hero-feels-row">
-        <span class="label" data-i18n="climate-feels">Percepita ora</span>
-        <strong class="value" id="val-feels">—</strong>
-      </div>
-    </section>
-
-    <!-- Time configuration -->
-    <section class="card" data-i18n-aria="time-card-aria" aria-label="Configurazione Temporale">
-      <div class="slider-row">
-        <div class="slider-header">
-          <span class="label-with-tip">
-            <span data-i18n="time-month">Mese di analisi</span>
-            <span class="info-tip" tabindex="0" data-i18n-aria="tip-time-month">
-              <span class="info-tip-icon" aria-hidden="true">ⓘ</span>
-              <span class="info-tip-box" role="tooltip" data-i18n="tip-time-month">Il mese scelto aggiorna la posizione del sole, le temperature stagionali e il Comfort Rate.</span>
-            </span>
-          </span>
-          <strong id="month-label">Giugno</strong>
-        </div>
-        <input type="range" id="month-slider" min="0" max="11" value="5" data-i18n-aria="month-slider-aria" aria-label="Seleziona mese">
-      </div>
-
-      <div class="slider-row">
-        <div class="slider-header">
-          <span class="label-with-tip">
-            <span data-i18n="time-hour">Ora locale</span>
-            <span class="info-tip" tabindex="0" data-i18n-aria="tip-time-hour">
-              <span class="info-tip-icon" aria-hidden="true">ⓘ</span>
-              <span class="info-tip-box" role="tooltip" data-i18n="tip-time-hour">L'ora locale muove il sole sulla mappa: mostra dove cade l'ombra e se le pareti della stanza sono illuminate in quel momento.</span>
-            </span>
-          </span>
-          <strong id="hour-label">12:00</strong>
-        </div>
-        <input type="range" id="hour-slider" min="0" max="23" value="12" data-i18n-aria="hour-slider-aria" aria-label="Seleziona ora">
-      </div>
-    </section>
-
-    <!-- Facade parameters: each wall's orientation and shading are derived
-         silently from the drawn room and OSM buildings (they still drive the
-         comfort score) — only the two user choices are shown here. -->
-    <section class="card" data-i18n-aria="facade-card-aria" aria-label="Parametri Geometrici Facciata">
-      <div class="choice-row">
-        <span class="choice-label" data-i18n="facade-windows">Tipo di Infissi</span>
-        <div class="choice-group" role="radiogroup" data-i18n-aria="windows-select-aria" aria-label="Seleziona tipo di infissi">
-          <label class="choice">
-            <input type="radio" name="windows" value="single">
-            <span class="choice-emoji" aria-hidden="true">🪟</span>
-            <span class="choice-text" data-i18n="windows-single">Vetro Singolo</span>
-          </label>
-          <label class="choice">
-            <input type="radio" name="windows" value="double" checked>
-            <span class="choice-emoji" aria-hidden="true">🧊</span>
-            <span class="choice-text" data-i18n="windows-double">Doppio Vetro</span>
-          </label>
-          <label class="choice">
-            <input type="radio" name="windows" value="triple">
-            <span class="choice-emoji" aria-hidden="true">🛡️</span>
-            <span class="choice-text" data-i18n="windows-triple">Triplo / Termico</span>
-          </label>
-        </div>
-      </div>
-
-      <div class="choice-row">
-        <span class="choice-label" data-i18n="facade-insulation">Isolamento Muri</span>
-        <div class="choice-group" role="radiogroup" data-i18n-aria="insulation-select-aria" aria-label="Seleziona isolamento pareti">
-          <label class="choice">
-            <input type="radio" name="insulation" value="none" checked>
-            <span class="choice-emoji" aria-hidden="true">🧱</span>
-            <span class="choice-text" data-i18n="insulation-none">Muro Storico</span>
-          </label>
-          <label class="choice">
-            <input type="radio" name="insulation" value="coat">
-            <span class="choice-emoji" aria-hidden="true">🧥</span>
-            <span class="choice-text" data-i18n="insulation-coat">Cappotto Termico</span>
-          </label>
-          <label class="choice">
-            <input type="radio" name="insulation" value="fortress">
-            <span class="choice-emoji" aria-hidden="true">🏰</span>
-            <span class="choice-text" data-i18n="insulation-fortress">Da Fortezza</span>
-          </label>
-        </div>
-      </div>
-    </section>
-
-    <!-- Solar info -->
-    <section class="card solar-card" data-i18n-aria="solar-card-aria" aria-label="Informazioni Solari">
-      <!-- Dynamic Sun Trajectory Arc Widget -->
-      <div class="solar-trajectory-widget" id="solar-trajectory-widget" aria-hidden="true">
-        <div class="solar-arc-svg-wrap">
-          <svg viewBox="0 0 280 84" class="solar-arc-svg" fill="none">
-            <defs>
-              <linearGradient id="arcSkyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.35"/>
-                <stop offset="50%" stop-color="#f5b301" stop-opacity="0.95"/>
-                <stop offset="100%" stop-color="#f97316" stop-opacity="0.35"/>
-              </linearGradient>
-              <linearGradient id="arcFillGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stop-color="rgba(245, 179, 1, 0.16)"/>
-                <stop offset="100%" stop-color="rgba(245, 179, 1, 0.0)"/>
-              </linearGradient>
-              <filter id="sunGlow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
-                <feMerge>
-                  <feMergeNode in="blur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-            </defs>
-            <!-- Day Sky Fill under curve -->
-            <path id="solar-arc-fill" d="M 20 70 Q 140 14 260 70 Z" fill="url(#arcFillGrad)"/>
-            <!-- Background Arc Track -->
-            <path d="M 20 70 Q 140 14 260 70" stroke="rgba(255,255,255,0.12)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="3 5"/>
-            <!-- Active Sun Path Curve -->
-            <path id="solar-arc-path" d="M 20 70 Q 140 14 260 70" stroke="url(#arcSkyGrad)" stroke-width="3" stroke-linecap="round"/>
-            <!-- Horizon Base Line -->
-            <line x1="12" y1="70" x2="268" y2="70" stroke="rgba(255,255,255,0.15)" stroke-width="1.5" stroke-dasharray="2 3"/>
-            <!-- Moving Sun Orb -->
-            <g id="solar-arc-sun" transform="translate(140, 14)">
-              <circle r="14" fill="rgba(245,179,1,0.22)" filter="url(#sunGlow)"/>
-              <circle r="7.5" fill="#f5b301" stroke="#ffffff" stroke-width="2"/>
-            </g>
-          </svg>
-        </div>
-
-        <div class="solar-arc-footer">
-          <div class="solar-endpoint">
-            <span class="endpoint-ico">🌅</span>
-            <div class="endpoint-meta">
-              <span class="endpoint-lbl" data-i18n="solar-sunrise">Alba</span>
-              <strong class="endpoint-val" id="val-sunrise">--:--</strong>
-            </div>
-          </div>
-          <div class="solar-day-badge">
-            <span class="day-badge-lbl" data-i18n="solar-daylength">Giorno</span>
-            <strong class="day-badge-val" id="val-day-length">--</strong>
-          </div>
-          <div class="solar-endpoint endpoint-right">
-            <div class="endpoint-meta text-right">
-              <span class="endpoint-lbl" data-i18n="solar-sunset">Tramonto</span>
-              <strong class="endpoint-val" id="val-sunset">--:--</strong>
-            </div>
-            <span class="endpoint-ico">🌇</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Bento Telemetry Grid -->
-      <div class="solar-telemetry-grid">
-        <div class="telemetry-pill">
-          <span class="telemetry-pill-lbl" data-i18n="solar-elevation">Elevazione solare</span>
-          <strong class="telemetry-pill-val" id="val-sun-elevation">--°</strong>
-        </div>
-        <div class="telemetry-pill">
-          <span class="telemetry-pill-lbl" data-i18n="solar-azimuth">Azimut solare</span>
-          <strong class="telemetry-pill-val" id="val-sun-azimuth">--°</strong>
-        </div>
-        <div class="telemetry-pill telemetry-pill-full">
-          <span class="label-with-tip">
-            <span class="telemetry-pill-lbl" data-i18n="solar-direct">Sole diretto</span>
-            <span class="info-tip" tabindex="0" data-i18n-aria="tip-direct-sun">
-              <span class="info-tip-icon" aria-hidden="true">ⓘ</span>
-              <span class="info-tip-box" role="tooltip" data-i18n="tip-direct-sun">Se il sole colpisce davvero la facciata o e' bloccato dagli edifici vicini.</span>
-            </span>
-          </span>
-          <strong class="value badge-value" id="val-sun-direct">--</strong>
-        </div>
-      </div>
-    </section>
-
-    <!-- Local climate widgets for the selected month (real Open-Meteo normals) -->
-    <section class="card" data-i18n-aria="climate-card-aria" aria-label="Clima del luogo">
-      <div class="climate-widget-row">
-        <span class="cw-label" data-i18n="climate-humidity">Umidità media</span>
-        <span class="cw-chip cw-chip-blue"><span id="val-humidity">—</span><span class="cw-ico" aria-hidden="true">💧</span></span>
-      </div>
-      <div class="climate-widget-row">
-        <span class="cw-label" data-i18n="climate-wind">Vento medio</span>
-        <span class="cw-chip cw-chip-teal"><span id="val-wind">—</span><span class="cw-ico" aria-hidden="true">🌬️</span></span>
-      </div>
-      <div class="climate-widget-row">
-        <span class="cw-label" data-i18n="climate-rain">Pioggia del mese</span>
-        <span class="cw-chip cw-chip-indigo"><span id="val-rain">—</span><span class="cw-ico" aria-hidden="true">🌧️</span></span>
-      </div>
-    </section>
-
-    <!-- Footer -->
     <footer class="sidebar-footer">
       <nav data-i18n-aria="footer-links-aria" aria-label="Link utili">
         <ul class="footer-links">
-          <li><a href="docs/case-study.md" data-i18n="footer-docs">Documentazione</a></li>
+          <li><a href="https://github.com/holyemilio/suntrace2/blob/main/docs/metodo.md" data-i18n="footer-docs">Metodo e fonti</a></li>
           <li><a href="https://github.com/holyemilio/suntrace2" target="_blank" rel="noopener" data-i18n="footer-github">GitHub</a></li>
           <li><a href="privacy.html" data-i18n="footer-privacy">Privacy</a></li>
         </ul>
       </nav>
-      <p class="footer-copy" data-i18n="footer-copy">© 2026 SunTrace 2. Motore Meeus/SPA — solo uso indicativo.</p>
+      <p class="footer-copy" data-i18n="footer-copy">SunTrace 2 · stime indicative, non una certificazione energetica.</p>
     </footer>
 
   </aside>
 
   <!-- ── Map ──────────────────────────────────────────────────────────────── -->
-  <main id="map-container" data-i18n-aria="map-aria" aria-label="Mappa Interattiva Microclimatica">
+  <main id="map-container" data-i18n-aria="map-aria" aria-label="Mappa: disegna qui la stanza">
     <button
       class="map-floating-btn"
       id="geo-btn"
       data-i18n-aria="geo-aria"
-      aria-label="Rileva la mia posizione geografica"
+      aria-label="Usa la mia posizione"
       data-i18n-title="geo-title"
-      title="Rileva posizione"
+      title="Usa la mia posizione"
     >
-      <span id="geo-icon" role="img" aria-hidden="true">📌</span>
+      <svg class="icon" id="geo-icon" aria-hidden="true"><use href="#i-locate"/></svg>
     </button>
 
     <!-- Language switcher (bottom-left of the map) -->
@@ -424,20 +265,19 @@
       <button type="button" class="lang-btn" data-lang="en">EN</button>
     </div>
 
-    <!-- Floor selector (top-center of the map): the user's floor sets how much
-         nearby buildings still block the sun -->
-    <div id="floor-bar" class="floor-bar" role="group" data-i18n-aria="floor-aria" aria-label="Piano dell'abitazione">
+    <!-- Floor selector: the floor sets how far above the neighbours' roofs the
+         room sits, which decides how much of the low winter sun reaches it -->
+    <div id="floor-bar" class="floor-bar" role="group" data-i18n-aria="floor-aria" aria-label="Piano della stanza">
       <span class="floor-bar-label" data-i18n="floor-label">Piano</span>
-      <button type="button" class="floor-btn" data-floor="0" data-i18n-title="floor-ground" title="Piano terra">🏠</button>
+      <button type="button" class="floor-btn" data-floor="0" data-i18n-title="floor-ground" title="Piano terra">T</button>
       <button type="button" class="floor-btn" data-floor="1">1</button>
       <button type="button" class="floor-btn" data-floor="2">2</button>
       <button type="button" class="floor-btn" data-floor="3">3</button>
       <button type="button" class="floor-btn" data-floor="4">4</button>
-      <button type="button" class="floor-btn" data-floor="5" data-i18n-title="floor-roof" title="Tetto">🔺</button>
+      <button type="button" class="floor-btn" data-floor="5" data-i18n-title="floor-5" title="5° piano o più">5+</button>
     </div>
 
-    <!-- Map legend: collapses to a single icon button, same footprint as the
-         geolocation button, so it can sit out of the way once it's been read. -->
+    <!-- Map legend: collapses to a single icon button -->
     <div id="map-legend" class="map-legend mini-panel mini-panel-col" data-i18n-aria="legend-aria" aria-label="Legenda">
       <button
         type="button"
@@ -446,26 +286,25 @@
         aria-expanded="true"
         aria-controls="map-legend-body"
         data-i18n-aria="legend-toggle-aria"
-        aria-label="Mostra/nascondi la legenda"
+        aria-label="Mostra o nascondi la legenda"
       >
-        <span aria-hidden="true">🗺️</span>
+        <svg class="icon" aria-hidden="true"><use href="#i-legend"/></svg>
       </button>
       <div class="mini-panel-body" id="map-legend-body">
         <p class="map-legend-title" data-i18n="legend-title">Legenda</p>
         <ul class="map-legend-list">
-          <li class="map-legend-item"><span class="lg-swatch lg-area"></span><span data-i18n="legend-room">Perimetro stanza</span></li>
-          <li class="map-legend-item"><span class="lg-swatch lg-facade"></span><span data-i18n="legend-facade">Parete esposta, ora al sole</span></li>
-          <li class="map-legend-item"><span class="lg-swatch lg-facade-dim"></span><span data-i18n="legend-facade-shadow">Parete esposta, ora in ombra</span></li>
-          <li class="map-legend-item"><span class="lg-swatch lg-facade-interior"></span><span data-i18n="legend-facade-interior">Parete verso un altro vano (contorno sottile)</span></li>
-          <li class="map-legend-item"><span class="lg-swatch lg-sun"></span><span data-i18n="legend-sun">Direzione del sole</span></li>
-          <li class="map-legend-item"><span class="lg-swatch lg-shadow"></span><span data-i18n="legend-shadow">Ombra proiettata</span></li>
+          <li class="map-legend-item"><span class="lg-swatch lg-area"></span><span data-i18n="legend-room">Perimetro della stanza</span></li>
+          <li class="map-legend-item"><span class="lg-swatch lg-facade"></span><span data-i18n="legend-facade">Parete verso l'esterno, ora al sole</span></li>
+          <li class="map-legend-item"><span class="lg-swatch lg-facade-dim"></span><span data-i18n="legend-facade-shadow">Parete verso l'esterno, ora in ombra</span></li>
+          <li class="map-legend-item"><span class="lg-swatch lg-facade-interior"></span><span data-i18n="legend-facade-interior">Parete verso un'altra stanza (linea sottile)</span></li>
+          <li class="map-legend-item"><span class="lg-swatch lg-sun"></span><span data-i18n="legend-sun">Da dove arriva il sole</span></li>
+          <li class="map-legend-item"><span class="lg-swatch lg-shadow"></span><span data-i18n="legend-shadow">Ombra della stanza</span></li>
         </ul>
       </div>
     </div>
 
-    <!-- Placement hint: collapses to a single icon button (the lightbulb),
-         the same size as the geolocation button right above it. -->
-    <div id="map-hint" class="map-hint mini-panel mini-panel-row" data-i18n-aria="hint-aria" aria-label="Suggerimento">
+    <!-- Drawing hint: collapses to a single icon button -->
+    <div id="map-hint" class="map-hint mini-panel mini-panel-row" data-i18n-aria="hint-aria" aria-label="Come disegnare">
       <button
         type="button"
         class="mini-panel-toggle"
@@ -473,73 +312,79 @@
         aria-expanded="true"
         aria-controls="map-hint-text"
         data-i18n-aria="hint-toggle-aria"
-        aria-label="Mostra/nascondi il suggerimento"
+        aria-label="Mostra o nascondi il suggerimento"
       >
-        <span aria-hidden="true">💡</span>
+        <svg class="icon" aria-hidden="true"><use href="#i-pencil"/></svg>
       </button>
-      <p class="mini-panel-body" id="map-hint-text" data-i18n="placement-hint">Clicca per disegnare il perimetro della stanza, un punto per parete. Clicca vicino al primo punto per chiudere e bloccare la stanza; usa 🗑️ per ricominciare.</p>
+      <p class="mini-panel-body" id="map-hint-text" data-i18n="placement-hint">Clicca sulla mappa un punto per ogni angolo della stanza. Clicca di nuovo sul primo punto per chiuderla. Il cestino cancella e ricomincia.</p>
     </div>
 
-    <!-- Remove-room: clears the locked room polygon and re-enables drawing.
-         A dedicated button (rather than click-to-edit) so a stray tap on the
-         map never disturbs an already-drawn room. -->
+    <!-- Remove-room: clears the locked room polygon and re-enables drawing. -->
     <button
       class="map-floating-btn"
       id="remove-room-btn"
       data-i18n-aria="remove-room-aria"
-      aria-label="Rimuovi la stanza disegnata"
+      aria-label="Cancella la stanza disegnata"
       data-i18n-title="remove-room-title"
-      title="Rimuovi stanza"
+      title="Cancella la stanza"
     >
-      <span aria-hidden="true">🗑️</span>
+      <svg class="icon" aria-hidden="true"><use href="#i-trash"/></svg>
     </button>
 
     <!-- ── Mobile-only layout ────────────────────────────────────────────────
          Below the desktop breakpoint the sidebar is hidden and its content is
-         moved here at startup (see initMobileLayout in ui.js): a persistent
-         strip for the seasonal temperatures, a settings drawer for everything
-         you set (search, month/hour, infissi/isolamento), two small widgets
-         for solar and climate readings, and one Info sheet that folds the map
-         legend and the placement hint together — the map itself stays clear. -->
+         moved here at startup (see initMobileLayout in ui.js): the cost sits
+         in a persistent bottom bar, everything else (search, the result in
+         full, the questions, the checklist) in one drawer, the sun and
+         climate readings in two small widgets, legend and hint in one sheet. -->
 
-    <button type="button" class="mobile-info-btn" id="mobile-info-btn" aria-expanded="false" aria-controls="mobile-info-sheet" data-i18n-aria="mobile-info-aria" aria-label="Apri legenda e suggerimenti">
-      <span aria-hidden="true">ⓘ</span>
+    <button type="button" class="mobile-info-btn" id="mobile-info-btn" aria-expanded="false" aria-controls="mobile-info-sheet" data-i18n-aria="mobile-info-aria" aria-label="Legenda e suggerimenti">
+      <svg class="icon" aria-hidden="true"><use href="#i-info"/></svg>
     </button>
 
     <div class="mobile-sheet-overlay" id="mobile-info-overlay"></div>
     <div class="mobile-sheet" id="mobile-info-sheet" role="dialog" aria-modal="true" data-i18n-aria="mobile-info-aria" aria-label="Legenda e suggerimenti">
       <div class="mobile-sheet-handle"></div>
-      <button type="button" class="mobile-sheet-close" id="mobile-info-close" data-i18n-aria="modal-close-aria" aria-label="Chiudi">✕</button>
+      <button type="button" class="mobile-sheet-close" id="mobile-info-close" data-i18n-aria="close-aria" aria-label="Chiudi">
+        <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+      </button>
       <div class="mobile-sheet-body" id="mobile-info-body"></div>
     </div>
 
     <div class="mobile-sheet-overlay" id="mobile-drawer-overlay"></div>
-    <button type="button" class="mobile-drawer-toggle" id="mobile-drawer-toggle" aria-expanded="false" aria-controls="mobile-drawer" data-i18n-aria="mobile-drawer-aria" aria-label="Apri impostazioni">
-      <span aria-hidden="true">⚙️</span>
-      <span data-i18n="mobile-drawer-open">Imposta</span>
+    <button type="button" class="mobile-drawer-toggle" id="mobile-drawer-toggle" aria-expanded="false" aria-controls="mobile-drawer" data-i18n-aria="mobile-drawer-aria" aria-label="Domande e dettagli">
+      <svg class="icon" aria-hidden="true"><use href="#i-list"/></svg>
+      <span data-i18n="mobile-drawer-open">Domande e dettagli</span>
     </button>
-    <div class="mobile-sheet mobile-drawer" id="mobile-drawer" role="dialog" aria-modal="true" data-i18n-aria="mobile-drawer-aria" aria-label="Impostazioni">
+    <div class="mobile-sheet mobile-drawer" id="mobile-drawer" role="dialog" aria-modal="true" data-i18n-aria="mobile-drawer-aria" aria-label="Domande e dettagli">
       <div class="mobile-sheet-handle"></div>
-      <button type="button" class="mobile-sheet-close" id="mobile-drawer-close" data-i18n-aria="modal-close-aria" aria-label="Chiudi">✕</button>
+      <button type="button" class="mobile-sheet-close" id="mobile-drawer-close" data-i18n-aria="close-aria" aria-label="Chiudi">
+        <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+      </button>
       <div class="mobile-sheet-body" id="mobile-drawer-body"></div>
     </div>
 
     <div class="mobile-widgets" id="mobile-widgets">
       <div class="mini-panel mini-panel-col mobile-widget collapsed" id="mobile-solar-widget">
-        <button type="button" class="mini-panel-toggle" id="mobile-solar-toggle" aria-expanded="false" aria-controls="mobile-solar-body" data-i18n-aria="mobile-solar-aria" aria-label="Dati solari">
-          <span aria-hidden="true">☀️</span>
+        <button type="button" class="mini-panel-toggle" id="mobile-solar-toggle" aria-expanded="false" aria-controls="mobile-solar-body" data-i18n-aria="mobile-solar-aria" aria-label="Il sole adesso">
+          <svg class="icon" aria-hidden="true"><use href="#i-sun"/></svg>
         </button>
         <div class="mini-panel-body" id="mobile-solar-body"></div>
       </div>
       <div class="mini-panel mini-panel-col mobile-widget collapsed" id="mobile-climate-widget">
         <button type="button" class="mini-panel-toggle" id="mobile-climate-toggle" aria-expanded="false" aria-controls="mobile-climate-body" data-i18n-aria="mobile-climate-aria" aria-label="Clima del luogo">
-          <span aria-hidden="true">🌡️</span>
+          <svg class="icon" aria-hidden="true"><use href="#i-drop"/></svg>
         </button>
         <div class="mini-panel-body" id="mobile-climate-body"></div>
       </div>
     </div>
 
-    <div class="mobile-bottom-bar" id="mobile-bottom-bar"></div>
+    <div class="mobile-bottom-bar" id="mobile-bottom-bar">
+      <button type="button" class="mobile-cost" id="mobile-cost" aria-controls="mobile-drawer">
+        <span class="mobile-cost-label" data-i18n="result-title">Scaldare questa stanza</span>
+        <span class="mobile-cost-figure"><strong id="mobile-cost-range">—</strong> <span data-i18n="result-unit">€ al mese</span></span>
+      </button>
+    </div>
 
     <div
       id="map-error-toast"
@@ -552,68 +397,6 @@
     <div id="map"></div>
   </main>
 
-  <!-- ── Comfort Rate Modal ─────────────────────────────────────────────────────────── -->
-  <div
-    id="kpi-modal"
-    class="modal-overlay"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="modal-class-title"
-  >
-    <div class="modal">
-      <button class="modal-close" id="modal-close-btn" data-i18n-aria="modal-close-aria" aria-label="Chiudi modale">✕</button>
-
-      <h2 id="modal-class-title" data-i18n="modal-title-initial">Dettaglio Comfort Rate</h2>
-      <div class="modal-class-badge" id="modal-class-badge">Comfort Rate --</div>
-
-      <div class="kpi-grid">
-        <div class="kpi-cell">
-          <span class="kpi-val" id="kpi-winter-temp">--</span>
-          <span class="kpi-lbl" data-i18n="kpi-winter">Comfort Inverno (mezzogiorno)</span>
-        </div>
-        <div class="kpi-cell">
-          <span class="kpi-val" id="kpi-summer-temp">--</span>
-          <span class="kpi-lbl" data-i18n="kpi-summer">Comfort Estate (mezzogiorno)</span>
-        </div>
-        <div class="kpi-cell">
-          <span class="kpi-val" id="kpi-infissi-selected">--</span>
-          <span class="kpi-lbl" data-i18n="kpi-windows">Tipo di Infissi</span>
-        </div>
-        <div class="kpi-cell">
-          <span class="kpi-val" id="kpi-isolamento-selected">--</span>
-          <span class="kpi-lbl" data-i18n="kpi-insulation">Isolamento Pareti</span>
-        </div>
-        <div class="kpi-cell">
-          <span class="kpi-val" id="kpi-room-area">--</span>
-          <span class="kpi-lbl" data-i18n="kpi-area">Superficie disegnata</span>
-        </div>
-      </div>
-
-      <div class="modal-climate" id="modal-climate">
-        <div class="mc-item">
-          <span class="mc-val" id="kpi-feels-summer">—</span>
-          <span class="mc-lbl" data-i18n="lbl-feels-summer">Percepita estate</span>
-        </div>
-        <div class="mc-item">
-          <span class="mc-val" id="kpi-humidity">—</span>
-          <span class="mc-lbl" data-i18n="lbl-humidity">Umidità media</span>
-        </div>
-        <div class="mc-item">
-          <span class="mc-val" id="kpi-rain">—</span>
-          <span class="mc-lbl" data-i18n="lbl-rain">Pioggia annua</span>
-        </div>
-      </div>
-
-      <div class="modal-exposure" id="kpi-exposure"></div>
-
-      <div class="modal-tip" id="kpi-tip"></div>
-
-      <p class="modal-disclaimer" data-i18n="modal-disclaimer">
-        *Le temperature usano le medie climatiche reali del luogo (Open-Meteo, normali 1991–2020); il comportamento termico dell'abitazione è però una stima euristica e non costituisce una certificazione energetica ufficiale (APE).
-      </p>
-    </div>
-  </div>
-
   <!-- ── Scripts ─────────────────────────────────────────────────────────── -->
   <script src="vendor/leaflet/leaflet.js"></script>
 
@@ -622,13 +405,12 @@
     init();
   </script>
 
-  <!-- ── Mobile Block Overlay ─────────────────────────────────────────────────── -->
+  <!-- ── Too-narrow window block ─────────────────────────────────────────── -->
   <div id="mobile-warning" class="mobile-warning-overlay" role="alert" aria-live="assertive">
     <div class="mobile-warning-card">
-      <div class="mobile-warning-icon">🖥️</div>
-      <h2 data-i18n="mobile-title">Ops! SunTrace 2 ha bisogno di spazio...</h2>
-      <p data-i18n="mobile-p1">Ci hai scoperto! 🕵️‍♂️ Per il momento l'esperienza da smartphone non è disponibile.</p>
-      <p data-i18n="mobile-p2">Collegati da un computer per iniziare a scansionare al meglio ed esplorare l'esposizione al sole!</p>
+      <h2 data-i18n="mobile-title">La finestra è troppo stretta</h2>
+      <p data-i18n="mobile-p1">SunTrace 2 ha bisogno di almeno 320 pixel di larghezza per mostrare mappa e risultati.</p>
+      <p data-i18n="mobile-p2">Allarga la finestra o riduci lo zoom del browser.</p>
     </div>
   </div>
 

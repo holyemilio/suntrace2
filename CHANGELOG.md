@@ -5,6 +5,36 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) — [Semantic V
 
 ---
 
+## [4.0.0] — 2026-10-23
+
+SunTrace 2 diventa uno strumento per chi affitta: non dà più un voto a stelle,
+dice quanto costa scaldare la stanza, in euro al mese, con fonti verificate.
+
+### Cambiato (incompatibile)
+- **Il Comfort Rate a stelle, le temperature stagionali e le card infissi/isolamento sono stati rimossi**, con il modello termico euristico che li produceva (`src/climate.js`, nella storia git). Erano un indice senza unità e scelte che un inquilino non può fare.
+- **Il 5° piano non è più il tetto**: è «5° piano o più». Cosa c'è sopra la stanza (tetto o sottotetto) è ora una domanda esplicita.
+- **I cursori mese/ora muovono solo il sole sulla mappa** e stanno in «Dettagli tecnici»: la stima usa sempre tutta la stagione.
+
+### Aggiunto
+- **Stima del riscaldamento in €/mese** (`src/cost.js`): dispersione della stanza con i valori U della tipologia TABULA (Politecnico di Torino), gradi giorno dal clima Open-Meteo 1991–2020 nel periodo di accensione della zona (DPR 412/93, DPR 74/2013), sole sulla parete con le ombre OSM al piano scelto, caldaia a gas / pompa di calore / stufetta con rendimenti di legge (Reg. UE 813/2013, 626/2011) e prezzi ARERA (`src/prices.js`, aggiornati a mano ogni mese). Sempre una forbice: caso migliore e peggiore dei valori incerti.
+- **Sei domande della visita**, ognuna con «Non so»: riscaldamento, vetri (con il test della torcia), epoca del palazzo, cosa c'è sopra e sotto, persone che dividono le bollette.
+- **Quota a testa**, **risparmio massimo dal sole**, **confronto con la stufetta elettrica**, **checklist** «controlla e chiedi» generata dalle risposte.
+- **Scheda condivisibile**: un link con stanza e risposte (`?v=…`), senza server. Sezione dedicata nella privacy policy.
+- **Landing riscritta**: Fig. 1 con il vero percorso del sole su Roma, § 1 la stessa stanza con quattro riscaldamenti (calcolata dal vivo ai prezzi correnti), § 2 le domande, § 3 le fonti.
+- **`docs/metodo.md`**: ogni formula con una legenda per ogni simbolo, le fonti e un esempio svolto. **`docs/sviluppo.md`**: avvio, test, struttura.
+- 18 unit test su `cost.js`; e2e riscritti per il nuovo flusso (27).
+
+### Design
+- Carta e inchiostro al posto del tema scuro: crema dell'icona come fondo, un solo ambra riservato a sole e soldi, filetti invece di ombre, raggio 3 px, niente vetro sfocato, bagliori, gradienti o animazioni di reveal.
+- Newsreader (titoli e cifre) e IBM Plex Sans (interfaccia) al posto di Space Grotesk; IBM Plex Mono solo per le letture. Scala tipografica fissa di 6 livelli. Font self-hostati.
+- Un set di icone SVG disegnato per l'app al posto delle emoji; testi senza emoji, in seconda persona.
+
+### Rimosso
+- Dalla landing i dati ISPRA, ENEA ed ECCO Climate e la stima «−20% con buon orientamento»: non verificati.
+- `docs/case-study.md`, `docs/storyline.md`, `docs/manuale-utente.html`, `docs/testbook.*` spostati in `docs/archivio/` (descrivono la v3).
+
+---
+
 ## [3.1.2] — 2026-09-02
 
 Deploy live su GitHub Pages e riallineamento della documentazione a SunTrace 2.

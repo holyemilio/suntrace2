@@ -5,78 +5,81 @@ trappole, pendenze) è in `docs/stato-lavori.md` — leggerlo prima di lavori gr
 
 ## Cos'è
 
-Simulatore microclimatico urbano — ma a differenza di SunTrace 1 (repo separata,
-`holyemilio/Suntrace`), qui l'utente **disegna il perimetro della propria stanza**
-sulla mappa invece di cliccare un singolo punto: ogni lato del poligono diventa
-una parete con orientamento derivato geometricamente, classificata esposta al
-sole o verso un altro vano, e il risultato è un unico modello climatico "a
-livello di stanza" (non una bussola/facciata singola — vedi `docs/CHANGELOG.md`
-[3.0.0] per il perché). Vanilla JS, moduli ES nativi, **nessun build step, zero
-dipendenze di runtime**. Due pagine: `index.html` (landing) e `app.html`
-(simulatore, con layout mobile dedicato sotto i 768px). **Live su
-<https://holyemilio.github.io/suntrace2/>** (GitHub Pages, root → `index.html`)
-· versione **3.1.2**.
+Uno strumento per **chi cerca casa in affitto** (studenti, studenti lavoratori,
+lavoratori fuori sede): disegni il perimetro della stanza sulla mappa, rispondi a
+sei domande verificabili alla visita, e l'app stima **quanto costa scaldarla, in
+euro al mese** (sempre una forbice), con le ombre vere dei palazzi vicini e i
+prezzi ARERA. Dalla v4.0.0 non c'è più il Comfort Rate a stelle (vedi
+`CHANGELOG.md` [4.0.0]). Due requisiti fissi dell'utente: **niente "AI slop"**
+(né nel design né nei contenuti) e **ogni numero deve avere una fonte
+verificata**, altrimenti non entra nel calcolo.
+
+Vanilla JS, moduli ES nativi, **nessun build step, zero dipendenze di runtime**.
+Pagine: `index.html` (landing), `app.html` (l'app, layout mobile sotto i 768px),
+`privacy.html`. **Live su <https://holyemilio.github.io/suntrace2/>** (GitHub
+Pages da `main`, root → `index.html`) · versione **4.0.0**.
 
 ## Comandi
 
 ```bash
 ./start.command      # server locale su :8000 (Cache-Control: no-store)
-npm test             # 72 unit test (motore solare, clima, geometria/ombre)
-npm run test:e2e     # 25 e2e Playwright (API esterne mockate)
+npm test             # 64 unit test (motore solare, costo, geometria/ombre)
+npm run test:e2e     # 27 e2e Playwright (API esterne mockate)
 ```
 
-Node **è installato** su questo Mac (verificato: `node --version` funziona) —
-i test girano localmente, non serve aspettare la CI per verificare una modifica.
-La CI (`.github/workflows/ci.yml`) li rigira comunque ad ogni push — unit, parità
-i18n IT/EN, e2e — come seconda rete di sicurezza.
+Node **è installato** su questo Mac — i test girano localmente. La CI
+(`.github/workflows/ci.yml`) li rigira ad ogni push — unit, parità i18n IT/EN,
+e2e.
 
 ## Mappa dei file
 
 | Percorso | Ruolo |
 |---|---|
+| `src/cost.js` | **Il calcolo del costo.** Puro. Zona climatica + periodo (DPR 412/93, 74/2013), gradi giorno, sole sulla parete (Erbs + isotropico, ombre via callback), dispersione H con valori U TABULA, forbice lo/hi, checklist. Ogni costante ha la fonte in `docs/metodo.md`: **non aggiungere costanti senza fonte**. |
+| `src/prices.js` | Prezzi ARERA gas/luce. **L'utente li aggiorna a mano ogni mese** (procedura in `docs/metodo.md`). |
 | `src/solar.js` | Motore astronomico Meeus/SPA. **Puro, non toccare senza motivo** (23 test vs SunCalc). |
-| `src/climate.js` | Modello termico. `seasonalTemperatures` (una parete) resta invariata e testata; `roomSeasonalTemperatures` la chiama una volta per parete e combina per lunghezza + smorzamento da area stanza (`REF_ROOM_AREA_M2`, `INTERIOR_WALL_REF_C`, entrambe costanti interne non esportate). |
-| `src/shadow.js` | Geometria: `outwardNormalAz` (azimut di un lato, **attenzione** — ritorna l'azimut VERSO il punto di riferimento passato, non lontano da esso: per il lato di una stanza va usato col centroide e poi flippato di 180°, vedi `lockRoom()` in `ui.js`), `classifyRoomEdges` (esterno/interno per lato, tolleranza `EDGE_TOLERANCE_M=2.5`), `polygonArea`/`polygonCentroid`, `sunBlocked`/`monthlySunAccess` (cache ora una `Map` multi-chiave, non più a singolo slot — serve una chiamata per parete per refresh). |
-| `src/ui.js` | Tutto il simulatore: Leaflet, API, **disegno del poligono stanza** (click per vertice, chiusura vicino al primo vertice blocca la stanza, bottone 🗑️ la rimuove — niente più bussola/punto singolo), pannelli, layout mobile con reparenting DOM. Monolite. |
-| `src/landing.js` · `landing.css` | Landing. **Non importano `styles.css`** (che blocca lo scroll). |
-| `src/i18n.js` | Dizionario IT/EN. **Ogni stringa nuova va in ENTRAMBE le lingue** — la CI lo verifica. |
-| `src/tokens.css` | Design token condivisi dalle due pagine. |
-| `vendor/fonts/` · `vendor/leaflet/` | Font e Leaflet 1.9.4 **self-hostati**: niente CDN, mai reintrodurre link a Google Fonts/unpkg. |
+| `src/shadow.js` | Geometria: `outwardNormalAz` (**attenzione** — ritorna l'azimut VERSO il punto passato: per il lato di una stanza va usato col centroide e flippato di 180°, vedi `lockRoom()`), `classifyRoomEdges`, `polygonArea`/`polygonCentroid`, `sunBlocked`. |
+| `src/ui.js` | L'app: Leaflet, API, disegno del poligono, domande (`select[data-answer]`), `refreshCost()` (stima + checklist), `refreshUI()` (sole/mappa per mese e ora), link condivisibile `?v=…`, layout mobile con reparenting DOM. |
+| `src/landing.js` · `landing.css` | Landing: Fig. 1 (percorso del sole, da `solar.js`) e confronto § 1 (da `cost.js`, dati Milano incorporati). **Non importano `styles.css`** (che blocca lo scroll). |
+| `src/i18n.js` | Testi IT/EN. **Ogni stringa nuova va in ENTRAMBE le lingue** — la CI lo verifica. Voce: semplice, seconda persona, niente emoji. |
+| `src/tokens.css` | Carta e inchiostro, scala tipografica `--fs-*`, font. Condiviso dalle tre pagine. |
+| `vendor/fonts/` · `vendor/leaflet/` | Newsreader, IBM Plex Sans/Mono e Leaflet 1.9.4 **self-hostati**: mai reintrodurre link a Google Fonts/unpkg. |
+| `docs/metodo.md` | Il metodo per chi vuole capire i numeri: formule con legenda, fonti, esempio svolto. |
+| `docs/sviluppo.md` | Per chi sviluppa: avvio, test, struttura. Il `README` è solo funzionale. |
 | `server/overpass-cache/` | Cloudflare Worker (cache KV 30gg davanti ai mirror Overpass). **Non ancora deployato**: si attiva incollando l'URL in `OVERPASS_PROXY_URL` (`src/ui.js`). |
 
 ## Servizi esterni (gratuiti, senza chiave)
 
 OpenStreetMap (tiles) · Nominatim (geocoding, debounce ≥420ms, accetta it/va/sm)
 · Overpass (edifici — il più fragile: 3 mirror in fallback in `ui.js`)
-· Open-Meteo (normali climatiche 1991–2020, param `daily` aggregato a mano).
-Font e Leaflet **non** sono più esterni (self-hostati da v2.5.0); la privacy
-policy (`privacy.html` + chiavi `privacy-*` in i18n) riflette esattamente questo
-elenco — se cambi i servizi contattati, aggiorna anche lei, in entrambe le lingue.
+· Open-Meteo (normali 1991–2020: temperatura, umidità, vento, pioggia, sole;
+param `daily` aggregato a mano). La privacy policy (`privacy.html` + chiavi
+`privacy-*` in i18n) riflette esattamente questo elenco — se cambi i servizi
+contattati, aggiorna anche lei, in entrambe le lingue.
 
 ## Regole di progetto
 
 - Stringhe UI: sempre via `data-i18n` (o `-ph`/`-aria`/`-title`) + chiave in
   entrambe le lingue di `i18n.js`.
 - Niente CDN, niente nuove dipendenze di runtime, niente bundler.
+- Niente emoji come icone: c'è un set SVG (`<symbol>` in cima ad `app.html`).
 - Le coordinate nelle query Overpass sono arrotondate a 4 decimali (stessa
   tolleranza della cache localStorage): non "correggerlo".
-- Trappole già pagate (flexbox sidebar, `transform`+`backdrop-filter`,
-  cache del browser, finestra <768px): elenco completo in `docs/stato-lavori.md`
-  — consultarlo prima di toccare layout o mappa.
+- Trappole già pagate (flexbox sidebar, `transform`+`backdrop-filter`, `hidden`
+  contro `display`, controlli dentro `<details>` negli e2e, link `.md` su Pages,
+  finestra <768px): elenco completo in `docs/stato-lavori.md`.
 - A fine release: aggiornare `CHANGELOG.md`, `docs/stato-lavori.md` e la
-  versione in `package.json`, poi commit + push sul repo del progetto
-  (`holyemilio/suntrace2`, live su GitHub Pages).
+  versione in `package.json`, poi commit + push su `holyemilio/suntrace2`
+  (live su GitHub Pages).
 
-## Pendenze note (settembre 2026)
+## Pendenze note (ottobre 2026)
 
 1. **Deploy del worker Overpass** (azione manuale utente — README in
-   `server/overpass-cache/`) — **priorità alzata** ora che l'app è live: senza
-   la cache KV, traffico reale multi-utente concentra le richieste sui mirror
-   Overpass pubblici, il servizio già più fragile della pipeline (vedi anche
-   la risposta sui rischi multi-dispositivo in `docs/stato-lavori.md`).
-2. Nessun e2e sulla landing (`landing.js` verificata solo via screenshot).
-3. Fallback mirror Overpass mai provato end-to-end.
-4. Il cuneo d'ombra sulla mappa resta uno solo, disegnato dal centroide della
-   stanza — non uno per parete (semplificazione dichiarata).
-5. Nessuna validazione esplicita contro poligoni auto-intersecanti o degeneri
-   in fase di disegno.
+   `server/overpass-cache/`): con traffico reale le richieste si concentrano
+   sui mirror Overpass pubblici, il servizio più fragile.
+2. **Validare la stima con bollette vere** (3–5 stanze note): servono i dati
+   dell'utente.
+3. La forbice con tutti «Non so» è molto ampia: onesta ma poco utile.
+4. Nessun e2e sulla landing (verificata solo via screenshot).
+5. Fallback mirror Overpass mai provato end-to-end.
+6. Nessuna validazione contro poligoni auto-intersecanti o degeneri.

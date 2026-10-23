@@ -1,7 +1,7 @@
 {
   "name": "suntrace",
-  "version": "3.1.2",
-  "description": "Urban microclimate solar simulator \u2014 vanilla JS, no build step",
+  "version": "4.0.0",
+  "description": "What it costs to heat the room you are about to rent \u2014 vanilla JS, no build step",
   "type": "module",
   "scripts": {
     "test": "node --test tests/*.test.js",

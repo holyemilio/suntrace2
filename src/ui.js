@@ -1,29 +1,17 @@
 /**
  * ui.js — Application UI controller.
- * Imports solar.js, climate.js and shadow.js; manages Leaflet map, DOM
- * interactions, autocomplete, geolocation, the room-polygon drawing
- * interaction, and the KPI modal.
+ * Imports solar.js, shadow.js and cost.js; manages the Leaflet map, the
+ * room-polygon drawing, address search and geolocation, the visit questions,
+ * the heating-cost estimate, the checklist and the shareable link.
  */
 
 import {
   solarPosition,
   sunriseSunset,
   facadeIrradiance,
-  dailySunHours,
-  roofIrradiance,
-  dailyRoofSunHours,
   localToUTC,
   offsetByAzimuth,
 } from './solar.js';
-
-import {
-  airTemperature,
-  solarThermalGain,
-  seasonalTemperatures,
-  roomSeasonalTemperatures,
-  cozynessScore,
-  apparentTemperature,
-} from './climate.js';
 
 import {
   localXY,
@@ -33,8 +21,16 @@ import {
   polygonCentroid,
   classifyRoomEdges,
   sunBlocked,
-  monthlySunAccess,
 } from './shadow.js';
+
+import {
+  estimateHeating,
+  visitChecklist,
+  wallDailyIrradiance,
+  resolveClimateZone,
+} from './cost.js';
+
+import { PRICES } from './prices.js';
 
 import { t, monthName, getLang, setLang, applyTranslations } from './i18n.js';
 
@@ -55,14 +51,14 @@ const IN_ITALY_CODES = new Set(['it', 'va', 'sm']);
 // Open-Meteo climate normals (1991-2020, EC-Earth3P-HR). "monthly" aggregation
 // param returns an empty payload on this API — verified against the live
 // endpoint — so we pull daily means and aggregate to 12 monthly values ourselves.
+// shortwave_radiation_sum (MJ/m² per day, on the horizontal) feeds the sun
+// that comes in through the windows.
 const OPEN_METEO_URL = 'https://climate-api.open-meteo.com/v1/climate';
-const OPEN_METEO_RANGE = 'models=EC_Earth3P_HR&start_date=1991-01-01&end_date=2020-12-31&daily=temperature_2m_mean,relative_humidity_2m_mean,windspeed_10m_mean,precipitation_sum';
+const OPEN_METEO_RANGE = 'models=EC_Earth3P_HR&start_date=1991-01-01&end_date=2020-12-31&daily=temperature_2m_mean,relative_humidity_2m_mean,windspeed_10m_mean,precipitation_sum,shortwave_radiation_sum';
 const DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
-// Shadow model: one storey ≈ 3 m, and a facade in shadow still receives diffuse
-// sky light — never zero, just a small fraction of the direct gain.
+// One storey ≈ 3 m: the floor sets the observer height for the shadow rays.
 const FLOOR_HEIGHT_M = 3;
-const DIFFUSE_K = 0.15;
 
 // Clicking/tapping within this many metres of the room's first vertex closes
 // the loop instead of adding another vertex — generous enough for a fingertip
@@ -73,24 +69,31 @@ const CLOSE_LOOP_TOLERANCE_M = 1.2;
 // Land returns address.country_code; open sea returns an error (no country).
 const REVERSE_URL = 'https://nominatim.openstreetmap.org/reverse';
 
+// Map colours: the room in ink, sunlit walls in the sun's amber.
+const INK = '#1c1a16';
+const SUN = '#d08a00';
+const SHADE = '#8a8377';
+
+// A forbice wider than this (high ÷ low) tells the user to answer more.
+const WIDE_RANGE_RATIO = 3;
+
+// Above this the drawing is more likely a whole flat or building than a room.
+const BIG_ROOM_M2 = 120;
+
 // ─── state ────────────────────────────────────────────────────────────────────
 
 let map = null;
 let vertexMarkers = [];   // in-progress drawing: one marker per placed vertex
 let drawPolyline = null;  // in-progress drawing: open line through the vertices
 let roomPolygon = null;   // locked room's closed outline
-let wallLines = [];       // one highlighted line per exterior (sun-facing) wall
+let wallLines = [];       // one highlighted line per exterior wall
 let shadowPolygon = null;
 let sunRay = null;
 let errorTimeout = null;
 let autocompleteTimeout = null;
-let customBaseTemps = null; // 12 monthly temp means from Open-Meteo; null = fallback to climate.js Rome table
-let climateExtra = null;    // { rh, wind, precip } monthly means from Open-Meteo (may be null / partial)
-let currentFloor = 0;       // user's floor (0 = ground … 5); higher clears nearby rooftops → less obstruction
-// Floor 5 isn't "a wall 15m up" like the others — it's the roof: a horizontal
-// surface with no facing direction, so orientation stops mattering entirely.
-const ROOF_FLOOR = 5;
-let lastAnalysis = null; // { seasonal, comfort, ... } from the latest refreshUI(), read by openKPIModal()
+let climate = null;         // { temp, rh, wind, precip, rad } monthly normals, or null
+let climateStatus = 'idle'; // 'idle' | 'loading' | 'ready' | 'failed'
+let currentFloor = 0;       // user's floor (0 = ground … 5+); higher clears nearby rooftops
 // Coordinates of the last picked autocomplete suggestion, kept so the "Vai"
 // button can analyse them without a second Nominatim call. Includes the exact
 // query text it was picked for, to invalidate it if the user edits the field.
@@ -111,6 +114,10 @@ let currentRoom = {
 // Bumped on every lock()/removeRoom(): lets async work (Overpass/Nominatim
 // fetches) started for one room recognise it's been superseded by another.
 let roomGen = 0;
+
+// Monthly sun on each exterior wall is the expensive part (a shadow ray every
+// 10 minutes of 12 mean days): computed once per room/floor/buildings/climate.
+let irradianceCache = { key: null, byWall: new Map() };
 
 // ─── DOM helpers ──────────────────────────────────────────────────────────────
 
@@ -166,10 +173,8 @@ function initMap() {
   map.on('click', e => addVertex(e.latlng));
 }
 
-// Clean custom marker (a green dot) — replaces Leaflet's default pin + grey shadow.
-// The icon box is bigger than the visible dot on purpose: it's the drag
-// hit-area (Leaflet's 1-finger drag grabs this element), and a 16px dot
-// alone is too small a touch target.
+// A plain ink dot. The icon box is bigger than the visible dot on purpose:
+// it's the touch hit-area, and a 14px dot alone is too small a target.
 function markerIcon() {
   return L.divIcon({
     className: 'suntrace-marker',
@@ -189,9 +194,8 @@ function clearDrawingOverlays() {
   if (drawPolyline) { map.removeLayer(drawPolyline); drawPolyline = null; }
 }
 
-// The locked room's outline — redrawn only when the room is (re)locked or its
-// wall classification is refined by OSM data, never on every refreshUI() (the
-// shape itself doesn't change with month/hour/floor/etc).
+// The locked room's outline — redrawn only when the room is (re)locked, never
+// on every refreshUI() (the shape itself doesn't change with month/hour/floor).
 function clearRoomPolygon() {
   if (roomPolygon) { map.removeLayer(roomPolygon); roomPolygon = null; }
 }
@@ -200,17 +204,15 @@ function renderRoomPolygon() {
   clearRoomPolygon();
   const pts = currentRoom.vertices.map(v => [v.lat, v.lng]);
   roomPolygon = L.polygon(pts, {
-    color: '#22c55e',
+    color: INK,
     weight: 2,
-    fillColor: '#22c55e',
+    fillColor: INK,
     fillOpacity: 0.06,
   }).addTo(map);
 }
 
-// Exterior-wall highlights — unlike the outline above, these DO get redrawn on
-// every refreshUI() (month/hour/floor change which walls are actually lit
-// right now). Interior walls are skipped entirely: only exterior walls ever
-// get a highlight, lit or not.
+// Exterior-wall highlights — redrawn on every refreshUI() (month/hour/floor
+// change which walls are lit right now). Interior walls get no highlight.
 function clearWallHighlights() {
   wallLines.forEach(l => map.removeLayer(l));
   wallLines = [];
@@ -218,31 +220,28 @@ function clearWallHighlights() {
 
 /**
  * @param {Array} exteriorWalls
- * @param {?Map<number,boolean>} perWallLit — wall index (`w.i`) -> "catching
- *   direct sun right now" (already computed once in refreshUI() for kNow, not
- *   recomputed here). Pass null for the roof branch, where per-wall lighting
- *   isn't the relevant computation — every exterior wall then shows the same
- *   plain "exposed" green, undifferentiated.
+ * @param {Map<number,boolean>} perWallLit — wall index (`w.i`) -> "catching
+ *   direct sun right now", already computed once in refreshUI().
  */
 function renderWallHighlights(exteriorWalls, perWallLit) {
   clearWallHighlights();
   const n = currentRoom.vertices.length;
   for (const w of exteriorWalls) {
-    const lit = perWallLit ? perWallLit.get(w.i) : true;
+    const lit = perWallLit.get(w.i);
     const a = currentRoom.vertices[w.i];
     const c = currentRoom.vertices[(w.i + 1) % n];
     wallLines.push(L.polyline([[a.lat, a.lng], [c.lat, c.lng]], {
-      color: lit ? '#22c55e' : '#64748b', // lit: same green as the outline accent; shadowed: slate grey
+      color: lit ? SUN : SHADE,
       weight: 6,
       opacity: 0.95,
     }).addTo(map));
   }
 }
 
-// Sun-position-dependent overlays (shadow wedge + sun ray) — these DO change
-// on every refreshUI() (month/hour move the sun). Drawn from the room's
-// centroid: one representative wedge for the whole room, not one per wall —
-// a deliberate simplification, same spirit as the rest of this heuristic model.
+// Sun-position-dependent overlays (shadow wedge + sun ray), drawn from the
+// room's centroid: one representative wedge for the whole room, not one per
+// wall — a deliberate simplification for the map only (the estimate itself
+// checks every wall separately).
 function clearAnalysisOverlays() {
   if (shadowPolygon) { map.removeLayer(shadowPolygon); shadowPolygon = null; }
   if (sunRay)        { map.removeLayer(sunRay);        sunRay        = null; }
@@ -256,18 +255,18 @@ function renderMapOverlays(lat, lng, elevation, azimuth) {
   const L_shadow = Math.min(0.00055, 0.00004 + (1 / elevation) * 0.006);
   const p1 = offsetByAzimuth(lat, lng, shadowAz - 8, L_shadow);
   const p2 = offsetByAzimuth(lat, lng, shadowAz + 8, L_shadow);
-  const opacity = Math.max(0.18, 0.58 - (elevation / 90) * 0.32);
+  const opacity = Math.max(0.12, 0.4 - (elevation / 90) * 0.25);
 
   shadowPolygon = L.polygon([[lat, lng], p1, p2], {
-    color: 'rgba(148, 163, 184, 0.45)', // faint outline so the wedge reads on the dark map
-    fillColor: '#020509',
-    fillOpacity: Math.min(0.6, opacity + 0.12),
+    color: 'rgba(28, 26, 22, 0.35)',
+    fillColor: INK,
+    fillOpacity: opacity,
     weight: 1,
   }).addTo(map);
 
   const sunPt = offsetByAzimuth(lat, lng, azimuth, 0.00028);
   sunRay = L.polyline([sunPt, [lat, lng]], {
-    color: '#f5b301',
+    color: SUN,
     weight: 2,
     dashArray: '6 5',
     opacity: 0.95,
@@ -300,9 +299,8 @@ async function classifyLocation(lat, lng) {
   return isOutsideBox(lat, lng) ? 'foreign' : 'it-water';
 }
 
-// A room drawn abroad or over water can't sensibly be "moved" to Rome (unlike
-// the old single click-point) — it's simply removed, and the map recentres on
-// Rome as a friendly default so the user isn't left looking at a foreign view.
+// A room drawn abroad or over water is simply removed, and the map recentres
+// on Rome as a friendly default so the user isn't left looking at a foreign view.
 function goToRome() {
   map.setView([ROME.lat, ROME.lng], 13);
 }
@@ -323,17 +321,23 @@ function rejectWater() {
 // `myGen` guards against a slower fetch resolving after the room it was for
 // has since been removed or redrawn.
 function loadClimateFor(lat, lng, myGen) {
+  climateStatus = 'loading';
+  refreshCost();
   fetchClimateNormals(lat, lng)
     .then(normals => {
       if (roomGen !== myGen) return;
-      customBaseTemps = normals.temp;
-      climateExtra = { rh: normals.rh, wind: normals.wind, precip: normals.precip };
+      climate = normals;
+      climateStatus = 'ready';
       refreshUI();
     })
-    .catch(() => { /* silent fallback — Rome table already in effect */ });
+    .catch(() => {
+      if (roomGen !== myGen) return;
+      climateStatus = 'failed';
+      refreshCost();
+    });
 }
 
-// ─── OSM building context (real facade orientation + obstruction) ─────────────
+// ─── OSM building context (real wall classification + shadows) ────────────────
 
 // Optional edge cache (see server/overpass-cache): once deployed, paste its URL
 // here and it becomes the first stop — instant answers for already-seen areas,
@@ -356,28 +360,16 @@ function onValidRoom(lat, lng, myGen) {
   detectBuildingContext(lat, lng, myGen);
 }
 
-// Pulse the obstruction/cardinal readouts while OSM is being queried.
-function setBuildingLoading(on) {
-  ['telemetry-cardinal', 'val-manual-obs'].forEach(id => {
-    const el = $(id);
-    if (el) el.classList.toggle('loading-pulse', on);
-  });
-}
-
 /**
  * Fetch real OSM buildings around the room, refine each wall's provisional
  * exterior/interior classification against the containing building's actual
  * footprint, and re-render. Cached, silent, best-effort — never throws upward.
- * `myGen` guards against a slower fetch resolving after the room it was for
- * has since been removed or redrawn.
  */
 async function detectBuildingContext(lat, lng, myGen) {
-  setBuildingLoading(true);
   let ctx;
   try { ctx = await fetchBuildingContext(lat, lng); }
-  catch { if (roomGen === myGen) setBuildingLoading(false); return; }
-  if (roomGen !== myGen) return; // superseded — a newer call owns the loading state
-  setBuildingLoading(false);
+  catch { return; }
+  if (roomGen !== myGen) return; // superseded by a newer room
   if (!ctx) return; // no building nearby → every wall keeps its provisional "exterior"
 
   currentRoom.buildings = ctx.buildings;
@@ -393,16 +385,7 @@ async function detectBuildingContext(lat, lng, myGen) {
   }
   // classes === null (no containing building found) → leave every wall's
   // provisional `exterior: true` as-is — see classifyRoomEdges' own doc.
-
-  // The base outline doesn't change here — only which walls are exterior did,
-  // and refreshUI() -> renderWallHighlights() picks that up on its own.
   refreshUI();
-}
-
-// Floor-bar handler: the floor sets the observer height, so just re-render —
-// refreshUI recomputes the shadow geometrically from currentRoom.buildings.
-function applyFloor() {
-  if (currentRoom.locked) refreshUI();
 }
 
 async function fetchBuildingContext(lat, lng) {
@@ -449,10 +432,10 @@ async function overpassQuery(q) {
 
 // Building height in metres: OSM `height` tag, else levels × 3 m, default 3 storeys.
 function heightOf(el) {
-  const t = el.tags || {};
-  const h = parseFloat(t.height);
+  const tags = el.tags || {};
+  const h = parseFloat(tags.height);
   if (!isNaN(h) && h > 0) return h;
-  const lv = parseFloat(t['building:levels']);
+  const lv = parseFloat(tags['building:levels']);
   if (!isNaN(lv) && lv > 0) return lv * 3;
   return 9;
 }
@@ -477,14 +460,14 @@ function monthlyMean(time, values) {
 }
 
 /**
- * Real monthly climate normals (1991-2020) for a coordinate — temperature plus
- * humidity, wind and precipitation — cached in localStorage. Throws on any
- * network/shape problem or if temperature is unavailable; humidity/wind/precip
- * may individually be null and are handled gracefully downstream.
- * @returns {Promise<{temp:number[], rh:?number[], wind:?number[], precip:?number[]}>}
+ * Real monthly climate normals (1991-2020) for a coordinate, cached in
+ * localStorage. Throws on any network/shape problem or if temperature is
+ * unavailable; the other series may individually be null.
+ * @returns {Promise<{temp:number[], rh:?number[], wind:?number[], precip:?number[], rad:?number[]}>}
+ *   rad = mean daily horizontal solar radiation, kWh/m²
  */
 async function fetchClimateNormals(lat, lon) {
-  const cacheKey = `omc_${lat.toFixed(2)}_${lon.toFixed(2)}`;
+  const cacheKey = `omc2_${lat.toFixed(2)}_${lon.toFixed(2)}`;
   try {
     const cached = localStorage.getItem(cacheKey);
     if (cached) return JSON.parse(cached);
@@ -501,11 +484,13 @@ async function fetchClimateNormals(lat, lon) {
   const temp = monthlyMean(time, data.daily.temperature_2m_mean);
   if (!temp) throw new Error('Open-Meteo: temperatura mancante');
 
+  const radMJ = monthlyMean(time, data.daily.shortwave_radiation_sum);
   const normals = {
     temp,
     rh: monthlyMean(time, data.daily.relative_humidity_2m_mean),
     wind: monthlyMean(time, data.daily.windspeed_10m_mean),
     precip: monthlyMean(time, data.daily.precipitation_sum),
+    rad: radMJ ? radMJ.map(v => v / 3.6) : null, // MJ/m² → kWh/m²
   };
   try { localStorage.setItem(cacheKey, JSON.stringify(normals)); } catch { /* storage full/unavailable — non-fatal */ }
   return normals;
@@ -535,15 +520,15 @@ function addVertex(latlng) {
 
   if (drawPolyline) map.removeLayer(drawPolyline);
   drawPolyline = L.polyline(currentRoom.vertices.map(v => [v.lat, v.lng]), {
-    color: '#22c55e', weight: 4, opacity: 0.85, dashArray: '6 5',
+    color: INK, weight: 3, opacity: 0.85, dashArray: '6 5',
   }).addTo(map);
 }
 
 /**
  * Close the drawn loop: lock the room, derive its walls (azimuth + length,
  * provisionally all "exterior" until OSM data refines them) and floor area
- * from the vertices alone, then kick off the same geofence → climate/OSM
- * pipeline the old single-click flow used, now keyed on the room's centroid.
+ * from the vertices alone, then kick off the geofence → climate/OSM pipeline,
+ * keyed on the room's centroid.
  */
 function lockRoom() {
   currentRoom.locked = true;
@@ -580,16 +565,19 @@ function lockRoom() {
       midLat: mid.lat, midLng: mid.lon,
     };
   });
-  customBaseTemps = null; // reset to Rome fallback; upgraded async below if the fetch succeeds
-  climateExtra = null;    // humidity/wind/precip reset with the room
+  climate = null;
+  climateStatus = 'idle';
 
   renderRoomPolygon();
+  $('share-btn')?.removeAttribute('disabled');
   refreshUI();
 
   // Fast offline reject for rooms clearly outside Italy.
   if (isOutsideBox(cLat, cLng)) { rejectForeign(); return; }
 
   // Precise check near borders / on the sea: reverse-geocode the country.
+  climateStatus = 'loading';
+  refreshCost();
   classifyLocation(cLat, cLng)
     .then(kind => {
       if (roomGen !== myGen) return; // superseded by a newer room
@@ -611,9 +599,9 @@ function removeRoom() {
   clearWallHighlights();
   clearAnalysisOverlays();
   currentRoom = { vertices: [], locked: false, lat: null, lng: null, buildings: [], areaM2: 0, walls: [] };
-  customBaseTemps = null;
-  climateExtra = null;
-  lastAnalysis = null;
+  climate = null;
+  climateStatus = 'idle';
+  $('share-btn')?.setAttribute('disabled', '');
   resetOutputUI();
 }
 
@@ -621,18 +609,11 @@ function initRemoveRoomButton() {
   $('remove-room-btn')?.addEventListener('click', removeRoom);
 }
 
-/** Reset the sidebar output to its pre-analysis placeholder state. */
+/** Reset every reading to its pre-analysis placeholder. */
 function resetOutputUI() {
   setText('coord-lat', '--°N');
   setText('coord-lng', '--°E');
   setText('room-area', '-- m²');
-  setText('thermal-result', '--°C');
-  setText('main-output-title', t('output-initial'));
-  setText('hero-lo', '--°');
-  setText('hero-hi', '--°');
-  for (const id of ['winter', 'spring', 'summer', 'autumn']) setText(`val-q-${id}`, '--°C');
-  setText('comfort-rate-stars', '⭐⭐⭐⭐⭐');
-  setText('comfort-rate-label', '--');
   setText('val-sunrise', '--:--');
   setText('val-sunset', '--:--');
   setText('val-day-length', '--');
@@ -642,320 +623,239 @@ function resetOutputUI() {
   setText('val-humidity', '—');
   setText('val-wind', '—');
   setText('val-rain', '—');
-  setText('val-feels', '—');
+  setText('val-zone', '—');
+  setText('val-gg', '—');
+  refreshCost();
 }
 
+// ─── the visit answers ────────────────────────────────────────────────────────
+
+const ANSWER_KEYS = ['heating', 'glass', 'epoch', 'above', 'below', 'people'];
+
+function getAnswers() {
+  const a = {};
+  for (const key of ANSWER_KEYS) {
+    const el = document.querySelector(`select[data-answer="${key}"]`);
+    a[key] = el ? el.value : 'unknown';
+  }
+  a.people = parseInt(a.people, 10) || 1;
+  return a;
+}
+
+function setAnswers(values) {
+  for (const key of ANSWER_KEYS) {
+    const el = document.querySelector(`select[data-answer="${key}"]`);
+    const v = values[key];
+    if (el && v != null && [...el.options].some(o => o.value === String(v))) el.value = String(v);
+  }
+}
+
+function initAnswers() {
+  document.querySelectorAll('select[data-answer]').forEach(sel => {
+    sel.addEventListener('change', refreshCost);
+  });
+}
+
+function selectedLabel(key) {
+  const el = document.querySelector(`select[data-answer="${key}"]`);
+  return el?.selectedOptions[0]?.textContent ?? '';
+}
+
+// ─── the estimate ─────────────────────────────────────────────────────────────
+
+const euro = v => Math.round(v).toLocaleString(getLang() === 'en' ? 'en-GB' : 'it-IT');
+const range = (lo, hi) => Math.round(lo) === Math.round(hi) ? euro(lo) : `${euro(lo)}–${euro(hi)}`;
+
+/** Compass name of a wall's outward direction (8 sectors). */
+function cardinal(az) {
+  const keys = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'];
+  return t('dir-' + keys[Math.round(((az % 360) + 360) % 360 / 45) % 8]);
+}
+
+/**
+ * Daily sun on every exterior wall for each month of the heating season,
+ * shadows from the OSM buildings included. Cached: it only changes with the
+ * room, the floor, the buildings and the climate data.
+ */
+function wallIrradiance(exteriorWalls, days) {
+  const { buildings } = currentRoom;
+  const key = `${roomGen}|${currentFloor}|${buildings.length}|${climate?.rad ? 1 : 0}|${days.join(',')}`;
+  if (irradianceCache.key !== key) irradianceCache = { key, byWall: new Map() };
+  const obsH = currentFloor * FLOOR_HEIGHT_M;
+  return exteriorWalls.map(w => {
+    let irr = irradianceCache.byWall.get(w.i);
+    if (!irr) {
+      const isLit = (az, el) => !buildings.length || !sunBlocked(w.midLat, w.midLng, buildings, az, el, obsH);
+      irr = climate.rad.map((H, m) => days[m] ? wallDailyIrradiance(H, w.midLat, w.midLng, m, w.azDeg, isLit) : 0);
+      irradianceCache.byWall.set(w.i, irr);
+    }
+    return { lengthM: w.lengthM, irradiance: irr };
+  });
+}
+
+function showCostState(key) {
+  setText('cost-range', '—');
+  setText('mobile-cost-range', '—');
+  setText('cost-state', t(key));
+  $('cost-state').hidden = false;
+  $('cost-lines').hidden = true;
+  setText('cost-source', '');
+}
+
+function renderChecklist(items) {
+  const list = $('checklist');
+  if (!list) return;
+  list.replaceChildren(...items.map(key => {
+    const li = document.createElement('li');
+    li.textContent = t(key);
+    return li;
+  }));
+}
+
+/** Recompute and print the heating cost, the checklist and the climate rows. */
+function refreshCost() {
+  const answers = getAnswers();
+  if (!currentRoom.locked) {
+    showCostState('cost-empty');
+    renderChecklist(['checklist-empty']);
+    return;
+  }
+  if (climateStatus === 'failed') { showCostState('cost-failed'); renderChecklist(['check-ape']); return; }
+  if (climateStatus !== 'ready' || !climate) { showCostState('cost-loading'); return; }
+
+  const exteriorWalls = currentRoom.walls.filter(w => w.exterior);
+  const { zone, gg, days } = resolveClimateZone(climate.temp);
+  const walls = climate.rad ? wallIrradiance(exteriorWalls, days)
+    : exteriorWalls.map(w => ({ lengthM: w.lengthM, irradiance: new Array(12).fill(0) }));
+
+  const r = estimateHeating({
+    areaM2: currentRoom.areaM2,
+    exteriorWalls: walls,
+    monthlyTemps: climate.temp,
+    answers,
+    prices: PRICES,
+  });
+
+  setText('val-zone', zone);
+  setText('val-gg', euro(gg));
+
+  const southOrWestExterior = exteriorWalls.some(w => w.azDeg >= 135 && w.azDeg <= 315);
+  renderChecklist(visitChecklist(answers, r, { southOrWestExterior }));
+
+  if (!r.perMonth) { showCostState('cost-central'); return; }
+
+  const text = range(r.perMonth.lo, r.perMonth.hi);
+  setText('cost-range', text);
+  setText('mobile-cost-range', text);
+
+  const area = euro(currentRoom.areaM2);
+  const notes = [
+    currentRoom.areaM2 > BIG_ROOM_M2 ? t('cost-big-room', { area }) : '',
+    r.perMonth.hi > WIDE_RANGE_RATIO * Math.max(1, r.perMonth.lo) ? t('cost-wide') : '',
+    r.assumedGas ? t('cost-assumed-gas') : '',
+  ].filter(Boolean);
+  $('cost-state').hidden = notes.length === 0;
+  setText('cost-state', notes.join(' '));
+  $('cost-lines').hidden = false;
+
+  setText('cost-season', t('season-' + zone, { zone }));
+
+  $('cost-split-row').hidden = !r.perPerson;
+  if (r.perPerson) setText('cost-split', t('split-value', { n: r.perPerson.people, range: range(r.perPerson.lo, r.perPerson.hi) }));
+
+  const saving = r.sunSavingPerMonth;
+  setText('cost-sun', exteriorWalls.length === 0 ? t('sun-none-interior')
+    : !climate.rad ? t('sun-no-data')
+    : saving >= 1 ? t('sun-value', { eur: euro(saving) }) : t('sun-little'));
+
+  $('cost-electric-row').hidden = !r.electricPerMonth;
+  if (r.electricPerMonth) setText('cost-electric', t('electric-value', { range: range(r.electricPerMonth.lo, r.electricPerMonth.hi) }));
+
+  if (exteriorWalls.length === 0) {
+    setText('cost-why', t('why-interior', { area }));
+  } else {
+    const dirs = [...new Set(exteriorWalls.map(w => cardinal(w.azDeg)))].join(', ');
+    setText('cost-why', t(exteriorWalls.length === 1 ? 'why-value-one' : 'why-value', {
+      area,
+      n: exteriorWalls.length,
+      dirs,
+      glass: answers.glass === 'unknown' ? t('why-glass-unknown') : selectedLabel('glass').toLowerCase(),
+    }));
+  }
+
+  const lang = getLang();
+  setText('cost-source', t('result-source', {
+    gas: PRICES.gasEurPerSmc.toLocaleString(lang === 'en' ? 'en-GB' : 'it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+    gasPeriod: PRICES.gasPeriod[lang],
+    el: PRICES.electricityEurPerKWh.toLocaleString(lang === 'en' ? 'en-GB' : 'it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+    elPeriod: PRICES.electricityPeriod[lang],
+  }));
+}
+
+// ─── sun readings and map, for the selected month/hour ────────────────────────
+
 function refreshUI() {
+  if (!currentRoom.locked) { resetOutputUI(); return; }
   const { lat, lng, walls, areaM2, buildings } = currentRoom;
   const month = getSelectedMonth();
   const localHour = getSelectedLocalHour();
   const utcDate = getSelectedUTCDate();
 
-  // Solar position — shared by every wall (and by the roof), computed once.
   const { elevation, azimuth } = solarPosition(utcDate, lat, lng);
   const elevClamped = Math.max(0, elevation);
   const hasSun = elevClamped > 1;
 
-  // Property parameters
-  const windowsType = checkedValue('windows', 'double');
-  const insulationType = checkedValue('insulation', 'none');
-
-  const isRoof = currentFloor === ROOF_FLOOR;
-
-  // Real shadow: cast a ray to the sun through the nearby OSM buildings from the
-  // observer's floor height. When blocked, only diffuse sky light gets through.
   const obsH = currentFloor * FLOOR_HEIGHT_M;
   const hasBuildings = !!(buildings && buildings.length);
-
   const exteriorWalls = walls.filter(w => w.exterior);
-  const hasExterior = exteriorWalls.length > 0;
-  const totalExtLen = exteriorWalls.reduce((s, w) => s + w.lengthM, 0) || 1;
 
-  // A roof has no facing direction — its gain depends only on how high the sun
-  // is, and its single-point shadow check keeps exactly the old room's logic.
-  // A room's walls are aggregated by length: irradiance/obstruction of each
-  // exterior wall, weighted by how much of the room's perimeter it covers.
-  // Populated only in the exterior-walls branch below; read by
-  // renderWallHighlights() at the end of this function to colour each
-  // exterior wall by whether it's catching direct sun right now — reusing
-  // the exact same sunBlocked() call kNow already makes, not a second pass.
-  let perWallLit = null;
-
-  let irr, kNow, kMonth;
-  if (isRoof) {
-    irr = roofIrradiance(elevClamped);
-    const inShadow = hasSun && hasBuildings && sunBlocked(lat, lng, buildings, azimuth, elevation, obsH);
-    kNow = inShadow ? DIFFUSE_K : 1.0;
-    kMonth = m => hasBuildings
-      ? Math.max(DIFFUSE_K, monthlySunAccess(lat, lng, buildings, obsH, m, DEFAULT_YEAR, TIMEZONE))
-      : 1.0;
-  } else if (hasExterior) {
-    irr = exteriorWalls.reduce((s, w) => s + w.lengthM * facadeIrradiance(elevClamped, azimuth, w.azDeg), 0) / totalExtLen;
-    perWallLit = new Map();
-    kNow = exteriorWalls.reduce((s, w) => {
-      const blocked = hasSun && hasBuildings && sunBlocked(w.midLat, w.midLng, buildings, azimuth, elevation, obsH);
-      perWallLit.set(w.i, hasSun && !blocked);
-      return s + w.lengthM * (blocked ? DIFFUSE_K : 1.0);
-    }, 0) / totalExtLen;
-    kMonth = m => exteriorWalls.reduce((s, w) => {
-      const k = hasBuildings
-        ? Math.max(DIFFUSE_K, monthlySunAccess(w.midLat, w.midLng, buildings, obsH, m, DEFAULT_YEAR, TIMEZONE))
-        : 1.0;
-      return s + w.lengthM * k;
-    }, 0) / totalExtLen;
-  } else {
-    // No exterior wall at all (a fully interior room) — no solar term.
-    irr = 0; kNow = 1.0; kMonth = () => 1.0;
+  // Which exterior walls catch direct sun right now: facing the sun AND not
+  // blocked by a building. Coloured on the map, summarised in "Sole sulle pareti".
+  const perWallLit = new Map();
+  let facing = 0, blocked = 0;
+  for (const w of exteriorWalls) {
+    const faces = hasSun && facadeIrradiance(elevClamped, azimuth, w.azDeg) > 0;
+    const isBlocked = faces && hasBuildings && sunBlocked(w.midLat, w.midLng, buildings, azimuth, elevation, obsH);
+    if (faces) facing++;
+    if (isBlocked) blocked++;
+    perWallLit.set(w.i, faces && !isBlocked);
   }
-  const kOmbra = kMonth(month);
 
-  const airTemp = airTemperature(month, localHour, lat, customBaseTemps);
-  const gain = solarThermalGain(month, irr, kNow);
-  const roomTemp = airTemp + gain;
-
-  // Sunrise / sunset
   const { sunrise, sunset, dayLength } = sunriseSunset(utcDate, lat, lng);
   const fmt = d => d ? d.toLocaleTimeString('it-IT', { timeZone: TIMEZONE, hour: '2-digit', minute: '2-digit' }) : '--:--';
 
-  // Update main output
   setText('coord-lat', lat.toFixed(5) + '°N');
   setText('coord-lng', lng.toFixed(5) + '°E');
   setText('room-area', areaM2.toFixed(1) + ' m²');
-  setText('thermal-result', roomTemp.toFixed(1) + '°C');
-  setText('main-output-title', t('main-title', { month: monthName(month), hour: localHour }));
   setText('month-label', monthName(month));
   setText('hour-label', String(localHour).padStart(2, '0') + ':00');
 
-  // Seasonal analysis: a roof keeps the old single-point model untouched
-  // (isRoof=true short-circuits facing direction inside seasonalTemperatures);
-  // a real room combines every wall — exterior walls each run seasonalTemperatures
-  // with their own azimuth/obstruction, interior walls pull toward a fixed
-  // neutral reference, combined by wall length and damped by floor area.
-  const seasonal = isRoof
-    ? seasonalTemperatures(
-        m => solarPosition(localToUTC(DEFAULT_YEAR, m, 15, 12, TIMEZONE), lat, lng),
-        0, lat, kMonth, customBaseTemps, windowsType, insulationType, true
-      )
-    : roomSeasonalTemperatures(
-        m => solarPosition(localToUTC(DEFAULT_YEAR, m, 15, 12, TIMEZONE), lat, lng),
-        walls.map(w => ({
-          azDeg: w.azDeg,
-          lengthM: w.lengthM,
-          exterior: w.exterior,
-          obstrK: m => hasBuildings
-            ? Math.max(DIFFUSE_K, monthlySunAccess(w.midLat, w.midLng, buildings, obsH, m, DEFAULT_YEAR, TIMEZONE))
-            : 1.0,
-        })),
-        areaM2, lat, customBaseTemps, windowsType, insulationType
-      );
-
-  const seasonMap = {
-    winter: { id: 'winter', label: 'Inverno',   temp: seasonal.winter },
-    spring: { id: 'spring', label: 'Primavera', temp: seasonal.spring },
-    summer: { id: 'summer', label: 'Estate',    temp: seasonal.summer },
-    autumn: { id: 'autumn', label: 'Autunno',   temp: seasonal.autumn },
-  };
-
-  for (const [, s] of Object.entries(seasonMap)) {
-    setText(`val-q-${s.id}`, s.temp.toFixed(1) + '°C');
-    const card = $(`quad-${s.id}`);
-    if (!card) continue;
-    let color = 'var(--green)';
-    if (s.id === 'winter') {
-      if (s.temp < 13.5) color = 'var(--red)';
-      else if (s.temp < 14.5) color = 'var(--orange)';
-      else if (s.temp < 15.5) color = 'var(--yellow)';
-    } else if (s.id === 'summer') {
-      if (s.temp >= 29.5) color = 'var(--red)';
-      else if (s.temp >= 27.5) color = 'var(--orange)';
-      else if (s.temp >= 26.0) color = 'var(--yellow)';
-    }
-    card.style.setProperty('--q-color', color);
-  }
-
-  // Perceived ("feels-like") winter/summer temperatures from humidity + wind,
-  // when climate data is available (winter = January, summer = July).
-  let feels = null;
-  if (climateExtra && climateExtra.rh && climateExtra.wind) {
-    feels = {
-      winter: apparentTemperature(seasonal.winter, climateExtra.rh[0], climateExtra.wind[0]),
-      summer: apparentTemperature(seasonal.summer, climateExtra.rh[6], climateExtra.wind[6]),
-    };
-  }
-
-  // Hero range: the coldest and warmest season, beside the headline number
-  setText('hero-lo', seasonal.winter.toFixed(0) + '\u00b0');
-  setText('hero-hi', seasonal.summer.toFixed(0) + '\u00b0');
-
-  // Comfort Rate
-  const comfort = cozynessScore(seasonal.winter, seasonal.summer, kOmbra, windowsType, insulationType, feels);
-  const comfortLabel = t('comfort-' + comfort.stars);
-  setText('comfort-rate-stars', '⭐'.repeat(comfort.stars));
-  setText('comfort-rate-label', comfortLabel);
-  const badge = $('energy-class-field');
-  if (badge) {
-    badge.style.setProperty('--comfort-color', comfort.color);
-    badge.dataset.stars = String(comfort.stars);
-    badge.dataset.label = comfortLabel;
-  }
-  // Direct sun hours today, length-weighted across exterior walls (folded
-  // into the Comfort Rate detail) — a roof keeps the old single-point call.
-  const sunHoursToday = isRoof
-    ? dailyRoofSunHours(utcDate, lat, lng)
-    : hasExterior
-      ? exteriorWalls.reduce((s, w) => s + w.lengthM * dailySunHours(utcDate, w.midLat, w.midLng, w.azDeg), 0) / totalExtLen
-      : 0;
-  lastAnalysis = { seasonal, comfort, sunHoursToday, feels, climate: climateExtra };
-
-  // Solar info
   setText('val-sunrise', fmt(sunrise));
   setText('val-sunset', fmt(sunset));
-  setText('val-day-length', dayLength > 0 ? `${dayLength.toFixed(1)}h` : '--');
+  setText('val-day-length', dayLength > 0 ? `${dayLength.toFixed(1)} h` : '--');
   setText('val-sun-elevation', elevClamped > 0 ? `${elevation.toFixed(1)}°` : t('below-horizon'));
-  setText('val-sun-azimuth', `${azimuth.toFixed(0)}°`);
-  // Direct-sun verdict, from the room's aggregate figures. Orientation comes
-  // first: a room with no sun-facing wall has irr=0, same as every wall facing
-  // away from the sun; kNow < 1 means at least one exterior wall's ray is
-  // blocked right now.
+  setText('val-sun-azimuth', `${azimuth.toFixed(0)}° · ${cardinal(azimuth)}`);
+
+  // Direct-sun verdict for the room's walls: night, no wall facing the sun,
+  // at least one facing wall shaded by a building, or in sun.
   let sunKey;
   if (!hasSun) sunKey = 'sun-night';
-  else if (irr <= 0) sunKey = 'sun-other-side';
-  else if (kNow < 0.999) sunKey = 'sun-shadow';
+  else if (facing === 0) sunKey = 'sun-other-side';
+  else if (blocked > 0) sunKey = 'sun-shadow';
   else sunKey = 'sun-yes';
   setText('val-sun-direct', t(sunKey));
-  updateDayArc(sunrise, sunset, localHour);
-  $('hero-sun')?.classList.toggle('night', !hasSun);
 
-  // Local climate for the selected month (— when the API gave us nothing)
-  const rhNow = climateExtra?.rh?.[month];
-  const windNow = climateExtra?.wind?.[month];
-  const rainNow = climateExtra?.precip?.[month];
+  const rhNow = climate?.rh?.[month];
+  const windNow = climate?.wind?.[month];
+  const rainNow = climate?.precip?.[month];
   setText('val-humidity', rhNow != null ? Math.round(rhNow) + '%' : '—');
   setText('val-wind', windNow != null ? windNow.toFixed(1) + ' km/h' : '—');
   setText('val-rain', rainNow != null ? Math.round(rainNow * DAYS_IN_MONTH[month]) + ' mm' : '—');
-  setText('val-feels', (rhNow != null && windNow != null)
-    ? apparentTemperature(roomTemp, rhNow, windNow).toFixed(1) + '°C'
-    : '—');
 
-  // Sun-position-dependent map overlays. The room outline itself is drawn
-  // once by renderRoomPolygon() (on lock only — the shape never changes
-  // after that) — not here. Wall highlights DO belong here: which walls are
-  // lit (or exterior at all) can change every refresh, same as the shadow
-  // wedge/sun ray.
   renderMapOverlays(lat, lng, elevation, azimuth);
   renderWallHighlights(exteriorWalls, perWallLit);
-}
 
-// ─── KPI modal ────────────────────────────────────────────────────────────────
-
-/**
- * Turn today's direct-sun hours on the facade into a "good/bad news" line
- * for the Comfort Rate detail (replaces the removed sun-hours chart).
- */
-function sunExposureNote(hours) {
-  const h = hours.toFixed(1);
-  if (hours >= 5)   return t('exp-great', { h });
-  if (hours >= 2.5) return t('exp-ok', { h });
-  if (hours > 0)    return t('exp-low', { h });
-  return t('exp-none');
-}
-
-/** Value of the checked radio in a group, or a fallback. */
-function checkedValue(name, fallback) {
-  return document.querySelector(`input[name="${name}"]:checked`)?.value ?? fallback;
-}
-
-/** Visible label of the checked radio in a group. */
-function checkedLabel(name, fallback) {
-  const el = document.querySelector(`input[name="${name}"]:checked`);
-  return el?.parentElement?.querySelector('.choice-text')?.textContent ?? fallback;
-}
-
-function avg(arr) { return arr.reduce((a, b) => a + b, 0) / arr.length; }
-
-function openKPIModal() {
-  if (!lastAnalysis) return;
-  const { seasonal, comfort, sunHoursToday, feels, climate } = lastAnalysis;
-
-  const comfortLabel = t('comfort-' + comfort.stars);
-  setText('modal-class-title', t('modal-title', { label: comfortLabel }));
-  const classBadge = $('modal-class-badge');
-  if (classBadge) {
-    classBadge.textContent = `${t('comfort-rate')} ${'⭐'.repeat(comfort.stars)}`;
-    classBadge.style.setProperty('--comfort-color', comfort.color);
-  }
-
-  setText('kpi-winter-temp', seasonal.winter.toFixed(1) + '°C');
-  setText('kpi-summer-temp', seasonal.summer.toFixed(1) + '°C');
-  setText('kpi-infissi-selected', checkedLabel('windows', '--'));
-  setText('kpi-isolamento-selected', checkedLabel('insulation', '--'));
-  setText('kpi-room-area', currentRoom.areaM2.toFixed(1) + ' m²');
-
-  // Real-climate strip (humidity/wind → feels-like, plus rainfall)
-  setText('kpi-feels-summer', feels ? feels.summer.toFixed(1) + '°C' : '—');
-  setText('kpi-humidity', climate && climate.rh ? Math.round(avg(climate.rh)) + '%' : '—');
-  setText('kpi-rain', climate && climate.precip
-    ? Math.round(climate.precip.reduce((s, v, i) => s + v * DAYS_IN_MONTH[i], 0)) + ' mm'
-    : '—');
-
-  setText('kpi-exposure', sunExposureNote(sunHoursToday));
-  setText('kpi-tip', t(comfort.tipKey));
-  $('kpi-modal').classList.add('open');
-}
-
-function closeKPIModal() {
-  $('kpi-modal').classList.remove('open');
-}
-
-// ─── daylight bar ─────────────────────────────────────────────────────────────
-
-/**
- * Paint the daylight bar: the lit span of the day plus a dot on the hour being
- * analysed. Purely decorative — the same numbers sit in the rows underneath.
- * @param {Date|null} sunrise
- * @param {Date|null} sunset
- * @param {number} localHour  hour under analysis (0–23)
- */
-function updateDayArc(sunrise, sunset, localHour) {
-  const sunOrb = $('solar-arc-sun');
-
-  const hourOf = d => {
-    // The Date is UTC; read it back in the app's timezone, as the rows do.
-    const parts = new Intl.DateTimeFormat('it-IT', {
-      timeZone: TIMEZONE, hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
-    }).formatToParts(d);
-    const h = +parts.find(p => p.type === 'hour').value;
-    const m = +parts.find(p => p.type === 'minute').value;
-    return h + m / 60;
-  };
-
-  // No sunrise or sunset (polar edge cases): show defaults
-  const rise = sunrise ? hourOf(sunrise) : 6;
-  const set = sunset ? hourOf(sunset) : 18;
-  const dayLength = Math.max(0.1, set - rise);
-  const now = localHour + 0.5;
-  const fraction = (now - rise) / dayLength;
-
-  // SVG coordinate dimensions: x from 20 to 260, yBase = 70, yApex = 14
-  const x0 = 20, x1 = 260, yBase = 70, yApex = 14;
-
-  if (sunOrb) {
-    if (fraction >= 0 && fraction <= 1) {
-      const u = Math.max(0, Math.min(1, fraction));
-      const x = x0 + u * (x1 - x0);
-      // Parabolic arc height formula: y = yBase - (yBase - yApex) * 4 * u * (1 - u)
-      const y = yBase - (yBase - yApex) * 4 * u * (1 - u);
-      sunOrb.setAttribute('transform', `translate(${x.toFixed(1)}, ${y.toFixed(1)})`);
-      sunOrb.classList.remove('night');
-    } else {
-      // Below horizon
-      const isBeforeRise = fraction < 0;
-      const x = isBeforeRise ? x0 : x1;
-      const y = yBase + 4;
-      sunOrb.setAttribute('transform', `translate(${x}, ${y})`);
-      sunOrb.classList.add('night');
-    }
-  }
+  refreshCost();
 }
 
 // ─── time sliders ─────────────────────────────────────────────────────────────
@@ -972,17 +872,62 @@ function initSliders() {
     paintSlider(el);
     el.addEventListener('input', () => {
       paintSlider(el);
-      if (currentRoom.locked) refreshUI(); // refreshUI updates the month/hour labels
+      setText('month-label', monthName(getSelectedMonth()));
+      setText('hour-label', String(getSelectedLocalHour()).padStart(2, '0') + ':00');
+      if (currentRoom.locked) refreshUI();
     });
+  }
+  setText('month-label', monthName(getSelectedMonth()));
+}
+
+// ─── the shareable sheet ──────────────────────────────────────────────────────
+
+/** The current room and answers as a link: no server, everything is in the URL. */
+function shareUrl() {
+  const p = new URLSearchParams();
+  p.set('v', currentRoom.vertices.map(v => `${v.lat.toFixed(6)},${v.lng.toFixed(6)}`).join(';'));
+  p.set('f', String(currentFloor));
+  const a = getAnswers();
+  for (const key of ANSWER_KEYS) p.set(key, String(a[key]));
+  return `${location.origin}${location.pathname}?${p.toString()}`;
+}
+
+async function shareSheet() {
+  if (!currentRoom.locked) return;
+  const url = shareUrl();
+  try {
+    if (navigator.share) { await navigator.share({ title: t('share-title'), url }); return; }
+  } catch { /* the user closed the share sheet — fall back to copying */ }
+  try {
+    await navigator.clipboard.writeText(url);
+    showToast(t('share-copied'), 'default', 5000);
+  } catch {
+    showToast(url, 'default', 15000);
   }
 }
 
-// ─── property selectors (infissi / isolamento) ────────────────────────────────
+/** Rebuild a room from a shared link (?v=lat,lng;lat,lng;…). */
+function restoreSharedRoom(params) {
+  const verts = (params.get('v') || '').split(';')
+    .map(pair => pair.split(',').map(Number))
+    .filter(([lat, lng]) => Number.isFinite(lat) && Number.isFinite(lng))
+    .map(([lat, lng]) => ({ lat, lng }));
+  if (verts.length < 3) return false;
 
-function initPropertySelects() {
-  document.querySelectorAll('input[name="windows"], input[name="insulation"]').forEach(radio => {
-    radio.addEventListener('change', () => { if (currentRoom.locked) refreshUI(); });
-  });
+  setAnswers(Object.fromEntries(ANSWER_KEYS.map(k => [k, params.get(k)])));
+  const floor = parseInt(params.get('f'), 10);
+  if (floor >= 0 && floor <= 5) { currentFloor = floor; markActiveFloor(); }
+
+  const cLat = verts.reduce((s, v) => s + v.lat, 0) / verts.length;
+  const cLng = verts.reduce((s, v) => s + v.lng, 0) / verts.length;
+  map.setView([cLat, cLng], 19);
+  currentRoom.vertices = verts;
+  lockRoom();
+  return true;
+}
+
+function initShare() {
+  $('share-btn')?.addEventListener('click', shareSheet);
 }
 
 // ─── address search ───────────────────────────────────────────────────────────
@@ -1118,8 +1063,7 @@ function initGeolocation() {
 }
 
 function getLocation() {
-  const btn  = $('geo-btn');
-  const icon = $('geo-icon');
+  const btn = $('geo-btn');
   hideToast();
 
   if (!navigator.geolocation) {
@@ -1128,12 +1072,10 @@ function getLocation() {
   }
 
   btn.classList.add('loading');
-  icon.textContent = '⟳';
 
   navigator.geolocation.getCurrentPosition(
     pos => {
       btn.classList.remove('loading', 'denied');
-      icon.textContent = '📌';
       btn.setAttribute('aria-label', t('geo-aria'));
 
       const acc = Math.round(pos.coords.accuracy);
@@ -1146,7 +1088,6 @@ function getLocation() {
     err => {
       btn.classList.remove('loading');
       btn.classList.add('denied');
-      icon.textContent = '🚫';
 
       let msg = t('geoloc-failed');
       if (err.code === err.PERMISSION_DENIED) {
@@ -1177,8 +1118,8 @@ function changeLang(lang) {
   applyTranslations();          // static text
   panelRemeasurers.forEach(fn => fn()); // IT/EN copy differs in length
   markActiveLang();
-  if (currentRoom.locked) refreshUI(); // dynamic text (temps, labels, exposure…)
-  if ($('kpi-modal')?.classList.contains('open')) openKPIModal(); // refresh an open modal
+  setText('month-label', monthName(getSelectedMonth()));
+  if (currentRoom.locked) refreshUI(); else refreshCost(); // dynamic text
 }
 
 function initLangSwitch() {
@@ -1241,7 +1182,7 @@ function initFloorBar() {
     btn.addEventListener('click', () => {
       currentFloor = parseInt(btn.dataset.floor, 10);
       markActiveFloor();
-      applyFloor(); // recompute obstruction for the chosen floor and re-render
+      if (currentRoom.locked) refreshUI(); // shadows are recomputed for the new height
     });
   });
   markActiveFloor();
@@ -1251,13 +1192,11 @@ function initFloorBar() {
 //
 // Below the desktop breakpoint the sidebar is hidden (see the CSS) and its
 // content is moved, once, into the mobile-only elements declared in app.html:
-// a persistent bottom bar for the seasons and the Comfort Rate, a settings
-// drawer for search/month/hour/infissi/isolamento, two small widgets for the
-// solar and climate readings, and one Info sheet folding the map legend and
-// the placement hint together. Reparenting the *existing* elements (not
-// duplicating markup) keeps every id and its already-wired event handlers —
-// setText() and friends keep working unchanged regardless of where in the
-// DOM an element now lives.
+// the cost stays in a persistent bottom bar, the drawer carries search, the
+// full result, the questions, the checklist and the technical details, two
+// small widgets hold the sun and climate readings, and one Info sheet folds
+// the map legend and the drawing hint together. Reparenting the *existing*
+// elements (not duplicating markup) keeps every id and its event handlers.
 
 // Matches the CSS breakpoint. Decided once at startup — the app does not
 // re-layout live across a resize that crosses it (same as before).
@@ -1271,14 +1210,8 @@ function initMobileLayout() {
   const move = (el, into) => { if (el && into) into.appendChild(el); };
 
   const bottomBar = $('mobile-bottom-bar');
-  move(document.querySelector('.quadrant-grid'), bottomBar);
-  move($('energy-class-field'), bottomBar);
-
-  // The lang switch / drawer button / widgets float just above this bar.
-  // Its real height depends on content (season labels reflow between IT/EN,
-  // a wrapping label makes it taller) — measuring it beats guessing a fixed
-  // px offset, which is what let the lang switch drift over the bar's
-  // content on a real phone. Re-measured on language change (see below).
+  // The lang switch / drawer button / widgets float just above this bar; its
+  // real height depends on content, so it's measured rather than guessed.
   const measureBottomBar = () => {
     if (bottomBar) document.documentElement.style.setProperty('--mobile-bar-h', bottomBar.getBoundingClientRect().height + 'px');
   };
@@ -1286,22 +1219,23 @@ function initMobileLayout() {
   panelRemeasurers.push(measureBottomBar);
 
   const drawerBody = $('mobile-drawer-body');
-  move(document.querySelector('.hero-top'), drawerBody);
-  move(document.querySelector('.hero-main'), drawerBody);
-  move(document.querySelector('.hero-feels-row'), drawerBody);
   move(document.querySelector('.search-card'), drawerBody);
-  move(document.querySelector('[data-i18n-aria="time-card-aria"]'), drawerBody);
-  move(document.querySelector('[data-i18n-aria="facade-card-aria"]'), drawerBody);
+  move($('result-card'), drawerBody);
+  move($('visit-card'), drawerBody);
+  move($('checklist-card'), drawerBody);
+  move($('share-block'), drawerBody);
+  move($('tech-details'), drawerBody);
 
   move(document.querySelector('.solar-card'), $('mobile-solar-body'));
-  move(document.querySelector('[data-i18n-aria="climate-card-aria"]'), $('mobile-climate-body'));
+  move(document.querySelector('.climate-card'), $('mobile-climate-body'));
 
   const infoBody = $('mobile-info-body');
   move($('map-legend-body'), infoBody);
   move($('map-hint-text'), infoBody);
 
+  const openDrawer = initMobileSheet('mobile-drawer-toggle', 'mobile-drawer', 'mobile-drawer-overlay', 'mobile-drawer-close');
   initMobileSheet('mobile-info-btn', 'mobile-info-sheet', 'mobile-info-overlay', 'mobile-info-close');
-  initMobileSheet('mobile-drawer-toggle', 'mobile-drawer', 'mobile-drawer-overlay', 'mobile-drawer-close');
+  $('mobile-cost')?.addEventListener('click', () => openDrawer?.(true));
   initCollapsiblePanel('mobile-solar-widget', 'mobile-solar-toggle');
   initCollapsiblePanel('mobile-climate-widget', 'mobile-climate-toggle');
 
@@ -1327,10 +1261,11 @@ function initMobileLayout() {
  * close button that close it. `inert` keeps its (now off-screen) controls
  * out of tab order and out of the accessibility tree while closed, without
  * fighting the `display:block` the slide-up transform animation needs.
+ * @returns {(open:boolean) => void} the open/close setter
  */
 function initMobileSheet(toggleId, sheetId, overlayId, closeId) {
   const toggle = $(toggleId), sheet = $(sheetId), overlay = $(overlayId), close = $(closeId);
-  if (!toggle || !sheet) return;
+  if (!toggle || !sheet) return null;
   sheet.inert = true;
 
   const setOpen = open => {
@@ -1342,6 +1277,7 @@ function initMobileSheet(toggleId, sheetId, overlayId, closeId) {
   toggle.addEventListener('click', () => setOpen(!sheet.classList.contains('open')));
   close?.addEventListener('click', () => setOpen(false));
   overlay?.addEventListener('click', () => setOpen(false));
+  return setOpen;
 }
 
 // ─── app bootstrap ────────────────────────────────────────────────────────────
@@ -1357,10 +1293,8 @@ const MIN_USABLE_WIDTH = 320;
  * Show the explanation whenever the window is too small — not only at load.
  * Also the one live-resize case this app handles: starting wide and later
  * resizing *down* past the mobile breakpoint activates the mobile layout on
- * the spot, so shrinking the window never leaves you with neither the
- * sidebar nor the mobile UI. Going back the other way (mobile → desktop) is
- * not supported live — the sidebar's content has already been moved out —
- * a reload picks the right layout for whatever width you land on.
+ * the spot. Going back the other way is not supported live — a reload picks
+ * the right layout for whatever width you land on.
  */
 function updateMobileBlock() {
   const warning = $('mobile-warning');
@@ -1376,36 +1310,25 @@ function startApp() {
   appStarted = true;
   initMap();
   initSliders();
-  initPropertySelects();
+  initAnswers();
   initSearchAutocomplete();
   initGeolocation();
   initLangSwitch();
   initFloorBar();
   initRemoveRoomButton();
+  initShare();
 
   if (isMobileLayout()) {
     initMobileLayout();
   } else {
     initCollapsiblePanels();
   }
+  refreshCost();
 
-  // KPI modal wiring
-  const badge = $('energy-class-field');
-  if (badge) badge.addEventListener('click', openKPIModal);
-  const closeBtn = $('modal-close-btn');
-  if (closeBtn) closeBtn.addEventListener('click', closeKPIModal);
-  const overlay = $('kpi-modal');
-  if (overlay) overlay.addEventListener('click', e => {
-    if (e.target === overlay) closeKPIModal();
-  });
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeKPIModal();
-  });
-
-  // Arriving from the landing page: either a typed address (?q=...), run
-  // through the same search as the "Vai" button, or real coordinates from its
-  // own geolocation button (?lat=&lng=...), which skip the search entirely.
+  // Arriving with a link: a shared sheet (?v=…), a typed address from the
+  // landing page (?q=…), or real coordinates from its geolocation (?lat=&lng=).
   const params = new URLSearchParams(location.search);
+  if (restoreSharedRoom(params)) return;
   const handoffQuery = params.get('q');
   const handoffLat = parseFloat(params.get('lat'));
   const handoffLng = parseFloat(params.get('lng'));
