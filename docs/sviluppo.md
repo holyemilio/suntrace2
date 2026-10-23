@@ -64,6 +64,7 @@ scripts/            update_prices.py (prezzi ARERA → src/prices.js), price-tax
 tests/              *.test.js (unit) e e2e/app.e2e.js (Playwright)
 docs/
   metodo.md         il metodo di calcolo, con fonti
+  manuale/          manuale utente IT (manuale-utente.md) ed EN (user-manual.md), con le schermate
   sviluppo.md       questa pagina
   stato-lavori.md   stato, pendenze, trappole già incontrate
   archivio/         documenti della versione 3 (Comfort Rate), superati

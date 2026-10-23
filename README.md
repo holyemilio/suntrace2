@@ -63,6 +63,10 @@ Clima medio 1991–2020 da **Open-Meteo**, edifici da **OpenStreetMap**.
 Ogni formula, con una legenda per ogni simbolo e un esempio svolto, è in
 **[Come calcoliamo la stima](docs/metodo.md)**.
 
+## Manuale utente
+
+Passo per passo, con le schermate: **[Manuale utente](docs/manuale/manuale-utente.md)** ([English](docs/manuale/user-manual.md)).
+
 ## Cosa non fa
 
 - Non è un preventivo né un attestato energetico: serve a **confrontare** case.

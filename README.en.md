@@ -51,6 +51,10 @@ Average 1991–2020 climate from **Open-Meteo**, buildings from
 Every formula, with a legend for each symbol and a worked example, is in
 **[the method](docs/metodo.md)** (in Italian).
 
+## User manual
+
+Step by step, with screenshots: **[User manual](docs/manuale/user-manual.md)** ([Italiano](docs/manuale/manuale-utente.md)).
+
 ## What it doesn't do
 
 - It's not a quote or an energy certificate: it's for **comparing** homes.

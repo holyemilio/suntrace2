@@ -9,6 +9,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) — [Semantic V
 
 - Il messaggio «La forbice è ampia perché mancano risposte» compare solo se c'è ancora qualche «Non so»: con tutte le risposte la forbice che resta dipende da ciò che non si vede (muri, abitudini), non da domande mancanti.
 - Manuale utente aggiornato alla versione attuale: nuove schermate (logo, guida, controllo dell'acqua, cifra principale, domanda sulle ore), sezioni su guida e disegni rifiutati.
+- **Manuale utente nel repository**, in italiano e in inglese: `docs/manuale/manuale-utente.md` e `docs/manuale/user-manual.md`, con 13 schermate; linkato dai README.
 
 ---
 

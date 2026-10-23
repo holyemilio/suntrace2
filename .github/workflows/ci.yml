@@ -1,5 +1,5 @@
 # CI — gira su ogni push e pull request.
-# Tre livelli: unit (motore solare/clima/ombre), parità i18n IT/EN, e2e (Playwright).
+# Tre livelli: unit (motore solare/costo/ombre/prezzi/zone), parità i18n IT/EN, e2e (Playwright).
 name: CI
 
 on:
@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Unit tests (solar, climate, shadow)
+      - name: Unit tests (solar, cost, shadow, prices, zones)
         run: npm test
 
       - name: i18n parity IT/EN

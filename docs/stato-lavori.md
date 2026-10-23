@@ -52,6 +52,7 @@ Due pagine separate, più la privacy:
 | `src/cost.js` | **Il costo del riscaldamento.** Puro. Zona climatica e periodo (DPR 412/93, DPR 74/2013), gradi giorno dalle medie Open-Meteo, sole sulla parete verticale (Erbs + isotropico, raggio d'ombra ogni 10 minuti tramite callback), coefficiente di dispersione H con valori U TABULA, forbice lo/hi, checklist. Ogni costante ha la fonte in `docs/metodo.md`. |
 | `src/prices.js` | Prezzi ARERA gas (€/Smc, per ambito) e luce (€/kWh). **Generato ogni mese** da `scripts/update_prices.py` tramite `.github/workflows/update-prices.yml` (voce 17). |
 | `src/ambiti.js` | Regione (da Nominatim reverse) → ambito tariffario ARERA. |
+| `src/zones.js` · `src/data/zone-climatiche.json` | Comune → zona climatica di legge (DPR 412/93), tabella generata da `scripts/build_zones.py` (voce 4.6.0). |
 | `src/solar.js` | Motore astronomico Meeus/SPA. **Puro, non toccare senza motivo**: 23 test lo confrontano con SunCalc. |
 | `src/shadow.js` | Geometria: `outwardNormalAz`, `classifyRoomEdges`, `polygonArea`/`polygonCentroid`/`localToLatLng`, `sunBlocked`. Puro. |
 | `src/ui.js` | L'app: Leaflet, geofencing, API, disegno del poligono, domande (`select[data-answer]`), `refreshCost()` (stima + checklist), `refreshUI()` (sole e mappa per mese/ora), cache dell'irraggiamento per parete (`irradianceCache`), link condivisibile (`?v=lat,lng;…&f=&heating=…`), layout mobile. |
