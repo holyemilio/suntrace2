@@ -17,14 +17,14 @@ verificata**, altrimenti non entra nel calcolo.
 Vanilla JS, moduli ES nativi, **nessun build step, zero dipendenze di runtime**.
 Pagine: `index.html` (landing), `app.html` (l'app, layout mobile sotto i 768px),
 `privacy.html`. **Live su <https://holyemilio.github.io/suntrace2/>** (GitHub
-Pages da `main`, root → `index.html`) · versione **4.3.0**.
+Pages da `main`, root → `index.html`) · versione **4.3.1**.
 
 ## Comandi
 
 ```bash
 ./start.command      # server locale su :8000 (Cache-Control: no-store)
 npm test             # 73 unit test (motore solare, costo, geometria/ombre, prezzi)
-npm run test:e2e     # 31 e2e Playwright (API esterne mockate)
+npm run test:e2e     # 32 e2e Playwright (API esterne mockate)
 ```
 
 Node **è installato** su questo Mac — i test girano localmente. La CI

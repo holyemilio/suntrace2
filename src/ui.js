@@ -142,6 +142,11 @@ function showToast(msg, type = 'default', duration = 10000) {
   errorTimeout = setTimeout(() => { toast.style.display = 'none'; }, duration);
 }
 
+/** Hide the toast only if it still shows this message (a newer one stays). */
+function hideToastIf(msg) {
+  if ($('map-error-toast')?.textContent === msg) hideToast();
+}
+
 function hideToast() {
   const toast = $('map-error-toast');
   if (toast) toast.style.display = 'none';
@@ -376,8 +381,9 @@ function onValidRoom(lat, lng, myGen) {
 async function detectBuildingContext(lat, lng, myGen) {
   let ctx;
   try { ctx = await fetchBuildingContext(lat, lng); }
-  catch { return; }
+  catch { hideToastIf(t('water-checking')); return; }
   if (roomGen !== myGen) return; // superseded by a newer room
+  hideToastIf(t('water-checking'));
   if (!ctx) return; // no building nearby → every wall keeps its provisional "exterior"
 
   const xy = localXY(lat, lng);
@@ -610,6 +616,9 @@ function lockRoom() {
   renderRoomPolygon();
   $('share-btn')?.removeAttribute('disabled');
   refreshUI();
+  // The water check needs the OSM data: say so, or a room vanishing a few
+  // seconds later looks like a bug.
+  showToast(t('water-checking'), 'default', 20000);
 
   // Fast offline reject for rooms clearly outside Italy.
   if (isOutsideBox(cLat, cLng)) { rejectForeign(); return; }

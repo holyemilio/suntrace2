@@ -281,6 +281,18 @@ test('T46: a room whose sides cross is cleared, with a message to redraw it', as
   assert.equal(await page.locator('.suntrace-marker').count(), 0, 'drawing starts over');
 });
 
+test('T50: closing a room says the water check is running, then clears it', async (t) => {
+  const page = await openApp(t, { buildings: false });
+  let release;
+  const gate = new Promise(r => { release = r; });
+  await page.route('**/overpass-api.de/**', async r => { await gate; await r.fulfill({ json: { elements: [] } }); });
+  await drawRoom(page);
+  await page.waitForSelector('.map-error-toast', { state: 'visible' });
+  assert.match(await text(page, 'map-error-toast'), /non sia sull'acqua/);
+  release();
+  await page.waitForSelector('.map-error-toast', { state: 'hidden' });
+});
+
 test('T49: a room drawn on a river is refused', async (t) => {
   const page = await openApp(t, { buildings: false });
   const water = rect(41.9028, 12.4964, -400, 400, -400, 400, 0);
@@ -438,7 +450,7 @@ test('T45: a shared link rebuilds the same room, answers and estimate', async (t
 
   await page.evaluate(() => { navigator.share = undefined; });
   await page.locator('#share-btn').click();
-  await page.waitForFunction(() => document.getElementById('map-error-toast').textContent.length > 0);
+  await page.waitForFunction(() => /copiato/.test(document.getElementById('map-error-toast').textContent));
   const url = await page.evaluate(() => navigator.clipboard.readText());
   assert.match(url, /app\.html\?v=/);
 

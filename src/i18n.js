@@ -205,6 +205,7 @@ const STRINGS = {
     'geo-foreign': 'SunTrace 2 funziona solo in Italia, isole comprese. Ti abbiamo riportato su Roma.',
     'shape-crossing': 'Le linee della stanza si incrociano, quindi non è una stanza vera. L\'abbiamo cancellata: ridisegnala cliccando gli angoli in ordine, girando intorno alla stanza.',
     'shape-tiny': 'La stanza disegnata è troppo piccola (meno di 2 m²). L\'abbiamo cancellata: ingrandisci la mappa e ridisegnala.',
+    'water-checking': 'Controllo che la stanza non sia sull\'acqua e scarico gli edifici intorno…',
     'geo-water-inland': 'La stanza è disegnata sull\'acqua (un fiume, un lago o il mare). L\'abbiamo cancellata: ridisegnala sull\'edificio.',
     'geo-water': 'Qui c\'è solo acqua: disegna la stanza su un edificio. Ti abbiamo riportato su Roma.',
 
@@ -467,6 +468,7 @@ const STRINGS = {
     'geo-foreign': 'SunTrace 2 only works in Italy, islands included. We moved you back to Rome.',
     'shape-crossing': 'The room\'s lines cross, so it isn\'t a real room. We cleared it: draw it again clicking the corners in order, going round the room.',
     'shape-tiny': 'The drawn room is too small (under 2 m²). We cleared it: zoom in and draw it again.',
+    'water-checking': 'Checking the room isn\'t on water and loading the buildings around it…',
     'geo-water-inland': 'The room is drawn on water (a river, a lake or the sea). We cleared it: draw it again on the building.',
     'geo-water': 'That\'s open water: draw the room on a building. We moved you back to Rome.',
 

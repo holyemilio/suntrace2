@@ -5,6 +5,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) — [Semantic V
 
 ---
 
+## [4.3.1] — 2026-10-23
+
+- **Messaggio durante il controllo dell'acqua.** Appena chiudi la stanza compare «Controllo che la stanza non sia sull'acqua e scarico gli edifici intorno…», che sparisce quando arrivano i dati: una stanza cancellata qualche secondo dopo non sembra più un errore.
+
+---
+
 ## [4.3.0] — 2026-10-23
 
 - **Ore di accensione.** Nuova domanda «Quante ore al giorno lo accendete?», mai oltre il massimo di legge della zona (DPR 74/2013: 14 ore in zona E, 12 in D, …); con «Non so» si usa il massimo. Il calcolo non assume più il riscaldamento acceso 24 ore: la cifra principale sta a metà tra i due limiti fisici (solo le ore accese, oppure 24 ore), che restano gli estremi della forbice.
