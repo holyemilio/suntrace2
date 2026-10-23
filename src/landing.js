@@ -9,6 +9,7 @@ import { t, getLang, setLang, applyTranslations } from './i18n.js';
 import { solarPosition } from './solar.js';
 import { estimateHeating, wallDailyIrradiance } from './cost.js';
 import { PRICES } from './prices.js';
+import { gasPriceForRegion } from './ambiti.js';
 
 // Milan, Open-Meteo Climate API (EC_Earth3P_HR, 1991–2020): monthly mean
 // temperature (°C) and daily horizontal solar radiation (kWh/m²), aggregated
@@ -20,6 +21,9 @@ const MILAN = {
 };
 
 const ROME = { lat: 41.9028, lng: 12.4964 };
+
+// Milan's gas price: ARERA's nord-orientale tariff area.
+const MILAN_GAS = gasPriceForRegion('Lombardia');
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const svgEl = (name, attrs) => {
@@ -103,7 +107,7 @@ function fillComparison() {
     exteriorWalls: walls,
     monthlyTemps: MILAN.temp,
     answers: { ...c, epoch: 'y1950', above: 'flat', below: 'flat', people: 1 },
-    prices: PRICES,
+    prices: { gasEurPerSmc: MILAN_GAS.eurPerSmc, electricityEurPerKWh: PRICES.electricityEurPerKWh },
   }).perMonth]));
   const max = Math.max(...Object.values(results).map(r => r.hi));
 
@@ -118,7 +122,7 @@ function fillComparison() {
   const lang = getLang();
   const fmt = v => v.toLocaleString(lang === 'en' ? 'en-GB' : 'it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   document.getElementById('compare-caption').textContent = t('landing-s1-caption', {
-    gas: fmt(PRICES.gasEurPerSmc), gasPeriod: PRICES.gasPeriod[lang],
+    gas: fmt(MILAN_GAS.eurPerSmc), gasPeriod: PRICES.gasPeriod[lang],
     el: fmt(PRICES.electricityEurPerKWh), elPeriod: PRICES.electricityPeriod[lang],
   });
 }

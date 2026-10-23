@@ -1,6 +1,6 @@
 # Stato dei lavori — SunTrace 2
 
-Ultimo aggiornamento: **23 ottobre 2026** · versione **4.0.1** · repo:
+Ultimo aggiornamento: **23 ottobre 2026** · versione **4.1.0** · repo:
 `holyemilio/suntrace2` · **live su <https://holyemilio.github.io/suntrace2/>**
 
 Documento di passaggio di consegne: cosa è fatto, cosa è in sospeso e cosa
@@ -24,7 +24,7 @@ sviluppa in [`docs/sviluppo.md`](sviluppo.md).
 ./start.command                      # poi http://localhost:8000 (landing page)
 
 # test
-npm test                             # 64 unit  — motore solare, costo, geometria/pareti/ombre
+npm test                             # 67 unit  — motore solare, costo, geometria/pareti/ombre
 npm run test:e2e                     # 27 e2e   — Playwright guida app.html in un browser vero
 ```
 
@@ -50,7 +50,8 @@ Due pagine separate, più la privacy:
 | `index.html` + `src/landing.js` + `src/landing.css` | **Landing**: titolo editoriale, Fig. 1 (percorso del sole su Roma, disegnato da `solar.js`), § 1 confronto della stessa stanza con 4 riscaldamenti (calcolato da `cost.js` su dati Milano incorporati, ai prezzi di `prices.js`), § 2 le domande, § 3 le fonti. Ricerca → `app.html?q=`, geolocalizzazione → `app.html?lat=&lng=`. Non importa `styles.css`. |
 | `app.html` | L'app: colonna a sinistra (passi, ricerca, **stima in euro**, **domande della visita**, **checklist**, **condividi**, `<details>` «Dettagli tecnici» con cursori mese/ora, sole e clima), mappa a destra. Icone: un set SVG in `<symbol>` in cima al file, niente emoji. |
 | `src/cost.js` | **Il costo del riscaldamento.** Puro. Zona climatica e periodo (DPR 412/93, DPR 74/2013), gradi giorno dalle medie Open-Meteo, sole sulla parete verticale (Erbs + isotropico, raggio d'ombra ogni 10 minuti tramite callback), coefficiente di dispersione H con valori U TABULA, forbice lo/hi, checklist. Ogni costante ha la fonte in `docs/metodo.md`. |
-| `src/prices.js` | Prezzi ARERA gas (€/Smc) e luce (€/kWh), **aggiornati a mano ogni mese dall'utente**. |
+| `src/prices.js` | Prezzi ARERA gas (€/Smc, per ambito) e luce (€/kWh). **Generato ogni mese** da `scripts/update_prices.py` tramite `.github/workflows/update-prices.yml` (voce 17). |
+| `src/ambiti.js` | Regione (da Nominatim reverse) → ambito tariffario ARERA. |
 | `src/solar.js` | Motore astronomico Meeus/SPA. **Puro, non toccare senza motivo**: 23 test lo confrontano con SunCalc. |
 | `src/shadow.js` | Geometria: `outwardNormalAz`, `classifyRoomEdges`, `polygonArea`/`polygonCentroid`/`localToLatLng`, `sunBlocked`. Puro. |
 | `src/ui.js` | L'app: Leaflet, geofencing, API, disegno del poligono, domande (`select[data-answer]`), `refreshCost()` (stima + checklist), `refreshUI()` (sole e mappa per mese/ora), cache dell'irraggiamento per parete (`irradianceCache`), link condivisibile (`?v=lat,lng;…&f=&heating=…`), layout mobile. |
@@ -308,7 +309,7 @@ print('ok' if ki==ke else sorted(ki^ke))"
       correlazione mensile di Erbs (non trovata in fonti libere: si usa la
       correlazione oraria, verificata in Maleki et al. 2017). Tolti anche dalla
       landing i dati ISPRA/ENEA/ECCO e la stima «−20%» (non verificati).
-    - **Decisioni dell'utente**: prezzi aggiornati a mano ogni mese
+    - **Decisioni dell'utente**: prezzi aggiornati a mano ogni mese (superato: ora automatici, voce 17)
       (`src/prices.js`); Comfort Rate eliminato (decisione delegata); dati
       tecnici dietro «Dettagli»; parametri nell'URL accettati per la privacy
       (aggiunta la sezione nella privacy policy).
@@ -325,6 +326,21 @@ print('ok' if ki==ke else sorted(ki^ke))"
       note con i consumi: non fatto, mancano i dati); la forbice con tutti
       «Non so» è molto ampia (es. 73–1.721 €/mese per 100 m² disegnati) — è
       onesta ma poco utile, l'app lo segnala.
+
+---
+
+17. ~~**Prezzi automatici da ARERA (v4.1.0)**~~ — **completato il 23/10/2026**:
+    l'utente non può aggiornarli a mano. Fonte: i file Excel ufficiali ARERA
+    linkati da arera.it/consumatori/valori-vulnerabilita-gas (gas) e
+    arera.it/area-operatori/prezzi-e-tariffe (luce), un foglio per periodo,
+    il primo è il più recente, valori **senza imposte**. Il vecchio link
+    arera.it/aggiornamento-prezzi è morto (404). Le imposte non hanno una fonte
+    leggibile da programma (riforma accise D.Lgs 43/2025 dal 2026, aliquote
+    2026 non trovate): si usa un fattore calibrato sul totale del cliente tipo
+    pubblicato da ARERA, da ricontrollare ogni gennaio (promemoria automatico).
+    **Da tenere d'occhio**: il nome dei file cambia con l'anno (lo script prova
+    l'anno corrente e il precedente); se ARERA cambia il layout delle tabelle,
+    lo script fallisce e il workflow apre una segnalazione.
 
 ---
 

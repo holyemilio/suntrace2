@@ -30,7 +30,7 @@ buildings opposite shade the room, what glazing the window has.
 ## What it tells you
 
 - **What it costs to heat**, in euro a month, over the months heating is
-  allowed in your zone. It's a range, for example "42–102 €": the more you
+  allowed in your zone. It's a range, for example "40–97 €": the more you
   answer, the narrower it gets.
 - **How much each**, if you share the bills.
 - **How much the sun saves you** through the windows, with the real shadows of

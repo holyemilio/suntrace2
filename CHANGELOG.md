@@ -5,6 +5,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) — [Semantic V
 
 ---
 
+## [4.1.0] — 2026-10-23
+
+- **Prezzi aggiornati da soli ogni mese.** `scripts/update_prices.py` legge i file ufficiali ARERA (`G<anno>_stv.xlsx` per il gas, `E<anno>-smt.xlsx` per la luce) e rigenera `src/prices.js`; un'azione GitHub lo esegue i giorni 3, 5 e 8 del mese, lancia i test e pubblica. Se un file non si legge o un prezzo cambia più del 40%, non pubblica e apre una segnalazione.
+- **Prezzo del gas per zona.** La regione della stanza sceglie l'ambito tariffario ARERA (sette ambiti, `src/ambiti.js`): a settembre 2026 da 1,54 €/Smc (nord-est) a 1,76 €/Smc (sud e isole), al posto di un unico prezzo nazionale.
+- **Imposte con un fattore calibrato** sulle spese del cliente tipo pubblicate da ARERA (`scripts/price-taxes.json`), con promemoria annuale a gennaio.
+- 3 unit test nuovi (ambiti e prezzi generati).
+
+---
+
 ## [4.0.1] — 2026-10-23
 
 - 🐛 **Con «Riscaldamento centralizzato» il prezzo spariva** (segnalato dall'utente): l'app mostrava «—» e solo un messaggio, e sembrava un errore. Ora calcola il consumo stimato della stanza come per una caldaia a gas (il centralizzato brucia gas anche lui) e spiega sotto che quanto si paga dipende anche dalla ripartizione del condominio. Nessuna risposta alle domande nasconde più il prezzo.

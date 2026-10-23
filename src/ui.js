@@ -31,6 +31,7 @@ import {
 } from './cost.js';
 
 import { PRICES } from './prices.js';
+import { gasPriceForRegion } from './ambiti.js';
 
 import { t, monthName, getLang, setLang, applyTranslations } from './i18n.js';
 
@@ -106,6 +107,7 @@ let currentRoom = {
   vertices: [],  // [{lat,lng}], in click order, open until locked
   locked: false,
   lat: null, lng: null,   // centroid, set once locked
+  region: null,  // from reverse geocoding: picks the ARERA gas tariff area
   buildings: [], // OSM footprints + heights near the centroid (for shadow casting)
   areaM2: 0,
   walls: [],     // [{i, azDeg, lengthM, exterior, midLat, midLng}], set once locked
@@ -294,9 +296,10 @@ async function classifyLocation(lat, lng) {
   const res = await fetch(url);
   const data = await res.json();
   const cc = data && data.address ? data.address.country_code : null;
-  if (cc && IN_ITALY_CODES.has(cc)) return 'it-land';
-  if (cc) return 'foreign';               // some other country's land
-  return isOutsideBox(lat, lng) ? 'foreign' : 'it-water';
+  // The region picks the ARERA tariff area for the gas price (see ambiti.js).
+  if (cc && IN_ITALY_CODES.has(cc)) return { kind: 'it-land', region: data.address.state || null };
+  if (cc) return { kind: 'foreign' };     // some other country's land
+  return { kind: isOutsideBox(lat, lng) ? 'foreign' : 'it-water' };
 }
 
 // A room drawn abroad or over water is simply removed, and the map recentres
@@ -579,8 +582,9 @@ function lockRoom() {
   climateStatus = 'loading';
   refreshCost();
   classifyLocation(cLat, cLng)
-    .then(kind => {
+    .then(({ kind, region }) => {
       if (roomGen !== myGen) return; // superseded by a newer room
+      currentRoom.region = region || null;
       if (kind === 'it-land') onValidRoom(cLat, cLng, myGen);
       else if (kind === 'it-water') rejectWater();
       else rejectForeign();
@@ -598,7 +602,7 @@ function removeRoom() {
   clearRoomPolygon();
   clearWallHighlights();
   clearAnalysisOverlays();
-  currentRoom = { vertices: [], locked: false, lat: null, lng: null, buildings: [], areaM2: 0, walls: [] };
+  currentRoom = { vertices: [], locked: false, lat: null, lng: null, region: null, buildings: [], areaM2: 0, walls: [] };
   climate = null;
   climateStatus = 'idle';
   $('share-btn')?.setAttribute('disabled', '');
@@ -728,12 +732,13 @@ function refreshCost() {
   const walls = climate.rad ? wallIrradiance(exteriorWalls, days)
     : exteriorWalls.map(w => ({ lengthM: w.lengthM, irradiance: new Array(12).fill(0) }));
 
+  const gas = gasPriceForRegion(currentRoom.region);
   const r = estimateHeating({
     areaM2: currentRoom.areaM2,
     exteriorWalls: walls,
     monthlyTemps: climate.temp,
     answers,
-    prices: PRICES,
+    prices: { gasEurPerSmc: gas.eurPerSmc, electricityEurPerKWh: PRICES.electricityEurPerKWh },
   });
 
   setText('val-zone', zone);
@@ -784,7 +789,7 @@ function refreshCost() {
 
   const lang = getLang();
   setText('cost-source', t('result-source', {
-    gas: PRICES.gasEurPerSmc.toLocaleString(lang === 'en' ? 'en-GB' : 'it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+    gas: gas.eurPerSmc.toLocaleString(lang === 'en' ? 'en-GB' : 'it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
     gasPeriod: PRICES.gasPeriod[lang],
     el: PRICES.electricityEurPerKWh.toLocaleString(lang === 'en' ? 'en-GB' : 'it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
     elPeriod: PRICES.electricityPeriod[lang],

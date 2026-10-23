@@ -1,0 +1,64 @@
+# Aggiorna ogni mese i prezzi di gas e luce dai file ufficiali ARERA.
+# ARERA pubblica il gas entro i primi 2 giorni lavorativi del mese: il job gira
+# i giorni 3, 5 e 8 (se il primo tentativo trova ancora il mese vecchio, quello
+# dopo lo prende). Se la lettura fallisce o un prezzo cambia in modo sospetto,
+# non pubblica nulla e apre una segnalazione.
+name: Aggiorna prezzi ARERA
+
+on:
+  schedule:
+    - cron: '0 6 3,5,8 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Scarica e calcola i prezzi
+        run: python3 scripts/update_prices.py
+
+      - name: Controlla che l'app funzioni con i nuovi prezzi
+        run: |
+          npm ci
+          npm test
+
+      - name: Pubblica se qualcosa è cambiato
+        run: |
+          if git diff --quiet src/prices.js; then
+            echo "Prezzi invariati"
+            exit 0
+          fi
+          git config user.name "suntrace-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add src/prices.js
+          git commit -m "chore: prezzi ARERA aggiornati automaticamente"
+          git push
+
+      - name: Promemoria annuale sulle imposte
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$(date +%m-%d)" = "01-03" ]; then
+            gh issue create --title "Imposte su gas e luce: controllare i fattori" \
+              --body "È gennaio: la Legge di Bilancio può aver cambiato accise o IVA. Controlla scripts/price-taxes.json (procedura in docs/metodo.md)."
+          fi
+
+      - name: Segnala il problema
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create --title "Aggiornamento prezzi ARERA non riuscito" \
+            --body "Il job del $(date +%d/%m/%Y) non ha aggiornato i prezzi: l'app continua a usare gli ultimi validi. Log: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"

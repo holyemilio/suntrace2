@@ -32,7 +32,7 @@ finestra.
 
 - **Quanto costa scaldarla**, in euro al mese, da quando a quando si può
   accendere il riscaldamento nella tua zona. È una forbice, per esempio
-  «42–102 €»: più rispondi, più si stringe.
+  «40–97 €»: più rispondi, più si stringe.
 - **Quanto a testa**, se dividi le bollette.
 - **Quanto ti fa risparmiare il sole** che entra dalle finestre, con le ombre
   vere dei palazzi vicini, al piano che scegli.

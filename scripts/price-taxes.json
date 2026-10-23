@@ -1,0 +1,19 @@
+{
+  "_comment": "Rapporto tra la spesa del cliente tipo ARERA con le imposte e la stessa spesa calcolata senza imposte dai file ARERA dello stesso periodo. Copre accise, addizionale regionale e IVA come un unico fattore. Da ricontrollare quando cambiano le imposte (di solito con la Legge di Bilancio): il workflow apre un promemoria ogni gennaio.",
+  "gas": {
+    "factor": 1.2553,
+    "reference": "settembre 2026",
+    "withTaxes": 1.6202,
+    "withTaxesSource": "ARERA, nota stampa del 2/10/2026: 162,02 c€/Smc per il nuovo cliente tipo (1.100 Smc/anno)",
+    "withoutTaxes": 1.2907,
+    "withoutTaxesSource": "G2026_stv.xlsx, foglio 'set 2026': media dei 6 ambiti della penisola, cliente tipo 1.100 Smc/anno, contatore G6"
+  },
+  "electricity": {
+    "factor": 1.1063,
+    "reference": "ottobre–dicembre 2026",
+    "withTaxes": 0.4343,
+    "withTaxesSource": "ARERA via Il Sole 24 Ore Radiocor, 29/9/2026: 43,43 c€/kWh tasse incluse per il cliente tipo vulnerabile",
+    "withoutTaxes": 0.39256,
+    "withoutTaxesSource": "E2026-smt.xlsx, foglio 'ott-dic 2026': residenti, monorario, 2.000 kWh/anno, 3 kW"
+  }
+}

@@ -17,13 +17,13 @@ verificata**, altrimenti non entra nel calcolo.
 Vanilla JS, moduli ES nativi, **nessun build step, zero dipendenze di runtime**.
 Pagine: `index.html` (landing), `app.html` (l'app, layout mobile sotto i 768px),
 `privacy.html`. **Live su <https://holyemilio.github.io/suntrace2/>** (GitHub
-Pages da `main`, root → `index.html`) · versione **4.0.1**.
+Pages da `main`, root → `index.html`) · versione **4.1.0**.
 
 ## Comandi
 
 ```bash
 ./start.command      # server locale su :8000 (Cache-Control: no-store)
-npm test             # 64 unit test (motore solare, costo, geometria/ombre)
+npm test             # 67 unit test (motore solare, costo, geometria/ombre, prezzi)
 npm run test:e2e     # 27 e2e Playwright (API esterne mockate)
 ```
 
@@ -36,7 +36,8 @@ e2e.
 | Percorso | Ruolo |
 |---|---|
 | `src/cost.js` | **Il calcolo del costo.** Puro. Zona climatica + periodo (DPR 412/93, 74/2013), gradi giorno, sole sulla parete (Erbs + isotropico, ombre via callback), dispersione H con valori U TABULA, forbice lo/hi, checklist. Ogni costante ha la fonte in `docs/metodo.md`: **non aggiungere costanti senza fonte**. |
-| `src/prices.js` | Prezzi ARERA gas/luce. **L'utente li aggiorna a mano ogni mese** (procedura in `docs/metodo.md`). |
+| `src/prices.js` | Prezzi ARERA gas (per ambito) e luce. **Generato** da `scripts/update_prices.py`, che un'azione GitHub (`update-prices.yml`) esegue ogni mese: non modificarlo a mano. Imposte: fattori in `scripts/price-taxes.json`. |
+| `src/ambiti.js` | Regione → ambito tariffario ARERA del gas. |
 | `src/solar.js` | Motore astronomico Meeus/SPA. **Puro, non toccare senza motivo** (23 test vs SunCalc). |
 | `src/shadow.js` | Geometria: `outwardNormalAz` (**attenzione** — ritorna l'azimut VERSO il punto passato: per il lato di una stanza va usato col centroide e flippato di 180°, vedi `lockRoom()`), `classifyRoomEdges`, `polygonArea`/`polygonCentroid`, `sunBlocked`. |
 | `src/ui.js` | L'app: Leaflet, API, disegno del poligono, domande (`select[data-answer]`), `refreshCost()` (stima + checklist), `refreshUI()` (sole/mappa per mese e ora), link condivisibile `?v=…`, layout mobile con reparenting DOM. |

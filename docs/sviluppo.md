@@ -44,7 +44,8 @@ src/
   solar.js          posizione del sole (Meeus/SPA) — puro, testato contro SunCalc
   shadow.js         geometria della stanza, pareti esterne/interne, raggi d'ombra
   cost.js           il costo del riscaldamento — puro, tutte le costanti con fonte
-  prices.js         prezzi ARERA di gas e luce, aggiornati a mano ogni mese
+  prices.js         prezzi ARERA di gas (per ambito) e luce — GENERATO, non modificare
+  ambiti.js         regione → ambito tariffario ARERA
   ui.js             l'app: Leaflet, disegno, domande, stima, condivisione, mobile
   landing.js        la landing: lingua, ricerca → app, Fig. 1 e confronto
   legal.js          la pagina privacy
@@ -56,6 +57,7 @@ src/
 vendor/fonts/       Newsreader, IBM Plex Sans, IBM Plex Mono (OFL)
 vendor/leaflet/     Leaflet 1.9.4
 server/overpass-cache/  Cloudflare Worker opzionale, non ancora deployato
+scripts/            update_prices.py (prezzi ARERA → src/prices.js) e price-taxes.json
 tests/              *.test.js (unit) e e2e/app.e2e.js (Playwright)
 docs/
   metodo.md         il metodo di calcolo, con fonti
@@ -74,10 +76,12 @@ docs/
 - Prima di toccare layout o mappa, leggi le trappole in
   [stato-lavori.md](stato-lavori.md).
 
-## Aggiornare i prezzi
+## Prezzi
 
-Vedi [metodo.md, «Aggiornare i prezzi»](metodo.md#aggiornare-i-prezzi): si
-cambia solo `src/prices.js`.
+Si aggiornano da soli ogni mese (`.github/workflows/update-prices.yml`). Per
+rigenerarli a mano: `python3 scripts/update_prices.py` (con `--check` stampa
+senza scrivere). Dettagli in
+[metodo.md, «Come si aggiornano i prezzi»](metodo.md#come-si-aggiornano-i-prezzi).
 
 ## Deploy
 

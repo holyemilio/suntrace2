@@ -184,8 +184,8 @@ Poi dipende da come si scalda la casa:
 | *η* | Rendimento stagionale della caldaia, sul potere calorifico superiore: 0,86 è il minimo di legge per le caldaie nuove dal 26/9/2015, 0,75 il minimo delle caldaie B1, 0,94 una condensazione di classe A | Reg. UE 813/2013 |
 | 10,69 | kWh contenuti in 1 Smc di gas (potere calorifico superiore convenzionale, la base delle bollette) | ARERA, TIVG |
 | *SCOP* | Quanti kWh di calore per ogni kWh di corrente in una stagione: classe C (2,8), A (3,4), A+ (4,0) | Reg. UE 626/2011, allegato II |
-| prezzo del gas | 1,6202 €/Smc, tutto incluso, settembre 2026 | ARERA, cliente tipo vulnerabile |
-| prezzo della luce | 0,4343 €/kWh, tasse incluse, ottobre–dicembre 2026 | ARERA, cliente tipo vulnerabile |
+| prezzo del gas | Prezzo ARERA del cliente tipo (1.100 Smc/anno) per l'**ambito tariffario** della regione della stanza, imposte comprese; settembre 2026: da 1,54 €/Smc (nord-est) a 1,76 €/Smc (sud e isole) | ARERA, `G<anno>_stv.xlsx` |
+| prezzo della luce | Prezzo ARERA del cliente tipo (2.000 kWh/anno, 3 kW, residente), imposte comprese; ottobre–dicembre 2026: 0,4343 €/kWh | ARERA, `E<anno>-smt.xlsx` |
 
 L'importo **al mese** è il costo della stagione diviso per i mesi di
 riscaldamento della zona (giorni / 30,4). Con più persone l'app divide anche
@@ -223,8 +223,10 @@ vicino. Valori tipici:
 | Senza sole | 34,7 × 2.575 × 24 / 1000 | ≈ 2.144 kWh |
 | Con il sole | meno il sole dalle finestre a nord ed est | ≈ 1.779 kWh |
 
-L'app mostra **42–102 € al mese** (da ottobre ad aprile) con i prezzi ARERA
-indicati sopra, e «il sole ti fa risparmiare fino a 11 € al mese». La stessa
+Con il prezzo del gas dell'ambito nord-orientale (Lombardia) di settembre 2026,
+1,5373 €/Smc, l'app mostra **40–97 € al mese** (da ottobre ad aprile) e «il
+sole ti fa risparmiare fino a 10 € al mese». Le cifre cambiano ogni mese con i
+prezzi ARERA. La stessa
 stanza con una stufetta elettrica: 114–220 € al mese. Il test
 [`tests/cost.test.js`](../tests/cost.test.js) controlla questi passaggi.
 
@@ -246,23 +248,43 @@ stanza con una stufetta elettrica: 114–220 € al mese. Il test
 
 ---
 
-## Aggiornare i prezzi
+## Come si aggiornano i prezzi
 
-I prezzi stanno in [`src/prices.js`](../src/prices.js) e vanno aggiornati a
-mano ogni mese:
+**Da soli, ogni mese.** Il file [`src/prices.js`](../src/prices.js) è generato
+da [`scripts/update_prices.py`](../scripts/update_prices.py), che un'azione
+GitHub ([`update-prices.yml`](../.github/workflows/update-prices.yml)) esegue
+i giorni 3, 5 e 8 di ogni mese:
 
-1. **Gas:** ARERA pubblica nei primi giorni del mese la nota stampa
-   sull'aggiornamento per i clienti vulnerabili, con il «prezzo di
-   riferimento per il cliente tipo» in centesimi di euro al metro cubo
-   ([pagina ARERA](https://www.arera.it/area-operatori/prezzi-e-tariffe/valore-cmemm-vulnerabili)).
-   Dividi per 100 e scrivi il valore in `gasEurPerSmc`, con il mese in
-   `gasPeriod`.
-2. **Luce:** ARERA aggiorna ogni trimestre il prezzo di riferimento per il
-   cliente tipo vulnerabile, in centesimi di euro al kWh, tasse incluse.
-   Scrivilo in `electricityEurPerKWh`, con il trimestre in
-   `electricityPeriod`.
-3. Lancia `npm test`, poi fai commit e push: la landing e l'app mostrano
-   subito i nuovi prezzi.
+1. Scarica i due file ufficiali di ARERA, con i prezzi **al netto delle
+   imposte** e un foglio per periodo:
+   [`G<anno>_stv.xlsx`](https://www.arera.it/consumatori/valori-vulnerabilita-gas)
+   per il gas (ogni mese, per ambito tariffario) e
+   [`E<anno>-smt.xlsx`](https://www.arera.it/area-operatori/prezzi-e-tariffe)
+   per la luce (ogni trimestre).
+2. Dal foglio più recente calcola la spesa del **cliente tipo** ARERA: gas
+   1.100 Smc/anno a scaglioni, più la quota fissa del contatore G6; luce
+   2.000 kWh/anno, 3 kW, residente, più quota fissa e quota potenza. Divide per
+   il consumo e ottiene un prezzo medio.
+3. Aggiunge le imposte con un **fattore** (vedi sotto).
+4. Se un prezzo cambia più del 40% rispetto al mese prima, o se un file non si
+   legge, **non pubblica** e apre una segnalazione su GitHub. L'app continua a
+   usare gli ultimi prezzi validi.
+5. Altrimenti lancia i test e pubblica.
+
+**Le imposte.** I file ARERA non le contengono. Il fattore in
+[`scripts/price-taxes.json`](../scripts/price-taxes.json) è il rapporto, nello
+stesso periodo, tra la spesa del cliente tipo **con** imposte pubblicata da
+ARERA e quella **senza** imposte calcolata dai file: 1,2553 per il gas
+(settembre 2026), 1,1063 per la luce (ottobre–dicembre 2026). Tratta accise,
+addizionale regionale e IVA come un'unica percentuale: è un'approssimazione di
+pochi punti, perché le accise sono in realtà un importo fisso per Smc. Il
+fattore cambia solo quando cambiano le imposte: ogni gennaio l'azione apre un
+promemoria per ricontrollarlo.
+
+**Quale ambito.** La regione della stanza (dalla ricerca inversa di
+Nominatim) sceglie l'ambito, con le regioni elencate nei file ARERA
+([`src/ambiti.js`](../src/ambiti.js)). Se la regione non si trova, si usa la
+media dei sei ambiti della penisola.
 
 ---
 
