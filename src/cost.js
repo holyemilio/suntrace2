@@ -271,9 +271,15 @@ export function windowArea(areaM2, exteriorLengthM) {
  * @param {number[]} input.monthlyTemps   12 monthly mean temperatures, °C
  * @param {{heating:string, glass:string, epoch:string, above:string, below:string, people:number}} input.answers
  * @param {{gasEurPerSmc:number, electricityEurPerKWh:number}} input.prices
+ * @param {?string} [input.legalZone]  the comune's zone from DPR 412/93, if known
  */
-export function estimateHeating({ areaM2, exteriorWalls, monthlyTemps, answers, prices }) {
-  const { zone, gg, days } = resolveClimateZone(monthlyTemps);
+export function estimateHeating({ areaM2, exteriorWalls, monthlyTemps, answers, prices, legalZone = null }) {
+  // The comune's legal zone (DPR 412/93) decides the season and the hours when
+  // known; otherwise the zone is estimated from the climate. The degree days
+  // always come from the recent climate, over that season.
+  const zone = legalZone || resolveClimateZone(monthlyTemps).zone;
+  const days = HEATING_DAYS[zone];
+  const gg = degreeDays(monthlyTemps, days);
   const seasonDays = days.reduce((a, b) => a + b, 0);
   const months = seasonDays / DAYS_PER_MONTH_AVG;
   const exteriorLengthM = exteriorWalls.reduce((s, w) => s + w.lengthM, 0);

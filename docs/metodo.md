@@ -103,12 +103,30 @@ ha il suo periodo di accensione (DPR 74/2013, art. 4):
 | E | 15 ottobre – 15 aprile | 183 |
 | F | nessun limite di legge | 365 |
 
-SunTrace sceglie la zona il cui periodo produce gradi giorno che cadono in
-quella stessa zona (se più di una, la più fredda). Usiamo il clima recente
-(1991–2020) invece della tabella di legge del 1993, che è basata su anni più
-freddi: per Milano il DPR dà 2.404 gradi giorno, il modello climatico di
-Open-Meteo ne dà circa 2.575. La zona di legge del comune resta in ogni caso
-quella del DPR 412/93.
+**Quale zona.** Si usa la **zona di legge del comune**, dalla tabella
+dell'Allegato A del DPR 412/93
+([`src/data/zone-climatiche.json`](../src/data/zone-climatiche.json), 8.010
+comuni). La tabella non esiste in un formato ufficiale leggibile da programma:
+[`scripts/build_zones.py`](../scripts/build_zones.py) legge tre copie
+pubblicate in modo indipendente
+([ANAIP](https://nazionale.anaip.it/wp-content/uploads/dpr412-93_allA_tabellagradigiorno-riscaldamento.pdf),
+[Il Sole 24 Ore](https://i2.res.24o.it/pdf2010/Editrice/ILSOLE24ORE/ILSOLE24ORE/Online/_Oggetti_Embedded/Documenti/2019/10/11/ALLEGATO.pdf),
+[SICET](https://www.sicet.it/attachments/article/702/Allegato_A_DPR_412-93.pdf))
+e tiene un comune solo se almeno due copie concordano su zona e gradi giorno;
+142 comuni sono scartati. Dove le copie non concordano, l'elenco ufficiale
+della [Regione Piemonte](https://www.regione.piemonte.it/web/media/44156/download)
+dà sempre ragione alla maggioranza tenuta. Il comune e la provincia arrivano
+dalla ricerca inversa di Nominatim; per una provincia nata dopo il 1993 (es.
+Monza e Brianza) vale il nome, se è unico in Italia.
+
+Se il comune non c'è (fusioni recenti, nome non trovato), la zona viene
+**stimata dal clima**: quella il cui periodo produce gradi giorno che cadono in
+quella stessa zona (se più di una, la più fredda). L'app scrive quale delle
+due ha usato.
+
+I **gradi giorno del calcolo** vengono comunque dal clima recente (1991–2020)
+nel periodo della zona, non dalla tabella del 1993, basata su anni diversi:
+per Milano il DPR dà 2.404, il modello di Open-Meteo circa 2.575.
 
 L'energia che serve senza contare il sole, mese per mese, è:
 
@@ -309,7 +327,9 @@ media dei sei ambiti della penisola.
 - **Corrado, Ballarini, Corgnati, Talà**, *Building Typology Brochure – Italy*
   (TABULA), Politecnico di Torino, 2011, tabelle 4 e 5:
   [PDF](https://iris.polito.it/bitstream/11583/2465779/1/Italian%20Typology%20Brochure.pdf).
-- **DPR 412/1993**: zone climatiche e gradi giorno; **DPR 74/2013**, art. 4:
+- **DPR 412/1993, Allegato A**: zona climatica e gradi giorno di ogni comune,
+  da tre copie pubblicate (ANAIP, Il Sole 24 Ore, SICET) controllate con
+  l'elenco ufficiale della Regione Piemonte; **DPR 74/2013**, art. 4:
   periodi e ore di accensione, via
   [Infobuild](https://www.infobuild.it/approfondimenti/accensione-riscaldamento-2026-orari-zona-climatica/).
 - **DM 5 luglio 1975**: altezza minima 2,70 m, finestre ≥ 1/8 del pavimento:

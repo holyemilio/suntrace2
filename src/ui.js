@@ -30,10 +30,12 @@ import {
   visitChecklist,
   wallDailyIrradiance,
   resolveClimateZone,
+  HEATING_DAYS,
 } from './cost.js';
 
 import { PRICES } from './prices.js';
 import { gasPriceForRegion } from './ambiti.js';
+import { loadZones, zonesLoaded, lookupZone } from './zones.js';
 
 import { t, monthName, getLang, setLang, applyTranslations } from './i18n.js';
 import { startTour, tourDone } from './tour.js';
@@ -111,6 +113,7 @@ let currentRoom = {
   locked: false,
   lat: null, lng: null,   // centroid, set once locked
   region: null,  // from reverse geocoding: picks the ARERA gas tariff area
+  comune: null, prov: null, // from reverse geocoding: pick the legal climate zone
   buildings: [], // OSM footprints + heights near the centroid (for shadow casting)
   areaM2: 0,
   walls: [],     // [{i, azDeg, lengthM, exterior, midLat, midLng}], set once locked
@@ -308,7 +311,16 @@ async function classifyLocation(lat, lng) {
   const data = await res.json();
   const cc = data && data.address ? data.address.country_code : null;
   // The region picks the ARERA tariff area for the gas price (see ambiti.js).
-  if (cc && IN_ITALY_CODES.has(cc)) return { kind: 'it-land', region: data.address.state || null };
+  if (cc && IN_ITALY_CODES.has(cc)) {
+    const a = data.address;
+    return {
+      kind: 'it-land',
+      region: a.state || null,
+      // comune + provincia pick the legal climate zone (see zones.js)
+      comune: a.city || a.town || a.village || a.municipality || null,
+      prov: (a['ISO3166-2-lvl6'] || '').replace(/^IT-/, '') || null,
+    };
+  }
   if (cc) return { kind: 'foreign' };     // some other country's land
   return { kind: isOutsideBox(lat, lng) ? 'foreign' : 'it-water' };
 }
@@ -628,9 +640,11 @@ function lockRoom() {
   climateStatus = 'loading';
   refreshCost();
   classifyLocation(cLat, cLng)
-    .then(({ kind, region }) => {
+    .then(({ kind, region, comune, prov }) => {
       if (roomGen !== myGen) return; // superseded by a newer room
       currentRoom.region = region || null;
+      currentRoom.comune = comune || null;
+      currentRoom.prov = prov || null;
       if (kind === 'it-land') onValidRoom(cLat, cLng, myGen);
       else if (kind === 'it-water') rejectWater();
       else rejectForeign();
@@ -648,7 +662,7 @@ function removeRoom() {
   clearRoomPolygon();
   clearWallHighlights();
   clearAnalysisOverlays();
-  currentRoom = { vertices: [], locked: false, lat: null, lng: null, region: null, buildings: [], areaM2: 0, walls: [] };
+  currentRoom = { vertices: [], locked: false, lat: null, lng: null, region: null, comune: null, prov: null, buildings: [], areaM2: 0, walls: [] };
   climate = null;
   climateStatus = 'idle';
   $('share-btn')?.setAttribute('disabled', '');
@@ -774,7 +788,9 @@ function refreshCost() {
   if (climateStatus !== 'ready' || !climate) { showCostState('cost-loading'); return; }
 
   const exteriorWalls = currentRoom.walls.filter(w => w.exterior);
-  const { zone, days } = resolveClimateZone(climate.temp);
+  const legal = lookupZone(zonesLoaded(), currentRoom.comune, currentRoom.prov);
+  const zone = legal?.zone || resolveClimateZone(climate.temp).zone;
+  const days = HEATING_DAYS[zone];
   const walls = climate.rad ? wallIrradiance(exteriorWalls, days)
     : exteriorWalls.map(w => ({ lengthM: w.lengthM, irradiance: new Array(12).fill(0) }));
 
@@ -785,9 +801,10 @@ function refreshCost() {
     monthlyTemps: climate.temp,
     answers,
     prices: { gasEurPerSmc: gas.eurPerSmc, electricityEurPerKWh: PRICES.electricityEurPerKWh },
+    legalZone: legal?.zone || null,
   });
 
-  setText('val-zone', zone);
+  setText('val-zone', legal ? t('zone-legal', { zone, comune: currentRoom.comune }) : t('zone-estimated', { zone }));
 
   const southOrWestExterior = exteriorWalls.some(w => w.azDeg >= 135 && w.azDeg <= 315);
   renderChecklist(visitChecklist(answers, r, { southOrWestExterior }));
@@ -1422,6 +1439,7 @@ function startApp() {
     initCollapsiblePanels();
   }
   refreshCost();
+  loadZones().then(() => { if (currentRoom.locked) refreshCost(); });
 
   // Arriving with a link: a shared sheet (?v=…), a typed address from the
   // landing page (?q=…), or real coordinates from its geolocation (?lat=&lng=).

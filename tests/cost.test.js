@@ -208,3 +208,13 @@ test('fewer hours cost less, and never more than the legal maximum is used', () 
   assert.equal(over.hours, 14, 'zone E caps at 14 hours');
   assert.equal(few.perMonth.hi, max.perMonth.hi, 'the high end is always round the clock');
 });
+
+test('a legal zone overrides the estimated one: season and hours follow the law', () => {
+  const e = estimate(known);
+  const asD = estimateHeating({ areaM2: 16, exteriorWalls: wallsFacing(0, 90), monthlyTemps: MILAN_T, answers: known, prices: PRICES, legalZone: 'D' });
+  assert.equal(e.zone, 'E');
+  assert.equal(asD.zone, 'D');
+  assert.equal(asD.hours, 12);
+  assert.equal(asD.seasonDays, 166);
+  assert.ok(asD.perMonth.mid < e.perMonth.mid * 1.2);
+});

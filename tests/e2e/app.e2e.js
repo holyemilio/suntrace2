@@ -283,6 +283,16 @@ test('T46: a room whose sides cross is cleared, with a message to redraw it', as
   assert.equal(await page.locator('.suntrace-marker').count(), 0, 'drawing starts over');
 });
 
+test('T52: a known comune uses its legal climate zone (DPR 412/93)', async (t) => {
+  const page = await openApp(t, { buildings: false });
+  await page.route('**/nominatim.openstreetmap.org/reverse**', r =>
+    r.fulfill({ json: { address: { country_code: 'it', state: 'Lazio', city: 'Roma', 'ISO3166-2-lvl6': 'IT-RM' } } }));
+  await drawAndAnalyse(page);
+  await page.waitForFunction(() => document.getElementById('val-zone').textContent.includes('di legge'));
+  assert.equal(await text(page, 'val-zone'), 'D (di legge, Roma)');
+  assert.match(await text(page, 'cost-season'), /dal 1° novembre al 15 aprile \(zona D\), 12 ore/);
+});
+
 test('T51: the first visit opens a guided tour that blocks the app until it ends', async (t) => {
   const page = await openApp(t, { tour: true });
   await page.waitForSelector('.tour-overlay');
@@ -447,7 +457,7 @@ test('T44: the checklist follows the answers and always asks for the APE', async
 test('T37: the climate card shows the zone and follows the selected month', async (t) => {
   const page = await openApp(t);
   await drawAndAnalyse(page);
-  assert.match(await text(page, 'val-zone'), /^[A-F]$/);
+  assert.match(await text(page, 'val-zone'), /^[A-F] \(stimata dal clima\)$/, 'no comune in the mock → estimated zone');
   assert.match(await text(page, 'val-humidity'), /^\d+%$/);
   assert.match(await text(page, 'val-wind'), /km\/h$/);
 

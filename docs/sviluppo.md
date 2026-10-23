@@ -46,6 +46,8 @@ src/
   cost.js           il costo del riscaldamento — puro, tutte le costanti con fonte
   prices.js         prezzi ARERA di gas (per ambito) e luce — GENERATO, non modificare
   ambiti.js         regione → ambito tariffario ARERA
+  zones.js          comune → zona climatica di legge (DPR 412/93)
+  data/zone-climatiche.json  la tabella dei comuni, generata da scripts/build_zones.py
   ui.js             l'app: Leaflet, disegno, domande, stima, condivisione, mobile
   landing.js        la landing: lingua, ricerca → app, Fig. 1 e confronto
   legal.js          la pagina privacy
@@ -57,7 +59,8 @@ src/
 vendor/fonts/       Newsreader, IBM Plex Sans, IBM Plex Mono (OFL)
 vendor/leaflet/     Leaflet 1.9.4
 server/overpass-cache/  Cloudflare Worker opzionale, non ancora deployato
-scripts/            update_prices.py (prezzi ARERA → src/prices.js) e price-taxes.json
+scripts/            update_prices.py (prezzi ARERA → src/prices.js), price-taxes.json,
+                    build_zones.py (DPR 412/93 → src/data/zone-climatiche.json, a mano: serve pdfplumber)
 tests/              *.test.js (unit) e e2e/app.e2e.js (Playwright)
 docs/
   metodo.md         il metodo di calcolo, con fonti

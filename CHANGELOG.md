@@ -5,6 +5,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) — [Semantic V
 
 ---
 
+## [4.6.0] — 2026-10-23
+
+- **Zona climatica di legge per comune.** La stagione di riscaldamento e il massimo di ore al giorno seguono ora la zona del DPR 412/93 del comune della stanza (8.010 comuni, `src/data/zone-climatiche.json`), non più quella stimata dal clima. La tabella è costruita da `scripts/build_zones.py` incrociando tre copie pubblicate dell'Allegato A e tenendo solo i comuni su cui almeno due concordano; controllata con l'elenco ufficiale della Regione Piemonte. Se il comune non si trova, resta la zona stimata e l'app lo scrive («E (stimata dal clima)» invece di «E (di legge, Milano)»).
+
+---
+
 ## [4.5.0] — 2026-10-23
 
 - **Modalità scura automatica.** Segue l'impostazione del dispositivo (`prefers-color-scheme`): carta quasi nera e calda, inchiostro chiaro, ambra un po' più luminosa; contrasto dei grigi circa 6:1. Logo chiaro dedicato (`docs/brand/logo-dark.png`), colore della barra del browser e controlli di sistema (menu, barre di scorrimento) adattati. La mappa resta chiara: le tessere OpenStreetMap non hanno una versione scura gratuita senza chiave.
