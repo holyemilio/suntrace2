@@ -11,7 +11,7 @@
 
 const STRINGS = {
   it: {
-    'app-title': 'SunTrace 2 — Quanto costa scaldare questa stanza',
+    'app-title': 'SunTrace — Quanto costa scaldare questa stanza',
     'sidebar-aria': 'Pannello di SunTrace 2',
     'back-home': 'Home',
     'back-home-aria': 'Torna alla home',
@@ -261,7 +261,7 @@ const STRINGS = {
     'months': ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'],
 
     // Landing page
-    'landing-title': 'SunTrace 2 — Quanto costa scaldare la stanza che stai per affittare',
+    'landing-title': 'SunTrace — Sai quanto spendi prima di firmare',
     'landing-nav-method': 'Metodo e fonti',
     'landing-hero-title': 'Prima di firmare l\'affitto,',
     'landing-hero-title-em': 'guarda da dove arriva il sole.',
@@ -302,7 +302,7 @@ const STRINGS = {
     'landing-cta-btn': 'Inizia',
 
     // Privacy page
-    'privacy-title': 'Privacy — SunTrace 2',
+    'privacy-title': 'Privacy — SunTrace',
     'privacy-back': '← Torna a SunTrace 2',
     'privacy-h1': 'Privacy',
     'privacy-lead': 'In breve: SunTrace 2 non ha un server, non ha account, non usa cookie di profilazione e non ti traccia. Qui sotto trovi esattamente cosa succede quando usi il sito.',
@@ -319,7 +319,7 @@ const STRINGS = {
   },
 
   en: {
-    'app-title': 'SunTrace 2 — What it costs to heat this room',
+    'app-title': 'SunTrace — What it costs to heat this room',
     'sidebar-aria': 'SunTrace 2 panel',
     'back-home': 'Home',
     'back-home-aria': 'Back to home',
@@ -556,7 +556,7 @@ const STRINGS = {
 
     'months': ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
 
-    'landing-title': 'SunTrace 2 — What it costs to heat the room you\'re about to rent',
+    'landing-title': 'SunTrace — Know what you\'ll spend before you sign',
     'landing-nav-method': 'Method and sources',
     'landing-hero-title': 'Before you sign the lease,',
     'landing-hero-title-em': 'check where the sun comes from.',
@@ -596,7 +596,7 @@ const STRINGS = {
     'landing-cta-sub': 'Search the address and draw the room: it takes a minute, even on your phone.',
     'landing-cta-btn': 'Start',
 
-    'privacy-title': 'Privacy — SunTrace 2',
+    'privacy-title': 'Privacy — SunTrace',
     'privacy-back': '← Back to SunTrace 2',
     'privacy-h1': 'Privacy',
     'privacy-lead': 'Short version: SunTrace 2 has no server, no accounts, no tracking cookies, and doesn\'t track you. Below is exactly what happens when you use the site.',

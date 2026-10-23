@@ -83,6 +83,12 @@ rigenerarli a mano: `python3 scripts/update_prices.py` (con `--check` stampa
 senza scrivere). Dettagli in
 [metodo.md, «Come si aggiornano i prezzi»](metodo.md#come-si-aggiornano-i-prezzi).
 
+## Marchio e anteprima dei link
+
+Logo, simbolo e icone sono in `docs/brand/`. L'immagine dell'anteprima dei
+link (`og-image.png`, 1200×630) si rigenera aprendo `docs/brand/og-source.html`
+dal server locale e facendo uno screenshot a 1200×630 (es. con Playwright).
+
 ## Deploy
 
 GitHub Pages da `main`, cartella `/`: <https://holyemilio.github.io/suntrace2/>.

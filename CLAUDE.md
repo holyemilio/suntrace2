@@ -17,7 +17,7 @@ verificata**, altrimenti non entra nel calcolo.
 Vanilla JS, moduli ES nativi, **nessun build step, zero dipendenze di runtime**.
 Pagine: `index.html` (landing), `app.html` (l'app, layout mobile sotto i 768px),
 `privacy.html`. **Live su <https://holyemilio.github.io/suntrace2/>** (GitHub
-Pages da `main`, root → `index.html`) · versione **4.4.1**.
+Pages da `main`, root → `index.html`) · versione **4.4.2**.
 
 ## Comandi
 

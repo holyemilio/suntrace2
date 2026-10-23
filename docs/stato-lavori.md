@@ -1,6 +1,6 @@
 # Stato dei lavori — SunTrace 2
 
-Ultimo aggiornamento: **23 ottobre 2026** · versione **4.4.1** · repo:
+Ultimo aggiornamento: **23 ottobre 2026** · versione **4.4.2** · repo:
 `holyemilio/suntrace2` · **live su <https://holyemilio.github.io/suntrace2/>**
 
 Documento di passaggio di consegne: cosa è fatto, cosa è in sospeso e cosa

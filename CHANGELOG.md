@@ -5,6 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) — [Semantic V
 
 ---
 
+## [4.4.2] — 2026-10-23
+
+- **Anteprima del link con il nuovo logo.** Tag Open Graph e Twitter su landing, app e privacy: chi condivide il sito su WhatsApp, Telegram, LinkedIn o in una mail vede il logo, lo slogan «Sai quanto spendi prima di firmare.» e una descrizione (`docs/brand/og-image.png`, 1200×630, generata da `docs/brand/og-source.html`).
+- Titoli delle pagine allineati al marchio «SunTrace» e allo slogan; favicon con `?v=2` perché i browser non tengano quella vecchia in cache.
+
+---
+
 ## [4.4.1] — 2026-10-23
 
 - **Nuovo logo (provvisorio).** Sole che sorge sopra un arco, con la scritta «SunTrace» in serif. File in `docs/brand/`: `logo.png` (con la scritta, sfondo trasparente), `symbol.png` (solo simbolo), icone 32, 180 e 512 px. Usato nella colonna dell'app, nella barra della landing, come favicon e icona su telefono e nel README. `docs/app-icon.svg` resta nel repo ma non è più usato.
