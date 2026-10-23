@@ -17,7 +17,7 @@ verificata**, altrimenti non entra nel calcolo.
 Vanilla JS, moduli ES nativi, **nessun build step, zero dipendenze di runtime**.
 Pagine: `index.html` (landing), `app.html` (l'app, layout mobile sotto i 768px),
 `privacy.html`. **Live su <https://holyemilio.github.io/suntrace2/>** (GitHub
-Pages da `main`, root → `index.html`) · versione **4.4.2**.
+Pages da `main`, root → `index.html`) · versione **4.5.0**.
 
 ## Comandi
 
@@ -43,7 +43,7 @@ e2e.
 | `src/ui.js` | L'app: Leaflet, API, disegno del poligono, domande (`select[data-answer]`), `refreshCost()` (stima + checklist), `refreshUI()` (sole/mappa per mese e ora), link condivisibile `?v=…`, layout mobile con reparenting DOM. |
 | `src/landing.js` · `landing.css` | Landing: Fig. 1 (percorso del sole, da `solar.js`) e confronto § 1 (da `cost.js`, dati Milano incorporati). **Non importano `styles.css`** (che blocca lo scroll). |
 | `src/i18n.js` | Testi IT/EN. **Ogni stringa nuova va in ENTRAMBE le lingue** — la CI lo verifica. Voce: semplice, seconda persona, niente emoji. |
-| `src/tokens.css` | Carta e inchiostro, scala tipografica `--fs-*`, font. Condiviso dalle tre pagine. |
+| `src/tokens.css` | Carta e inchiostro, scala tipografica `--fs-*`, font, **e la variante scura** (`@media (prefers-color-scheme: dark)`). Ogni colore nuovo va definito qui in entrambe le versioni, mai scritto a mano nei CSS. |
 | `vendor/fonts/` · `vendor/leaflet/` | Newsreader, IBM Plex Sans/Mono e Leaflet 1.9.4 **self-hostati**: mai reintrodurre link a Google Fonts/unpkg. |
 | `docs/metodo.md` | Il metodo per chi vuole capire i numeri: formule con legenda, fonti, esempio svolto. |
 | `docs/sviluppo.md` | Per chi sviluppa: avvio, test, struttura. Il `README` è solo funzionale. |

@@ -5,6 +5,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) — [Semantic V
 
 ---
 
+## [4.5.0] — 2026-10-23
+
+- **Modalità scura automatica.** Segue l'impostazione del dispositivo (`prefers-color-scheme`): carta quasi nera e calda, inchiostro chiaro, ambra un po' più luminosa; contrasto dei grigi circa 6:1. Logo chiaro dedicato (`docs/brand/logo-dark.png`), colore della barra del browser e controlli di sistema (menu, barre di scorrimento) adattati. La mappa resta chiara: le tessere OpenStreetMap non hanno una versione scura gratuita senza chiave.
+
+---
+
 ## [4.4.2] — 2026-10-23
 
 - **Anteprima del link con il nuovo logo.** Tag Open Graph e Twitter su landing, app e privacy: chi condivide il sito su WhatsApp, Telegram, LinkedIn o in una mail vede il logo, lo slogan «Sai quanto spendi prima di firmare.» e una descrizione (`docs/brand/og-image.png`, 1200×630, generata da `docs/brand/og-source.html`).

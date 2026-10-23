@@ -20,7 +20,9 @@
   <meta name="twitter:title" content="SunTrace — Sai quanto spendi prima di firmare">
   <meta name="twitter:description" content="Disegna la stanza sulla mappa e scopri quanto costa scaldarla, in euro al mese, con le ombre vere dei palazzi vicini e i prezzi ARERA. Gratis, dal telefono.">
   <meta name="twitter:image" content="https://holyemilio.github.io/suntrace2/docs/brand/og-image.png">
-  <meta name="theme-color" content="#f3eee4">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f3eee4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#16140f" media="(prefers-color-scheme: dark)">
   <link rel="icon" type="image/png" sizes="32x32" href="docs/brand/icon-32.png?v=2">
   <link rel="icon" type="image/png" sizes="512x512" href="docs/brand/icon-512.png?v=2">
   <link rel="apple-touch-icon" href="docs/brand/icon-180.png?v=2">
@@ -35,7 +37,7 @@
   <!-- ── Nav ──────────────────────────────────────────────────────────────── -->
   <header class="l-nav">
     <a class="l-brand" href="index.html">
-      <img src="docs/brand/logo.png" alt="SunTrace" width="663" height="430">
+      <picture><source srcset="docs/brand/logo-dark.png" media="(prefers-color-scheme: dark)"><img src="docs/brand/logo.png" alt="SunTrace" width="663" height="430"></picture>
     </a>
     <nav class="l-nav-links">
       <a href="https://github.com/holyemilio/suntrace2/blob/main/docs/metodo.md" data-i18n="landing-nav-method">Metodo e fonti</a>
