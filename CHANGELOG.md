@@ -5,6 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) — [Semantic V
 
 ---
 
+## [4.6.1] — 2026-10-23
+
+- Il messaggio «La forbice è ampia perché mancano risposte» compare solo se c'è ancora qualche «Non so»: con tutte le risposte la forbice che resta dipende da ciò che non si vede (muri, abitudini), non da domande mancanti.
+- Manuale utente aggiornato alla versione attuale: nuove schermate (logo, guida, controllo dell'acqua, cifra principale, domanda sulle ore), sezioni su guida e disegni rifiutati.
+
+---
+
 ## [4.6.0] — 2026-10-23
 
 - **Zona climatica di legge per comune.** La stagione di riscaldamento e il massimo di ore al giorno seguono ora la zona del DPR 412/93 del comune della stanza (8.010 comuni, `src/data/zone-climatiche.json`), non più quella stimata dal clima. La tabella è costruita da `scripts/build_zones.py` incrociando tre copie pubblicate dell'Allegato A e tenendo solo i comuni su cui almeno due concordano; controllata con l'elenco ufficiale della Regione Piemonte. Se il comune non si trova, resta la zona stimata e l'app lo scrive («E (stimata dal clima)» invece di «E (di legge, Milano)»).

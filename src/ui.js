@@ -817,7 +817,10 @@ function refreshCost() {
   const area = euro(currentRoom.areaM2);
   const notes = [
     currentRoom.areaM2 > BIG_ROOM_M2 ? t('cost-big-room', { area }) : '',
-    r.perMonth.hi > WIDE_RANGE_RATIO * Math.max(1, r.perMonth.lo) ? t('cost-wide') : '',
+    // "Answer more" only while something is still unanswered: with every
+    // answer in, the range left is the physics we can't see (walls, habits).
+    r.perMonth.hi > WIDE_RANGE_RATIO * Math.max(1, r.perMonth.lo)
+      && ANSWER_KEYS.some(k => answers[k] === 'unknown') ? t('cost-wide') : '',
     r.assumedGas ? t('cost-assumed-gas') : '',
     r.central ? t('cost-central') : '',
   ].filter(Boolean);
