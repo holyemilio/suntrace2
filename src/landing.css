@@ -39,9 +39,8 @@ main, .l-nav, .l-footer { max-width: 1120px; margin: 0 auto; padding-left: 24px;
   padding-bottom: 18px;
   border-bottom: 1px solid var(--rule-strong);
 }
-.l-brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-family: var(--serif); font-weight: 600; font-size: var(--fs-lg); }
-.l-brand img { border-radius: 6px; }
-.l-brand em { font-style: normal; color: var(--sun-ink); }
+.l-brand { display: inline-flex; align-items: center; text-decoration: none; }
+.l-brand img { display: block; height: 52px; width: auto; }
 .l-nav-links { display: flex; align-items: center; gap: 18px; font-size: var(--fs-sm); }
 
 .lang-switch { display: flex; gap: 2px; padding: 3px; border: 1px solid var(--rule-strong); border-radius: var(--radius); background: var(--sheet); }

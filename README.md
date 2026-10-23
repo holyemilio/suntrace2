@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/logo.svg" alt="SunTrace" width="220">
+  <img src="docs/brand/logo.png" alt="SunTrace" width="220">
 </p>
 
 <p align="center"><strong>Italiano</strong> · <a href="README.en.md">English</a></p>

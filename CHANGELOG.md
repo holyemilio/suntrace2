@@ -5,6 +5,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) — [Semantic V
 
 ---
 
+## [4.4.1] — 2026-10-23
+
+- **Nuovo logo (provvisorio).** Sole che sorge sopra un arco, con la scritta «SunTrace» in serif. File in `docs/brand/`: `logo.png` (con la scritta, sfondo trasparente), `symbol.png` (solo simbolo), icone 32, 180 e 512 px. Usato nella colonna dell'app, nella barra della landing, come favicon e icona su telefono e nel README. `docs/app-icon.svg` resta nel repo ma non è più usato.
+
+---
+
 ## [4.4.0] — 2026-10-23
 
 - **Guida alla prima visita** (`src/tour.js`). Uno schermo scuro copre l'app e un riquadro ambra cerchia un elemento alla volta, con una scheda che spiega a cosa serve e i pulsanti Avanti, Indietro e Salta (anche da tastiera). Durante la guida non si può interagire con l'app. Nove passi su computer, sette su telefono; compare una volta sola e si riapre dal link «Guida» in fondo alla colonna (su telefono, in fondo al pannello domande, dove ora ci sono anche i link Metodo, GitHub e Privacy).
