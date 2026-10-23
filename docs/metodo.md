@@ -176,7 +176,7 @@ Poi dipende da come si scalda la casa:
 | Caldaia a gas | *Q* / (*η* · 10,69) × prezzo del gas | *η* = 0,94 · 0,86 · 0,75 |
 | Pompa di calore o condizionatore | *Q* / *SCOP* × prezzo della luce | *SCOP* = 4,0 · 3,4 · 2,8 |
 | Stufetta elettrica | *Q* × prezzo della luce | rendimento 1 |
-| Centralizzato | non stimato: il costo dipende dal condominio | – |
+| Centralizzato | come la caldaia a gas: è il consumo stimato della stanza; quanto paghi dipende anche dalla ripartizione del condominio, e l'app lo dice | come sopra |
 | Non so | calcolato come caldaia a gas, e l'app lo dice | – |
 
 | Simbolo | Cos'è | Da dove viene |

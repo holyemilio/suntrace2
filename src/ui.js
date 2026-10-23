@@ -742,8 +742,6 @@ function refreshCost() {
   const southOrWestExterior = exteriorWalls.some(w => w.azDeg >= 135 && w.azDeg <= 315);
   renderChecklist(visitChecklist(answers, r, { southOrWestExterior }));
 
-  if (!r.perMonth) { showCostState('cost-central'); return; }
-
   const text = range(r.perMonth.lo, r.perMonth.hi);
   setText('cost-range', text);
   setText('mobile-cost-range', text);
@@ -753,6 +751,7 @@ function refreshCost() {
     currentRoom.areaM2 > BIG_ROOM_M2 ? t('cost-big-room', { area }) : '',
     r.perMonth.hi > WIDE_RANGE_RATIO * Math.max(1, r.perMonth.lo) ? t('cost-wide') : '',
     r.assumedGas ? t('cost-assumed-gas') : '',
+    r.central ? t('cost-central') : '',
   ].filter(Boolean);
   $('cost-state').hidden = notes.length === 0;
   setText('cost-state', notes.join(' '));

@@ -278,28 +278,30 @@ export function estimateHeating({ areaM2, exteriorWalls, monthlyTemps, answers, 
     midSun: net(lossMid, true),
   };
 
-  const system = answers.heating === 'unknown' ? 'gas' : answers.heating;
+  // Central heating burns gas too: the room's own consumption is costed like a
+  // gas boiler. What the tenant actually pays also depends on how the building
+  // splits the bill, which the app says alongside the figure.
+  const system = answers.heating === 'unknown' || answers.heating === 'central' ? 'gas' : answers.heating;
   const toEuro = (q, sys, c) => {
     if (sys === 'gas') return q / (BOILER_EFF[c] * GAS_KWH_PER_SMC) * prices.gasEurPerSmc;
     if (sys === 'heatpump') return q / HEAT_PUMP_SCOP[c] * prices.electricityEurPerKWh;
-    if (sys === 'electric') return q * prices.electricityEurPerKWh;
-    return null; // central: the bill depends on the building, not on this room
+    return q * prices.electricityEurPerKWh; // plug-in electric heater
   };
-  const perMonth = eur => eur == null ? null : eur / months;
+  const perMonth = eur => eur / months;
   const people = Math.max(1, answers.people || 1);
 
   const lo = perMonth(toEuro(kWh.lo, system, 'lo'));
   const hi = perMonth(toEuro(kWh.hi, system, 'hi'));
-  const sunSaving = system === 'central' ? null
-    : perMonth(toEuro(kWh.midNoSun, system, 'mid') - toEuro(kWh.midSun, system, 'mid'));
+  const sunSaving = perMonth(toEuro(kWh.midNoSun, system, 'mid') - toEuro(kWh.midSun, system, 'mid'));
 
   return {
     zone, gg, seasonDays, months, system,
     assumedGas: answers.heating === 'unknown',
+    central: answers.heating === 'central',
     kWh,
-    perMonth: lo == null ? null : { lo, hi },
-    perPerson: lo == null || people === 1 ? null : { lo: lo / people, hi: hi / people, people },
-    perSeason: lo == null ? null : { lo: lo * months, hi: hi * months },
+    perMonth: { lo, hi },
+    perPerson: people === 1 ? null : { lo: lo / people, hi: hi / people, people },
+    perSeason: { lo: lo * months, hi: hi * months },
     sunSavingPerMonth: sunSaving,
     electricPerMonth: system === 'electric' ? null
       : { lo: perMonth(toEuro(kWh.lo, 'electric', 'lo')), hi: perMonth(toEuro(kWh.hi, 'electric', 'hi')) },

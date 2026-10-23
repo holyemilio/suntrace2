@@ -5,6 +5,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) — [Semantic V
 
 ---
 
+## [4.0.1] — 2026-10-23
+
+- 🐛 **Con «Riscaldamento centralizzato» il prezzo spariva** (segnalato dall'utente): l'app mostrava «—» e solo un messaggio, e sembrava un errore. Ora calcola il consumo stimato della stanza come per una caldaia a gas (il centralizzato brucia gas anche lui) e spiega sotto che quanto si paga dipende anche dalla ripartizione del condominio. Nessuna risposta alle domande nasconde più il prezzo.
+
+---
+
 ## [4.0.0] — 2026-10-23
 
 SunTrace 2 diventa uno strumento per chi affitta: non dà più un voto a stelle,

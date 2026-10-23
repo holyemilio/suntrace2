@@ -149,10 +149,12 @@ test('a plug-in electric heater costs more than a gas boiler, a heat pump less',
   assert.equal(electric.electricPerMonth, null, 'no comparison with itself');
 });
 
-test('central heating gives no euro figure for the room', () => {
-  const r = estimate({ ...known, heating: 'central' });
-  assert.equal(r.perMonth, null);
-  assert.equal(r.sunSavingPerMonth, null);
+test('central heating is costed like the gas it burns, and flagged', () => {
+  const central = estimate({ ...known, heating: 'central' });
+  const gas = estimate(known);
+  assert.deepEqual(central.perMonth, gas.perMonth);
+  assert.equal(central.central, true);
+  assert.equal(gas.central, false);
 });
 
 test('the split per person divides the room cost', () => {

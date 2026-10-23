@@ -346,11 +346,11 @@ test('T32: answering the questions narrows the range', async (t) => {
     `known ${JSON.stringify(known)} must be narrower than unknown ${JSON.stringify(unknown)}`);
 });
 
-test('T22: central heating gives no euro figure and says why', async (t) => {
+test('T22: central heating keeps the euro figure and explains the building split', async (t) => {
   const page = await openApp(t);
   await drawAndAnalyse(page);
   await answer(page, { heating: 'central' });
-  assert.equal(await text(page, 'cost-range'), '—');
+  assert.notEqual(await text(page, 'cost-range'), '—', 'answering never hides the price');
   assert.match(await text(page, 'cost-state'), /condominio/);
   assert.match(await text(page, 'checklist'), /centralizzato/);
 });
