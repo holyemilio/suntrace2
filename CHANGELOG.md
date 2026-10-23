@@ -5,6 +5,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) — [Semantic V
 
 ---
 
+## [4.3.0] — 2026-10-23
+
+- **Ore di accensione.** Nuova domanda «Quante ore al giorno lo accendete?», mai oltre il massimo di legge della zona (DPR 74/2013: 14 ore in zona E, 12 in D, …); con «Non so» si usa il massimo. Il calcolo non assume più il riscaldamento acceso 24 ore: la cifra principale sta a metà tra i due limiti fisici (solo le ore accese, oppure 24 ore), che restano gli estremi della forbice.
+- **Niente stanze sull'acqua.** Se il disegno cade su un fiume, un lago (OpenStreetMap `natural=water`, `waterway=riverbank`) o sul lato mare di una linea di costa, l'app lo cancella e chiede di ridisegnarlo. Tolleranza di 1,5 m sulla riva per gli edifici affacciati sull'acqua (`onWater` in `shadow.js`).
+- **Gradi giorno tolti dal pannello clima:** misura tecnica che le persone non usano. Resta nel calcolo e nel metodo.
+
+---
+
 ## [4.2.0] — 2026-10-23
 
 Correzioni dai test dell'utente.

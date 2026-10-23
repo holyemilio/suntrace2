@@ -113,12 +113,20 @@ quella del DPR 412/93.
 L'energia che serve senza contare il sole, mese per mese, è:
 
 ```math
-Q_m = \frac{H \cdot \max(0,\ 20 - T_m) \cdot 24 \cdot g_m}{1000}
+Q_m = \frac{H \cdot f_h \cdot \max(0,\ 20 - T_m) \cdot 24 \cdot g_m}{1000}
 ```
 
-con *Q_m* in kWh: le 24 ore sono una giornata di riscaldamento continuo a
-20 °C, come nel calcolo standard. Chi scalda meno ore spende meno: anche per
-questo la stima tende al rialzo.
+con *Q_m* in kWh e *f_h* il fattore delle **ore di accensione** *h*:
+
+| Caso | *f_h* | Perché |
+| --- | --- | --- |
+| Numero alto | 1 | Limite fisico superiore: acceso 24 ore su 24. |
+| Numero basso | *h* / 24 | Limite fisico inferiore: come se la stanza si raffreddasse all'istante appena si spegne, cosa che non succede mai. |
+| Cifra principale | (1 + *h*/24) / 2 | **Ipotesi:** a metà tra i due limiti. Quanto in fretta si raffredda una stanza dipende dalla massa dei muri, che non conosciamo. |
+
+*h* è la risposta alla domanda «Quante ore al giorno lo accendete?», mai oltre
+il **massimo di legge della zona** (DPR 74/2013, art. 4): A 6 ore, B 8, C 10,
+D 12, E 14, F nessun limite. Con «Non so» si usa il massimo di legge.
 
 ---
 
@@ -198,6 +206,7 @@ per il numero di persone.
 | Muri, finestre, soffitto, pavimento | *U* minimo dell'epoca | *U* massimo dell'epoca |
 | «Non so» su tetto o cantina | non c'è | c'è |
 | Ricambio d'aria *n* | 0,3 | 0,5 |
+| Ore di accensione | *h* / 24 | 24 ore |
 | Sole dalle finestre | tutto quello possibile | nessuno |
 | Caldaia / pompa di calore | la più efficiente | la meno efficiente |
 
@@ -237,8 +246,8 @@ stanza con una stufetta elettrica: 114–220 € al mese. Il test
 - **Il calore di persone ed elettrodomestici.** La formula della UNI/TS 11300-1
   per gli apporti interni non era verificabile da fonti libere: l'abbiamo
   lasciata fuori. La stima tende quindi al rialzo.
-- **Le abitudini.** Contiamo 20 °C per 24 ore nei giorni ammessi. Chi scalda
-  meno ore spende meno.
+- **La temperatura impostata.** Contiamo 20 °C, il valore convenzionale del
+  DPR 412/93. Chi tiene il termostato più basso spende meno.
 - **L'acqua calda e la cucina.** Non dipendono dall'esposizione della stanza.
 - **Il caldo d'estate in euro.** Molti non hanno il condizionatore: un numero
   sarebbe inventato. L'app segnala invece le stanze sotto il tetto con pareti a

@@ -157,6 +157,20 @@
       </div>
 
       <div class="field">
+        <label for="q-hours" data-i18n="q-hours">Quante ore al giorno lo accendete?</label>
+        <select id="q-hours" data-answer="hours">
+          <option value="unknown" data-i18n="hours-unknown">Non so (il massimo di legge)</option>
+          <option value="4" data-i18n="hours-4">Circa 4 ore</option>
+          <option value="6" data-i18n="hours-6">Circa 6 ore</option>
+          <option value="8" data-i18n="hours-8">Circa 8 ore</option>
+          <option value="10" data-i18n="hours-10">Circa 10 ore</option>
+          <option value="12" data-i18n="hours-12">Circa 12 ore</option>
+          <option value="14" data-i18n="hours-14">14 ore o più</option>
+        </select>
+        <p class="field-help" data-i18n="help-hours">La legge fissa un massimo per zona: 14 ore al giorno a Milano, 12 a Roma, 10 a Napoli. Non andiamo mai oltre.</p>
+      </div>
+
+      <div class="field">
         <label for="q-people" data-i18n="q-people">Quante persone dividono le bollette?</label>
         <select id="q-people" data-answer="people">
           <option value="1">1</option>
@@ -219,12 +233,10 @@
       <section class="card climate-card" data-i18n-aria="climate-card-aria" aria-label="Clima del luogo">
         <dl class="readings">
           <div><dt data-i18n="climate-zone">Zona climatica</dt><dd id="val-zone">—</dd></div>
-          <div><dt data-i18n="climate-gg">Gradi giorno</dt><dd id="val-gg">—</dd></div>
           <div><dt data-i18n="climate-humidity">Umidità media del mese</dt><dd id="val-humidity">—</dd></div>
           <div><dt data-i18n="climate-wind">Vento medio del mese</dt><dd id="val-wind">—</dd></div>
           <div><dt data-i18n="climate-rain">Pioggia del mese</dt><dd id="val-rain">—</dd></div>
         </dl>
-        <p class="readings-help" data-i18n="climate-gg-help">Gradi giorno: quanto freddo fa in tutta la stagione di riscaldamento. Più è alto, più si spende. Li calcoliamo dal clima 1991–2020 del punto disegnato; il valore di legge del comune (DPR 412/93) può essere un po' diverso.</p>
 
         <div class="room-facts">
           <span id="coord-lat">--°N</span>

@@ -130,6 +130,27 @@ export const HEATING_DAYS = {
   F: DAYS_IN_MONTH.slice(),
 };
 
+/**
+ * DPR 74/2013, art. 4: the most hours a day heating may run, per zone
+ * (F has no national limit).
+ */
+export const MAX_DAILY_HOURS = { A: 6, B: 8, C: 10, D: 12, E: 14, F: 24 };
+
+/**
+ * Share of the round-the-clock heat loss a day with `hours` of heating costs.
+ * Two hard limits: heating `hours` a day can't cost more than heating all 24
+ * (factor 1), nor less than the loss during those hours alone (hours / 24, as
+ * if the room went cold the instant the heating stopped — it never does). The
+ * typical case takes the middle of the two: an assumption, stated as such in
+ * docs/metodo.md, because how fast a room cools depends on walls we can't see.
+ */
+export function dailyHoursFactor(hours, c) {
+  const share = Math.min(24, Math.max(0, hours)) / 24;
+  if (c === 'lo') return share;
+  if (c === 'hi') return 1;
+  return (1 + share) / 2;
+}
+
 /** Degree days from 12 monthly mean temperatures over the given heating days. */
 export function degreeDays(monthlyTemps, heatingDays) {
   return monthlyTemps.reduce((s, t, m) => s + heatingDays[m] * Math.max(0, INDOOR_C - t), 0);
@@ -264,8 +285,10 @@ export function estimateHeating({ areaM2, exteriorWalls, monthlyTemps, answers, 
   const gainsByMonth = monthlyTemps.map((_, m) => exteriorWalls.reduce((s, w) =>
     s + winTotal * (w.lengthM / exteriorLengthM) * g * (w.irradiance[m] || 0) * days[m], 0));
 
+  // Hours a day: the answer, never above the zone's legal maximum; "Non so" = the maximum.
+  const hours = Math.min(MAX_DAILY_HOURS[zone], Number(answers.hours) || MAX_DAILY_HOURS[zone]);
   const lossByMonth = c => {
-    const H = heatLossCoefficient(geo, c);
+    const H = heatLossCoefficient(geo, c) * dailyHoursFactor(hours, c);
     return monthlyTemps.map((t, m) => H * Math.max(0, INDOOR_C - t) * 24 * days[m] / 1000);
   };
   const net = (loss, withSun) => loss.reduce((s, q, m) => s + Math.max(0, q - (withSun ? gainsByMonth[m] : 0)), 0);
@@ -298,7 +321,7 @@ export function estimateHeating({ areaM2, exteriorWalls, monthlyTemps, answers, 
   const sunSaving = perMonth(toEuro(kWh.midNoSun, system, 'mid') - toEuro(kWh.midSun, system, 'mid'));
 
   return {
-    zone, gg, seasonDays, months, system,
+    zone, gg, seasonDays, months, system, hours,
     assumedGas: answers.heating === 'unknown',
     central: answers.heating === 'central',
     kWh,

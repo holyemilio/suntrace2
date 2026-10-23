@@ -21,6 +21,8 @@ import {
   estimateHeating,
   visitChecklist,
   ROOM_HEIGHT_M,
+  dailyHoursFactor,
+  MAX_DAILY_HOURS,
 } from '../src/cost.js';
 
 // Milan, Open-Meteo EC_Earth3P_HR 1991–2020 monthly means (°C and kWh/m²/day).
@@ -185,4 +187,24 @@ test('the checklist puts the costliest issue first, ends with the APE, max 5', (
   assert.ok(items.length <= 5);
   assert.equal(visitChecklist(known, { sunShare: 0.3 }).at(-1), 'check-ape');
   assert.deepEqual(visitChecklist(known, { sunShare: 0.3 }), ['check-ape']);
+});
+
+// ─── heating hours ────────────────────────────────────────────────────────────
+
+test('dailyHoursFactor sits between the two physical limits', () => {
+  assert.equal(dailyHoursFactor(12, 'lo'), 0.5);
+  assert.equal(dailyHoursFactor(12, 'hi'), 1);
+  assert.equal(dailyHoursFactor(12, 'mid'), 0.75);
+  assert.equal(dailyHoursFactor(30, 'lo'), 1, 'never more than a day');
+});
+
+test('fewer hours cost less, and never more than the legal maximum is used', () => {
+  assert.equal(MAX_DAILY_HOURS.E, 14);
+  const max = estimate(known);
+  const few = estimate({ ...known, hours: 6 });
+  const over = estimate({ ...known, hours: 20 });
+  assert.equal(max.hours, 14);
+  assert.ok(few.perMonth.mid < max.perMonth.mid);
+  assert.equal(over.hours, 14, 'zone E caps at 14 hours');
+  assert.equal(few.perMonth.hi, max.perMonth.hi, 'the high end is always round the clock');
 });

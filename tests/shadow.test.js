@@ -18,6 +18,7 @@ import {
   sunBlocked,
   sunAccessFraction,
   roomShapeProblem,
+  onWater,
 } from '../src/shadow.js';
 
 const LAT = 41.9028, LNG = 12.4964;      // Rome
@@ -230,4 +231,28 @@ test('roomShapeProblem flags crossing sides and slivers', () => {
   const sliver = [{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 0.1 }];
   assert.equal(roomShapeProblem(bowTie), 'crossing');
   assert.equal(roomShapeProblem(sliver), 'tiny');
+});
+
+// ─── onWater ──────────────────────────────────────────────────────────────────
+
+test('onWater refuses a room inside a water area, with a little slack at the shore', () => {
+  const lat = 43.77, lng = 11.25;
+  const ll = localToLatLng(lat, lng);
+  const square = (x0, y0, x1, y1) => [[x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0]].map(([x, y]) => ll(x, y));
+  const river = { areas: [[square(-50, -20, 50, 20)]], coasts: [] };     // a 40 m wide river
+  const room = (dy) => [[-2, -2], [2, -2], [2, 2], [-2, 2]].map(([x, y]) => ({ x, y: y + dy }));
+  assert.equal(onWater(lat, lng, room(0), river), true, 'mid-river');
+  assert.equal(onWater(lat, lng, room(23), river), false, 'on the bank, outside the water');
+  assert.equal(onWater(lat, lng, room(21), river), false, 'one corner 1 m into the water: tolerated');
+  assert.equal(onWater(lat, lng, room(19), river), true, 'a corner 3 m into the water: refused');
+  assert.equal(onWater(lat, lng, room(0), null), false, 'no water data, no refusal');
+});
+
+test('onWater reads the sea side of a coastline (OSM: land on the left)', () => {
+  const lat = 41.0, lng = 14.0;
+  const ll = localToLatLng(lat, lng);
+  const coast = { areas: [], coasts: [[ll(-100, 0), ll(100, 0)]] }; // drawn eastward: land on the left (north), sea south
+  const room = (dy) => [[-2, -2], [2, -2], [2, 2], [-2, 2]].map(([x, y]) => ({ x, y: y + dy }));
+  assert.equal(onWater(lat, lng, room(10), coast), false, 'inland');
+  assert.equal(onWater(lat, lng, room(-10), coast), true, 'at sea');
 });

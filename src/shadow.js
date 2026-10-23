@@ -206,3 +206,58 @@ export function monthlySunAccess(clat, clng, buildings, obsH, month, year, timeZ
   }
   return byMonth[month];
 }
+
+// ─── water ────────────────────────────────────────────────────────────────────
+
+/**
+ * How far into water a drawn corner may sit before the room is refused:
+ * a little room for drawing slack on a canal or lake front, no more.
+ */
+export const WATER_TOLERANCE_M = 1.5;
+
+/**
+ * True when the room is drawn on water: its centre, or any corner more than
+ * WATER_TOLERANCE_M from the shore, falls inside an OSM water area or on the
+ * sea side of an OSM coastline.
+ *
+ * @param {number} clat  @param {number} clng   local origin (the room centroid)
+ * @param {Array<{x,y}>} ring  the room's corners in local metres
+ * @param {{areas: Array<Array<Array<{lat,lon}>>>, coasts: Array<Array<{lat,lon}>>}} water
+ *   areas: each water feature as its list of outlines (a way's own outline, or
+ *   every member way of a multipolygon — even-odd counting needs no joining);
+ *   coasts: coastline ways, which OSM draws with the land on the left.
+ */
+export function onWater(clat, clng, ring, water) {
+  if (!water) return false;
+  const xy = localXY(clat, clng);
+  const toSegs = lines => lines.flatMap(line => {
+    const pts = line.map(p => xy(p.lat, p.lon));
+    return pts.slice(1).map((p, i) => [pts[i], p]);
+  });
+  const areas = (water.areas || []).map(toSegs);
+  const coast = toSegs(water.coasts || []);
+
+  const wet = p => {
+    for (const segs of areas) {
+      let inside = false, d = Infinity;
+      for (const [a, c] of segs) {
+        if (((a.y > p.y) !== (c.y > p.y)) && (p.x < (c.x - a.x) * (p.y - a.y) / (c.y - a.y) + a.x)) inside = !inside;
+        d = Math.min(d, pointSegDist(p, a, c));
+      }
+      if (inside && d > WATER_TOLERANCE_M) return true;
+    }
+    // Sea: the nearest coastline segment decides; right of its direction is water.
+    let best = null, bestD = Infinity;
+    for (const seg of coast) {
+      const d = pointSegDist(p, seg[0], seg[1]);
+      if (d < bestD) { bestD = d; best = seg; }
+    }
+    if (best && bestD > WATER_TOLERANCE_M) {
+      const [a, c] = best;
+      if ((c.x - a.x) * (p.y - a.y) - (c.y - a.y) * (p.x - a.x) < 0) return true;
+    }
+    return false;
+  };
+
+  return wet(polygonCentroid(ring)) || ring.some(wet);
+}

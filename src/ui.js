@@ -22,6 +22,7 @@ import {
   classifyRoomEdges,
   sunBlocked,
   roomShapeProblem,
+  onWater,
 } from './shadow.js';
 
 import {
@@ -379,10 +380,18 @@ async function detectBuildingContext(lat, lng, myGen) {
   if (roomGen !== myGen) return; // superseded by a newer room
   if (!ctx) return; // no building nearby → every wall keeps its provisional "exterior"
 
-  currentRoom.buildings = ctx.buildings;
-
   const xy = localXY(lat, lng);
   const ring = currentRoom.vertices.map(v => xy(v.lat, v.lng));
+
+  // A river, a lake or the sea under the drawing: not a room.
+  if (onWater(lat, lng, ring, ctx.water)) {
+    removeRoom();
+    showToast(t('geo-water-inland'), 'warn', 12000);
+    return;
+  }
+
+  currentRoom.buildings = ctx.buildings;
+  if (!ctx.buildings.length) return;
   const classes = classifyRoomEdges(lat, lng, ring, ctx.buildings);
   if (classes) {
     for (const { i, exterior } of classes) {
@@ -396,7 +405,7 @@ async function detectBuildingContext(lat, lng, myGen) {
 }
 
 async function fetchBuildingContext(lat, lng) {
-  const cacheKey = `osm3_${lat.toFixed(4)}_${lng.toFixed(4)}`;
+  const cacheKey = `osm4_${lat.toFixed(4)}_${lng.toFixed(4)}`;
   try {
     const cached = localStorage.getItem(cacheKey);
     if (cached) return JSON.parse(cached);
@@ -405,15 +414,29 @@ async function fetchBuildingContext(lat, lng) {
   // Coordinates rounded to 4 decimals (~11 m — same tolerance as the cache key
   // above): identical queries from nearby clicks let the edge cache share results.
   const qLat = lat.toFixed(4), qLng = lng.toFixed(4);
-  const q = `[out:json][timeout:20];(way["building"](around:90,${qLat},${qLng});relation["building"](around:90,${qLat},${qLng}););out geom;`;
+  // Buildings for shadows and wall classification; water nearby (and any water
+  // area containing the point, via is_in) to refuse rooms drawn on it.
+  const q = `[out:json][timeout:25];is_in(${qLat},${qLng})->.here;(`
+    + `way["building"](around:90,${qLat},${qLng});relation["building"](around:90,${qLat},${qLng});`
+    + `way["natural"="water"](around:60,${qLat},${qLng});relation["natural"="water"](around:60,${qLat},${qLng});`
+    + `way["waterway"="riverbank"](around:60,${qLat},${qLng});way["natural"="coastline"](around:200,${qLat},${qLng});`
+    + `way(pivot.here)["natural"="water"];relation(pivot.here)["natural"="water"];`
+    + `);out geom;`;
   const data = await overpassQuery(q);
 
-  const raw = (data.elements || []).filter(e => Array.isArray(e.geometry) && e.geometry.length >= 3);
-  let ctx = null;
-  if (raw.length) {
-    const buildings = raw.map(e => ({ geom: e.geometry.map(p => ({ lat: p.lat, lon: p.lon })), h: heightOf(e) }));
-    ctx = { buildings };
-  }
+  const els = data.elements || [];
+  const pts = g => g.map(p => ({ lat: p.lat, lon: p.lon }));
+  const isWater = e => e.tags && (e.tags.natural === 'water' || e.tags.waterway === 'riverbank');
+  const buildings = els
+    .filter(e => !isWater(e) && e.tags?.natural !== 'coastline' && Array.isArray(e.geometry) && e.geometry.length >= 3)
+    .map(e => ({ geom: pts(e.geometry), h: heightOf(e) }));
+  const water = {
+    areas: els.filter(isWater).map(e => e.type === 'relation'
+      ? (e.members || []).filter(m => Array.isArray(m.geometry)).map(m => pts(m.geometry))
+      : [pts(e.geometry || [])]),
+    coasts: els.filter(e => e.tags?.natural === 'coastline' && Array.isArray(e.geometry)).map(e => pts(e.geometry)),
+  };
+  const ctx = (buildings.length || water.areas.length || water.coasts.length) ? { buildings, water } : null;
   try { localStorage.setItem(cacheKey, JSON.stringify(ctx)); } catch { /* storage unavailable */ }
   return ctx;
 }
@@ -641,13 +664,12 @@ function resetOutputUI() {
   setText('val-wind', '—');
   setText('val-rain', '—');
   setText('val-zone', '—');
-  setText('val-gg', '—');
   refreshCost();
 }
 
 // ─── the visit answers ────────────────────────────────────────────────────────
 
-const ANSWER_KEYS = ['heating', 'glass', 'epoch', 'above', 'below', 'people'];
+const ANSWER_KEYS = ['heating', 'glass', 'epoch', 'above', 'below', 'hours', 'people'];
 
 function getAnswers() {
   const a = {};
@@ -742,7 +764,7 @@ function refreshCost() {
   if (climateStatus !== 'ready' || !climate) { showCostState('cost-loading'); return; }
 
   const exteriorWalls = currentRoom.walls.filter(w => w.exterior);
-  const { zone, gg, days } = resolveClimateZone(climate.temp);
+  const { zone, days } = resolveClimateZone(climate.temp);
   const walls = climate.rad ? wallIrradiance(exteriorWalls, days)
     : exteriorWalls.map(w => ({ lengthM: w.lengthM, irradiance: new Array(12).fill(0) }));
 
@@ -756,7 +778,6 @@ function refreshCost() {
   });
 
   setText('val-zone', zone);
-  setText('val-gg', euro(gg));
 
   const southOrWestExterior = exteriorWalls.some(w => w.azDeg >= 135 && w.azDeg <= 315);
   renderChecklist(visitChecklist(answers, r, { southOrWestExterior }));
@@ -777,7 +798,7 @@ function refreshCost() {
   setText('cost-state', notes.join(' '));
   $('cost-lines').hidden = false;
 
-  setText('cost-season', t('season-' + zone, { zone }));
+  setText('cost-season', t('season-hours', { season: t('season-' + zone, { zone }), hours: r.hours }));
 
   $('cost-split-row').hidden = !r.perPerson;
   if (r.perPerson) setText('cost-split', t('split-value', { n: r.perPerson.people, mid: euro(r.perPerson.mid), range: range(r.perPerson.lo, r.perPerson.hi) }));

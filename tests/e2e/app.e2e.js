@@ -281,6 +281,17 @@ test('T46: a room whose sides cross is cleared, with a message to redraw it', as
   assert.equal(await page.locator('.suntrace-marker').count(), 0, 'drawing starts over');
 });
 
+test('T49: a room drawn on a river is refused', async (t) => {
+  const page = await openApp(t, { buildings: false });
+  const water = rect(41.9028, 12.4964, -400, 400, -400, 400, 0);
+  water.tags = { natural: 'water', water: 'river' };
+  await page.route('**/overpass-api.de/**', r => r.fulfill({ json: { elements: [water] } }));
+  await drawRoom(page);
+  await page.waitForSelector('.map-error-toast', { state: 'visible' });
+  assert.match(await text(page, 'map-error-toast'), /sull'acqua/);
+  assert.equal(await text(page, 'cost-mid'), '—');
+});
+
 test('T47: the big number is the most likely figure, inside its range', async (t) => {
   const page = await openApp(t, { buildings: false });
   await drawAndAnalyse(page);
