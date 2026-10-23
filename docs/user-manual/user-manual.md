@@ -1,4 +1,4 @@
-<p align="center"><a href="manuale-utente.md">Italiano</a> · <strong>English</strong></p>
+
 
 # SunTrace 2 — User manual
 
@@ -195,7 +195,7 @@ bottom bar.
 | Are the prices up to date? | Yes: they update themselves every month from ARERA's files, by part of Italy. The month used is written under the estimate. |
 | Is it an energy certificate? | No. For the official energy class ask for the APE. |
 
-For the numbers, formula by formula: [the method](../metodo.md) (in Italian).
+For the numbers, formula by formula: [the method](../method.md).
 
 ---
 

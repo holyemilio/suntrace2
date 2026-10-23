@@ -1,6 +1,6 @@
 {
   "name": "suntrace",
-  "version": "4.6.1",
+  "version": "4.7.0",
   "description": "What it costs to heat the room you are about to rent \u2014 vanilla JS, no build step",
   "type": "module",
   "scripts": {

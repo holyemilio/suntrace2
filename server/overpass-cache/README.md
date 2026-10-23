@@ -1,62 +1,62 @@
 # Overpass edge cache
 
-Piccolo proxy con cache davanti ai mirror Overpass. Risolve il punto più
-fragile dell'app: Overpass è gratuito, sovraccarico e rate-limita spesso.
-Con la cache, le zone già viste rispondono in ~50 ms senza toccare Overpass.
+A small caching proxy in front of the Overpass mirrors. It fixes the app's
+most fragile point: Overpass is free, overloaded and often rate-limits. With
+the cache, areas already seen answer in ~50 ms without touching Overpass.
 
-**L'app funziona anche senza**: finché `OVERPASS_PROXY_URL` in `src/ui.js`
-resta vuota, il client parla coi mirror pubblici come ha sempre fatto. E anche
-a proxy attivo, se il worker è giù il client scala sui mirror diretti — nessun
-nuovo single point of failure.
+**The app works without it**: while `OVERPASS_PROXY_URL` in `src/ui.js` is
+empty, the client talks to the public mirrors as it always has. Even with the
+proxy on, if the worker is down the client falls back to the mirrors — no new
+single point of failure.
 
-## Deploy (una tantum, ~10 minuti, piano gratuito)
+## Deploy (once, ~10 minutes, free plan)
 
-Serve un account [Cloudflare](https://dash.cloudflare.com/sign-up) (free).
+You need a [Cloudflare](https://dash.cloudflare.com/sign-up) account (free).
 
 ```bash
 cd server/overpass-cache
 
-# 1. login (apre il browser)
+# 1. log in (opens the browser)
 npx wrangler login
 
-# 2. crea lo spazio di cache e copia l'id stampato
+# 2. create the cache namespace and copy the printed id
 npx wrangler kv namespace create OSM_CACHE
 
-# 3. in wrangler.toml, scommenta il blocco [[kv_namespaces]] e incolla l'id
+# 3. in wrangler.toml, uncomment the [[kv_namespaces]] block and paste the id
 
-# 4. pubblica
+# 4. publish
 npx wrangler deploy
-# → stampa l'URL, tipo https://suntrace-overpass.<account>.workers.dev
+# → prints the URL, like https://suntrace-overpass.<account>.workers.dev
 ```
 
-Poi in `src/ui.js` incolla quell'URL in `OVERPASS_PROXY_URL`:
+Then paste that URL into `OVERPASS_PROXY_URL` in `src/ui.js`:
 
 ```js
 const OVERPASS_PROXY_URL = 'https://suntrace-overpass.<account>.workers.dev';
 ```
 
-## Verifica
+## Check
 
 ```bash
 curl -sS -X POST 'https://suntrace-overpass.<account>.workers.dev' \
   -H 'Content-Type: application/x-www-form-urlencoded' \
   --data 'data=[out:json][timeout:20];(way["building"](around:90,41.9028,12.4964););out geom;' \
   -D - -o /dev/null | grep -i x-suntrace-cache
-# prima chiamata:  X-Suntrace-Cache: miss
-# seconda chiamata: X-Suntrace-Cache: hit   ← la cache funziona
+# first call:  X-Suntrace-Cache: miss
+# second call: X-Suntrace-Cache: hit   ← the cache works
 ```
 
-## Limiti del piano gratuito (abbondanti per questa scala)
+## Free-plan limits (plenty at this scale)
 
-| Risorsa | Limite free | Uso stimato |
+| Resource | Free limit | Expected use |
 |---|---|---|
-| Richieste worker | 100.000/giorno | qualche centinaio |
-| Letture KV | 100.000/giorno | idem |
-| Scritture KV | 1.000/giorno | solo sui cache miss |
+| Worker requests | 100,000/day | a few hundred |
+| KV reads | 100,000/day | same |
+| KV writes | 1,000/day | only on cache misses |
 
-## Nota privacy
+## Privacy note
 
-Con il proxy attivo, le bbox richieste passano dal tuo worker (Cloudflare ne
-vede i log). Va riflesso in `privacy.html` il giorno in cui lo attivi:
-la sezione "Servizi di terze parti" deve citare il proxy al posto del
-contatto diretto con Overpass.
+With the proxy on, the requested areas go through your worker (Cloudflare sees
+its logs). Reflect it in `privacy.html` the day you switch it on: the
+"Third-party services" section must name the proxy instead of a direct
+connection to Overpass.

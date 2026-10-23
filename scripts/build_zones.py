@@ -76,9 +76,9 @@ def main():
         else:
             dropped += 1
     if kept < 7500:
-        sys.exit(f'Troppi pochi comuni letti ({kept}): una fonte è cambiata?')
+        sys.exit(f'Too few comuni read ({kept}): has a source changed?')
     OUT.write_text(json.dumps({p: dict(sorted(c.items())) for p, c in sorted(out.items())}, ensure_ascii=False, separators=(',', ':')))
-    print(f'{kept} comuni scritti, {dropped} scartati (fonti in disaccordo o una sola fonte)')
+    print(f'{kept} comuni written, {dropped} dropped (sources disagree or only one source)')
 
 
 if __name__ == '__main__':

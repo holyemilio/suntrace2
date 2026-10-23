@@ -1,9 +1,9 @@
-# Aggiorna ogni mese i prezzi di gas e luce dai file ufficiali ARERA.
-# ARERA pubblica il gas entro i primi 2 giorni lavorativi del mese: il job gira
-# i giorni 3, 5 e 8 (se il primo tentativo trova ancora il mese vecchio, quello
-# dopo lo prende). Se la lettura fallisce o un prezzo cambia in modo sospetto,
-# non pubblica nulla e apre una segnalazione.
-name: Aggiorna prezzi ARERA
+# Updates gas and electricity prices every month from ARERA's official files.
+# ARERA publishes gas within the first 2 working days of the month: the job runs
+# on the 3rd, 5th and 8th (if the first try still finds last month, a later one
+# picks it up). If reading fails or a price moves suspiciously, it publishes
+# nothing and opens an issue.
+name: Update ARERA prices
 
 on:
   schedule:
@@ -25,40 +25,40 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Scarica e calcola i prezzi
+      - name: Download and compute the prices
         run: python3 scripts/update_prices.py
 
-      - name: Controlla che l'app funzioni con i nuovi prezzi
+      - name: Check the app works with the new prices
         run: |
           npm ci
           npm test
 
-      - name: Pubblica se qualcosa è cambiato
+      - name: Publish if anything changed
         run: |
           if git diff --quiet src/prices.js; then
-            echo "Prezzi invariati"
+            echo "Prices unchanged"
             exit 0
           fi
           git config user.name "suntrace-bot"
           git config user.email "actions@users.noreply.github.com"
           git add src/prices.js
-          git commit -m "chore: prezzi ARERA aggiornati automaticamente"
+          git commit -m "chore: ARERA prices updated automatically"
           git push
 
-      - name: Promemoria annuale sulle imposte
+      - name: Yearly tax reminder
         if: success()
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           if [ "$(date +%m-%d)" = "01-03" ]; then
-            gh issue create --title "Imposte su gas e luce: controllare i fattori" \
-              --body "È gennaio: la Legge di Bilancio può aver cambiato accise o IVA. Controlla scripts/price-taxes.json (procedura in docs/metodo.md)."
+            gh issue create --title "Gas and electricity taxes: check the factors" \
+              --body "It is January: the budget law may have changed excise or VAT. Check scripts/price-taxes.json (procedure in docs/method.md)."
           fi
 
-      - name: Segnala il problema
+      - name: Report the problem
         if: failure()
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh issue create --title "Aggiornamento prezzi ARERA non riuscito" \
-            --body "Il job del $(date +%d/%m/%Y) non ha aggiornato i prezzi: l'app continua a usare gli ultimi validi. Log: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          gh issue create --title "ARERA price update failed" \
+            --body "The run of $(date +%Y-%m-%d) did not update the prices: the app keeps using the last valid ones. Log: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"

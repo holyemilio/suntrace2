@@ -4,7 +4,7 @@
  * Serves the project over HTTP (the app needs http://, not file://) and stubs the
  * three external data APIs so runs are deterministic and don't hammer public
  * services. Leaflet and fonts are self-hosted (vendor/), so no network at all.
- * Case IDs come from the v3 testbook (docs/archivio/testbook.html); new ones continue the series.
+ * Case IDs (T01…) continue the numbering of the old v3 test book.
  *
  * SunTrace 2: the app no longer auto-analyses a clicked point with a
  * bussola-set facade — the user draws the room's outline (a polygon) on the

@@ -2,86 +2,87 @@
   <img src="docs/brand/logo.png" alt="SunTrace" width="220">
 </p>
 
-<p align="center"><strong>Italiano</strong> · <a href="README.en.md">English</a></p>
-
 # SunTrace 2
 
-**Quanto costa scaldare la stanza che stai per affittare?**
-SunTrace 2 te lo dice in euro al mese, prima di firmare.
+**What will it cost to heat the room you're about to rent?**
+SunTrace 2 tells you in euro a month, before you sign.
 
-**[Apri SunTrace 2](https://holyemilio.github.io/suntrace2/)** — gratis, senza
-account, funziona anche dal telefono.
+**[Open SunTrace 2](https://holyemilio.github.io/suntrace2/)** — free, no
+account, works on your phone too. The app is in Italian and English.
 
-È pensato per chi cerca casa in affitto: studenti, studenti lavoratori,
-lavoratori fuori sede. Il riscaldamento è la voce più variabile della
-bolletta, e dipende da cose che in un annuncio non si vedono: da che parte
-arriva il sole, quanto fanno ombra i palazzi di fronte, che vetri ha la
-finestra.
+It's made for people renting in Italy: students, working students, workers
+away from home. Heating is the most variable part of the bill, and it depends
+on things a listing doesn't show: where the sun comes from, how much the
+buildings opposite shade the room, what glazing the window has.
 
 ---
 
-## Come si usa
+## How to use it
 
-1. **Cerca l'indirizzo** della casa.
-2. **Disegna la stanza** sulla mappa: un clic per ogni angolo, poi di nuovo sul
-   primo punto per chiuderla.
-3. **Rispondi alle domande** della visita. Ogni risposta stringe la stima; se
-   non sai qualcosa, lascia «Non so».
+1. **Search the address** of the home.
+2. **Draw the room** on the map: one click per corner, then the first point
+   again to close it.
+3. **Answer the viewing questions.** Each answer sharpens the estimate; if you
+   don't know something, leave "Don't know".
 
-## Cosa ti dice
+The first visit opens a short guided tour of the app.
 
-- **Quanto costa scaldarla**, in euro al mese, da quando a quando si può
-  accendere il riscaldamento nella tua zona. È una forbice, per esempio
-  «40–97 €»: più rispondi, più si stringe.
-- **Quanto a testa**, se dividi le bollette.
-- **Quanto ti fa risparmiare il sole** che entra dalle finestre, con le ombre
-  vere dei palazzi vicini, al piano che scegli.
-- **Quanto costerebbe con una stufetta elettrica**: con i prezzi di oggi, circa il doppio del gas.
-- **Cosa controllare e chiedere alla visita**: una lista breve, diversa per
-  ogni stanza.
-- **Una scheda da condividere** con i coinquilini, per confrontare case
-  diverse.
+## What it tells you
 
-## Le domande della visita
+- **What it costs to heat**: the most likely figure in euro a month, over the
+  months heating is allowed in your comune, with the range from best to worst
+  case.
+- **How much each**, if you share the bills.
+- **How much the sun saves you** through the windows, with the real shadows of
+  nearby buildings, at the floor you pick.
+- **What a plug-in electric heater would cost**: at today's prices, about
+  twice as much as gas.
+- **What to check and ask at the viewing**: a short list, different for every
+  room.
+- **A sheet to share** with flatmates, to compare different homes.
 
-| Domanda | Come lo scopri |
+## The viewing questions
+
+| Question | How to find out |
 | --- | --- |
-| Come si scalda la casa? | Chiedi al proprietario. La caldaia di solito è in cucina, in bagno o sul balcone. |
-| Che vetri ha? | Avvicina al vetro la torcia del telefono: 2 riflessi = vetro singolo, 4 = doppio. |
-| Quando è stato costruito il palazzo? | Nell'annuncio o nell'attestato energetico (APE). |
-| Cosa c'è sopra e sotto? | Un altro appartamento, oppure tetto e cantina. |
-| In quanti dividete le bollette? | — |
-| A che piano è? | Dalla barra in alto sulla mappa. |
+| How is the home heated? | Ask the landlord. The boiler is usually in the kitchen, the bathroom or on the balcony. |
+| What glazing does it have? | Hold your phone torch to the glass: 2 reflections = single glazing, 4 = double. |
+| When was the building built? | In the listing or the energy certificate (APE). |
+| What is above and below? | Another flat, or roof and cellar. |
+| How many hours a day is heating on? | Your habit; the law sets a maximum per climate zone. |
+| How many share the bills? | — |
+| Which floor? | The bar at the top of the map. |
 
-## Da dove vengono i numeri
+## Where the numbers come from
 
-Prezzi di gas e luce di **ARERA**, aggiornati ogni mese. Muri e finestre dalla
-tipologia edilizia italiana **TABULA** del Politecnico di Torino. Zone
-climatiche e mesi di accensione dalle leggi (**DPR 412/93** e **DPR 74/2013**).
-Clima medio 1991–2020 da **Open-Meteo**, edifici da **OpenStreetMap**.
+Gas and electricity prices from **ARERA**, the Italian energy regulator,
+updated automatically every month for each part of Italy. Walls and windows
+from the Italian building typology **TABULA** (Politecnico di Torino). Climate
+zones, heating months and hours from Italian law (**DPR 412/93** and
+**DPR 74/2013**). Average 1991–2020 climate from **Open-Meteo**, buildings and
+water from **OpenStreetMap**.
 
-Ogni formula, con una legenda per ogni simbolo e un esempio svolto, è in
-**[Come calcoliamo la stima](docs/metodo.md)**.
+Every formula, with a legend for each symbol and a worked example, is in
+**[the method](docs/method.md)**.
 
-## Manuale utente
+## User manual
 
-Passo per passo, con le schermate: **[Manuale utente](docs/manuale/manuale-utente.md)** ([English](docs/manuale/user-manual.md)).
+Step by step, with screenshots: **[User manual](docs/user-manual/user-manual.md)**.
 
-## Cosa non fa
+## What it doesn't do
 
-- Non è un preventivo né un attestato energetico: serve a **confrontare** case.
-- Non conta il calore di persone ed elettrodomestici né le tue abitudini: la
-  stima tende al rialzo.
-- Non stima in euro il caldo d'estate.
-- Funziona solo in Italia.
+- It's not a quote or an energy certificate: it's for **comparing** homes.
+- It doesn't count the heat of people and appliances: the estimate leans high.
+- It doesn't estimate summer heat in euro.
+- It only works in Italy.
 
 ## Privacy
 
-Nessun account, nessun server nostro, nessuna analytics. Il link «Condividi la
-scheda» contiene la posizione della stanza e le tue risposte: decidi tu a chi
-mandarlo. Dettagli nella [pagina privacy](privacy.html).
+No account, no server of ours, no analytics. The "Share this sheet" link
+contains the room's location and your answers: you decide who gets it.
+Details on the [privacy page](https://holyemilio.github.io/suntrace2/privacy.html).
 
 ---
 
-**Per chi vuole modificare il codice:** come avviarlo, i test e la struttura
-sono in [docs/sviluppo.md](docs/sviluppo.md). Licenza [MIT](LICENSE).
+**For developers:** running it locally, the tests and the structure are in
+[docs/development.md](docs/development.md). [MIT](LICENSE) licence.

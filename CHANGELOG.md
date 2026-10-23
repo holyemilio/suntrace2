@@ -5,335 +5,341 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) — [Semantic V
 
 ---
 
-## [4.6.1] — 2026-10-23
+## [4.7.0] — 2026-10-23
 
-- Il messaggio «La forbice è ampia perché mancano risposte» compare solo se c'è ancora qualche «Non so»: con tutte le risposte la forbice che resta dipende da ciò che non si vede (muri, abitudini), non da domande mancanti.
-- Manuale utente aggiornato alla versione attuale: nuove schermate (logo, guida, controllo dell'acqua, cifra principale, domanda sulle ore), sezioni su guida e disegni rifiutati.
-- **Manuale utente nel repository**, in italiano e in inglese: `docs/manuale/manuale-utente.md` e `docs/manuale/user-manual.md`, con 13 schermate; linkato dai README.
+- **Repository in English.** README, method, developer guide, project status,
+  changelog, user manual, script and workflow messages are now in English. The
+  app itself stays bilingual (Italian/English). Renamed: `docs/metodo.md` →
+  `docs/method.md`, `docs/sviluppo.md` → `docs/development.md`,
+  `docs/stato-lavori.md` → `docs/project-status.md`, `docs/manuale/` →
+  `docs/user-manual/` (English only). Removed: `README.en.md` (the README is
+  now English), the Italian user manual and `docs/archivio/` (v3 documents, in
+  git history).
 
 ---
+
+## [4.6.1] — 2026-10-23
+
+- "The range is wide because answers are missing" now appears only while some
+  answer is still "Don't know": with every answer in, the remaining range comes
+  from what can't be seen (walls, habits), not from missing questions.
+- User manual updated to the current version (new screenshots: logo, guide,
+  water check, main figure, hours question) and added to the repository.
 
 ## [4.6.0] — 2026-10-23
 
-- **Zona climatica di legge per comune.** La stagione di riscaldamento e il massimo di ore al giorno seguono ora la zona del DPR 412/93 del comune della stanza (8.010 comuni, `src/data/zone-climatiche.json`), non più quella stimata dal clima. La tabella è costruita da `scripts/build_zones.py` incrociando tre copie pubblicate dell'Allegato A e tenendo solo i comuni su cui almeno due concordano; controllata con l'elenco ufficiale della Regione Piemonte. Se il comune non si trova, resta la zona stimata e l'app lo scrive («E (stimata dal clima)» invece di «E (di legge, Milano)»).
-
----
+- **Legal climate zone per comune.** The heating season and the maximum daily
+  hours now follow the DPR 412/93 zone of the room's comune (8,010 comuni,
+  `src/data/zone-climatiche.json`) instead of the zone estimated from the
+  climate. The table is built by `scripts/build_zones.py` from three published
+  copies of Annex A, keeping only comuni on which at least two agree; checked
+  against the official list of Regione Piemonte. If the comune isn't found, the
+  estimated zone remains and the app says so ("E (estimated from the climate)"
+  instead of "E (legal, Milano)").
 
 ## [4.5.0] — 2026-10-23
 
-- **Modalità scura automatica.** Segue l'impostazione del dispositivo (`prefers-color-scheme`): carta quasi nera e calda, inchiostro chiaro, ambra un po' più luminosa; contrasto dei grigi circa 6:1. Logo chiaro dedicato (`docs/brand/logo-dark.png`), colore della barra del browser e controlli di sistema (menu, barre di scorrimento) adattati. La mappa resta chiara: le tessere OpenStreetMap non hanno una versione scura gratuita senza chiave.
-
----
+- **Automatic dark mode** following the device setting (`prefers-color-scheme`):
+  warm near-black paper, light ink, slightly brighter amber; greys around 6:1
+  contrast. Dedicated light logo (`docs/brand/logo-dark.png`), browser bar
+  colour and system controls adapted. The map stays light: OpenStreetMap has no
+  free dark tiles without a key.
 
 ## [4.4.2] — 2026-10-23
 
-- **Anteprima del link con il nuovo logo.** Tag Open Graph e Twitter su landing, app e privacy: chi condivide il sito su WhatsApp, Telegram, LinkedIn o in una mail vede il logo, lo slogan «Sai quanto spendi prima di firmare.» e una descrizione (`docs/brand/og-image.png`, 1200×630, generata da `docs/brand/og-source.html`).
-- Titoli delle pagine allineati al marchio «SunTrace» e allo slogan; favicon con `?v=2` perché i browser non tengano quella vecchia in cache.
-
----
+- **Link preview with the new logo.** Open Graph and Twitter tags on landing,
+  app and privacy: sharing the site on WhatsApp, Telegram, LinkedIn or by email
+  shows the logo, the slogan "Sai quanto spendi prima di firmare." and a
+  description (`docs/brand/og-image.png`, 1200×630, generated from
+  `docs/brand/og-source.html`).
+- Page titles aligned with the "SunTrace" brand and slogan; favicon with `?v=2`
+  so browsers drop the cached old one.
 
 ## [4.4.1] — 2026-10-23
 
-- **Nuovo logo (provvisorio).** Sole che sorge sopra un arco, con la scritta «SunTrace» in serif. File in `docs/brand/`: `logo.png` (con la scritta, sfondo trasparente), `symbol.png` (solo simbolo), icone 32, 180 e 512 px. Usato nella colonna dell'app, nella barra della landing, come favicon e icona su telefono e nel README. `docs/app-icon.svg` resta nel repo ma non è più usato.
-
----
+- **New logo (provisional)**: a rising sun over an arc, with "SunTrace" in a
+  serif. Files in `docs/brand/`: `logo.png` (wordmark, transparent),
+  `symbol.png`, icons at 32, 180 and 512 px. Used in the app column, the
+  landing bar, as favicon and phone icon, and in the README.
 
 ## [4.4.0] — 2026-10-23
 
-- **Guida alla prima visita** (`src/tour.js`). Uno schermo scuro copre l'app e un riquadro ambra cerchia un elemento alla volta, con una scheda che spiega a cosa serve e i pulsanti Avanti, Indietro e Salta (anche da tastiera). Durante la guida non si può interagire con l'app. Nove passi su computer, sette su telefono; compare una volta sola e si riapre dal link «Guida» in fondo alla colonna (su telefono, in fondo al pannello domande, dove ora ci sono anche i link Metodo, GitHub e Privacy).
-- Gli e2e segnano la guida come già vista (`addInitScript`), tranne il test che la verifica.
-
----
+- **First-visit guided tour** (`src/tour.js`). A dark overlay covers the app and
+  an amber frame circles one element at a time, with a card explaining it and
+  Next, Back and Skip (keyboard too). The app can't be used during the tour.
+  Nine steps on desktop, seven on phones; shown once, reopened from the "Guide"
+  link at the bottom of the column (on phones, at the bottom of the questions
+  panel, which now also holds the Method, GitHub and Privacy links).
+- e2e tests mark the tour as seen (`addInitScript`), except the test that checks it.
 
 ## [4.3.1] — 2026-10-23
 
-- **Messaggio durante il controllo dell'acqua.** Appena chiudi la stanza compare «Controllo che la stanza non sia sull'acqua e scarico gli edifici intorno…», che sparisce quando arrivano i dati: una stanza cancellata qualche secondo dopo non sembra più un errore.
-
----
+- **Message during the water check.** Right after closing the room, "Checking
+  the room isn't on water and loading the buildings around it…" appears and
+  disappears when the data arrives, so a room cleared a few seconds later no
+  longer looks like a bug.
 
 ## [4.3.0] — 2026-10-23
 
-- **Ore di accensione.** Nuova domanda «Quante ore al giorno lo accendete?», mai oltre il massimo di legge della zona (DPR 74/2013: 14 ore in zona E, 12 in D, …); con «Non so» si usa il massimo. Il calcolo non assume più il riscaldamento acceso 24 ore: la cifra principale sta a metà tra i due limiti fisici (solo le ore accese, oppure 24 ore), che restano gli estremi della forbice.
-- **Niente stanze sull'acqua.** Se il disegno cade su un fiume, un lago (OpenStreetMap `natural=water`, `waterway=riverbank`) o sul lato mare di una linea di costa, l'app lo cancella e chiede di ridisegnarlo. Tolleranza di 1,5 m sulla riva per gli edifici affacciati sull'acqua (`onWater` in `shadow.js`).
-- **Gradi giorno tolti dal pannello clima:** misura tecnica che le persone non usano. Resta nel calcolo e nel metodo.
-
----
+- **Heating hours.** New question "How many hours a day is it on?", never above
+  the zone's legal maximum (DPR 74/2013: 14 hours in zone E, 12 in D, …); "Don't
+  know" uses the maximum. The calculation no longer assumes heating on 24 hours:
+  the main figure sits halfway between the two physical limits (hours on only,
+  or 24 hours), which remain the ends of the range.
+- **No rooms on water.** A drawing on a river, a lake (OpenStreetMap
+  `natural=water`, `waterway=riverbank`) or on the sea side of a coastline is
+  cleared with a request to redraw it. 1.5 m of slack at the shore for
+  waterfront buildings (`onWater` in `shadow.js`).
+- **Degree days removed from the climate panel**: a technical measure people
+  don't use. It stays in the calculation and in the method.
 
 ## [4.2.0] — 2026-10-23
 
-Correzioni dai test dell'utente.
+Fixes from the user's tests.
 
-- **Una cifra principale, non solo una forbice.** Il numero grande è ora la stima più probabile («circa 812 € al mese»), con i valori tipici per tutto quello che non sai; la forbice resta sotto, alla riga «Forbice». Prima, senza risposte, si vedeva solo un intervallo come 55–2.254 €, poco utile.
-- **Stanze impossibili rifiutate.** Se i lati del disegno si incrociano, o la stanza è sotto i 2 m², l'app la cancella e spiega come ridisegnarla (`roomShapeProblem` in `shadow.js`).
-- **Mobile: i pannelli sole e clima si chiudono toccando fuori.**
-- **Mobile: il pannello delle domande non scivola più di lato** mentre scorri (scorrimento solo verticale).
-- **Zoom più vicino:** la mappa arriva al livello 21 (le tessere OSM del livello 19 ingrandite) e da telefono la ricerca atterra un livello più vicino, per toccare gli angoli con il dito.
-- **Gradi giorno spiegati** nel pannello clima, con la differenza dal valore di legge del comune.
-
----
+- **A main figure, not only a range.** The big number is now the most likely
+  estimate ("about €812 a month"), with typical values for everything unknown;
+  the range moves to the "Range" line. Before, with no answers, only a range
+  like €55–2,254 showed, which wasn't useful.
+- **Impossible rooms refused.** Crossing sides, or a room under 2 m², is cleared
+  with an explanation of how to redraw it (`roomShapeProblem` in `shadow.js`).
+- **Mobile: the sun and climate panels close when tapping outside.**
+- **Mobile: the questions panel no longer slides sideways** while scrolling.
+- **Closer zoom:** the map reaches level 21 (OSM level-19 tiles scaled up) and
+  on phones the search lands one level closer, to tap corners with a finger.
+- **Degree days explained** in the climate panel.
 
 ## [4.1.0] — 2026-10-23
 
-- **Prezzi aggiornati da soli ogni mese.** `scripts/update_prices.py` legge i file ufficiali ARERA (`G<anno>_stv.xlsx` per il gas, `E<anno>-smt.xlsx` per la luce) e rigenera `src/prices.js`; un'azione GitHub lo esegue i giorni 3, 5 e 8 del mese, lancia i test e pubblica. Se un file non si legge o un prezzo cambia più del 40%, non pubblica e apre una segnalazione.
-- **Prezzo del gas per zona.** La regione della stanza sceglie l'ambito tariffario ARERA (sette ambiti, `src/ambiti.js`): a settembre 2026 da 1,54 €/Smc (nord-est) a 1,76 €/Smc (sud e isole), al posto di un unico prezzo nazionale.
-- **Imposte con un fattore calibrato** sulle spese del cliente tipo pubblicate da ARERA (`scripts/price-taxes.json`), con promemoria annuale a gennaio.
-- 3 unit test nuovi (ambiti e prezzi generati).
-
----
+- **Prices update themselves every month.** `scripts/update_prices.py` reads
+  ARERA's official files (`G<year>_stv.xlsx` for gas, `E<year>-smt.xlsx` for
+  electricity) and regenerates `src/prices.js`; a GitHub Action runs it on the
+  3rd, 5th and 8th of the month, runs the tests and publishes. If a file can't
+  be read or a price moves more than 40%, it publishes nothing and opens an issue.
+- **Gas price per area.** The room's region picks ARERA's tariff area (seven
+  areas, `src/ambiti.js`): in September 2026 from €1.54/Smc (north-east) to
+  €1.76/Smc (south and islands), instead of one national price.
+- **Taxes through a factor** calibrated on ARERA's published reference-customer
+  spend (`scripts/price-taxes.json`), with a yearly January reminder.
+- 3 new unit tests (tariff areas and generated prices).
 
 ## [4.0.1] — 2026-10-23
 
-- 🐛 **Con «Riscaldamento centralizzato» il prezzo spariva** (segnalato dall'utente): l'app mostrava «—» e solo un messaggio, e sembrava un errore. Ora calcola il consumo stimato della stanza come per una caldaia a gas (il centralizzato brucia gas anche lui) e spiega sotto che quanto si paga dipende anche dalla ripartizione del condominio. Nessuna risposta alle domande nasconde più il prezzo.
-
----
+- **With "Central heating" the price disappeared** (reported by the user): the
+  app showed "—" and only a message, which looked like a bug. It now costs the
+  room's estimated consumption as for a gas boiler (central heating burns gas
+  too) and explains that what you pay also depends on how the building splits
+  the bill. No answer hides the price any more.
 
 ## [4.0.0] — 2026-10-23
 
-SunTrace 2 diventa uno strumento per chi affitta: non dà più un voto a stelle,
-dice quanto costa scaldare la stanza, in euro al mese, con fonti verificate.
+SunTrace 2 becomes a tool for renters: no star rating any more, it says what it
+costs to heat the room, in euro a month, from verified sources.
 
-### Cambiato (incompatibile)
-- **Il Comfort Rate a stelle, le temperature stagionali e le card infissi/isolamento sono stati rimossi**, con il modello termico euristico che li produceva (`src/climate.js`, nella storia git). Erano un indice senza unità e scelte che un inquilino non può fare.
-- **Il 5° piano non è più il tetto**: è «5° piano o più». Cosa c'è sopra la stanza (tetto o sottotetto) è ora una domanda esplicita.
-- **I cursori mese/ora muovono solo il sole sulla mappa** e stanno in «Dettagli tecnici»: la stima usa sempre tutta la stagione.
+### Changed (breaking)
+- **The star Comfort Rate, the seasonal temperatures and the
+  windows/insulation cards are removed**, along with the heuristic thermal
+  model behind them (`src/climate.js`, in git history). They were a unitless
+  index and choices a tenant can't make.
+- **Floor 5 is no longer the roof**: it's "5th floor or higher". What is above
+  the room (roof or attic) is now an explicit question.
+- **The month/hour sliders only move the sun on the map** and live in
+  "Technical details": the estimate always covers the whole season.
 
-### Aggiunto
-- **Stima del riscaldamento in €/mese** (`src/cost.js`): dispersione della stanza con i valori U della tipologia TABULA (Politecnico di Torino), gradi giorno dal clima Open-Meteo 1991–2020 nel periodo di accensione della zona (DPR 412/93, DPR 74/2013), sole sulla parete con le ombre OSM al piano scelto, caldaia a gas / pompa di calore / stufetta con rendimenti di legge (Reg. UE 813/2013, 626/2011) e prezzi ARERA (`src/prices.js`, aggiornati a mano ogni mese). Sempre una forbice: caso migliore e peggiore dei valori incerti.
-- **Sei domande della visita**, ognuna con «Non so»: riscaldamento, vetri (con il test della torcia), epoca del palazzo, cosa c'è sopra e sotto, persone che dividono le bollette.
-- **Quota a testa**, **risparmio massimo dal sole**, **confronto con la stufetta elettrica**, **checklist** «controlla e chiedi» generata dalle risposte.
-- **Scheda condivisibile**: un link con stanza e risposte (`?v=…`), senza server. Sezione dedicata nella privacy policy.
-- **Landing riscritta**: Fig. 1 con il vero percorso del sole su Roma, § 1 la stessa stanza con quattro riscaldamenti (calcolata dal vivo ai prezzi correnti), § 2 le domande, § 3 le fonti.
-- **`docs/metodo.md`**: ogni formula con una legenda per ogni simbolo, le fonti e un esempio svolto. **`docs/sviluppo.md`**: avvio, test, struttura.
-- 18 unit test su `cost.js`; e2e riscritti per il nuovo flusso (27).
+### Added
+- **Heating estimate in €/month** (`src/cost.js`): room heat loss with TABULA
+  U-values (Politecnico di Torino), degree days from the Open-Meteo 1991–2020
+  climate over the zone's heating period (DPR 412/93, DPR 74/2013), sun on the
+  wall with OSM shadows at the chosen floor, gas boiler / heat pump / plug-in
+  heater with legal efficiencies (EU Reg. 813/2013, 626/2011) and ARERA prices.
+  Always a range: best and worst case of the uncertain values.
+- **Six viewing questions**, each with "Don't know": heating, glazing (with the
+  torch test), building period, what's above and below, people sharing the bills.
+- **Share each**, **maximum sun saving**, **comparison with a plug-in heater**,
+  **"check and ask" checklist** generated from the answers.
+- **Shareable sheet**: a link with room and answers (`?v=…`), no server. New
+  section in the privacy policy.
+- **Landing rewritten**: Fig. 1 with the real sun path over Rome, § 1 the same
+  room with four heating systems (computed live at current prices), § 2 the
+  questions, § 3 the sources.
+- **Method document** with every formula, a legend for each symbol, the
+  sources and a worked example; **developer guide**.
+- 18 unit tests on `cost.js`; e2e rewritten for the new flow (27).
 
 ### Design
-- Carta e inchiostro al posto del tema scuro: crema dell'icona come fondo, un solo ambra riservato a sole e soldi, filetti invece di ombre, raggio 3 px, niente vetro sfocato, bagliori, gradienti o animazioni di reveal.
-- Newsreader (titoli e cifre) e IBM Plex Sans (interfaccia) al posto di Space Grotesk; IBM Plex Mono solo per le letture. Scala tipografica fissa di 6 livelli. Font self-hostati.
-- Un set di icone SVG disegnato per l'app al posto delle emoji; testi senza emoji, in seconda persona.
+- Paper and ink instead of the dark theme: the icon's cream as ground, one
+  amber reserved for sun and money, hairline rules instead of shadows, 3 px
+  radius, no blur, glows, gradients or reveal animations.
+- Newsreader (headings, figures) and IBM Plex Sans (interface) instead of Space
+  Grotesk; IBM Plex Mono only for readings. Fixed 6-step type scale.
+  Self-hosted fonts.
+- An SVG icon set drawn for the app instead of emoji; texts without emoji, in
+  the second person.
 
-### Rimosso
-- Dalla landing i dati ISPRA, ENEA ed ECCO Climate e la stima «−20% con buon orientamento»: non verificati.
-- `docs/case-study.md`, `docs/storyline.md`, `docs/manuale-utente.html`, `docs/testbook.*` spostati in `docs/archivio/` (descrivono la v3).
+### Removed
+- ISPRA, ENEA and ECCO Climate figures and the "−20% with good orientation"
+  estimate from the landing: not verified.
+- v3 documents moved to an archive (since removed from the repository).
 
 ---
 
 ## [3.1.2] — 2026-09-02
 
-Deploy live su GitHub Pages e riallineamento della documentazione a SunTrace 2.
+Live deploy on GitHub Pages and documentation realigned with SunTrace 2.
 
-- 🌍 **Deploy live** — pubblicato su GitHub Pages: <https://holyemilio.github.io/suntrace2/> (root → `index.html` landing, simulatore su `/app.html`).
-- 🐛 **Fix: link GitHub nel footer del simulatore** puntava ancora al repository di SunTrace 1 (`holyemilio/Suntrace`) invece che a `holyemilio/suntrace2` — copiato all'epoca del fork architetturale e mai aggiornato.
-- 📝 **README (IT/EN) e case study riscritti** — descrivevano ancora l'interazione di SunTrace 1 (bussola/punto singolo, 60 unit + 22/23 e2e, link di deploy v1): aggiornati al disegno del perimetro stanza, classificazione per-parete, modello climatico d'ambiente, layout mobile, 72 unit + 25 e2e.
-- 📝 **`CLAUDE.md` disallineato**: dichiarava ancora versione 3.0.0 e repo "non ancora deployata" nonostante 3.1.0/3.1.1 fossero già in `CHANGELOG.md`; pendenze riallineate a `docs/stato-lavori.md` (rimossa quella sulla metratura stanza, già risolta in 3.1.0).
-- 📋 **Rischi da deploy pubblico + multi-dispositivo analizzati** (`docs/stato-lavori.md`, voce 15) — nessun codice cambiato, solo documentazione: Overpass sotto carico reale, cache statica di GitHub Pages senza `no-store`, `localStorage` non sincronizzato tra dispositivi, degrado silenzioso senza UI di errore. Priorità del deploy del worker Cloudflare (cache Overpass, mai attivato) alzata di conseguenza.
-
----
+- **Live deploy** on GitHub Pages: <https://holyemilio.github.io/suntrace2/>
+  (root → `index.html` landing, simulator at `/app.html`).
+- **Fix: GitHub link in the simulator footer** still pointed to the SunTrace 1
+  repository (`holyemilio/Suntrace`) instead of `holyemilio/suntrace2`.
+- **README and case study rewritten**: they still described SunTrace 1's
+  interaction (compass/single point); updated to room drawing, per-wall
+  classification, room-level climate model, mobile layout, 72 unit + 25 e2e.
+- **`CLAUDE.md` realigned** (it still said version 3.0.0 and "not deployed").
+- **Public-deploy and multi-device risks analysed** (documentation only):
+  Overpass under real load, GitHub Pages caching without `no-store`,
+  per-device `localStorage`, silent degradation with no error UI. Priority of
+  the Overpass cache worker raised.
 
 ## [3.1.1] — 2026-08-31
 
-Tolleranza di classificazione esterno/interno abbassata da 2.5 a 1.0 m.
-
-- 📏 **`EDGE_TOLERANCE_M`: 2.5 m → 1.0 m** — a 2.5 m, una stanza disegnata vicino a uno spigolo dell'edificio poteva avere più lati classificati "esposti" da muri diversi, indipendentemente da come era orientata (il controllo misura solo la distanza, non l'allineamento). Verificato con un caso concreto: una stanza ruotata di 25° vicino a uno spigolo passava da 3 lati esposti su 4 (a 2.5m) a 1 solo, quello vero (a 1.0m). Resta comunque abbastanza largo da assorbire un normale errore di disegno.
-
----
+- **`EDGE_TOLERANCE_M`: 2.5 m → 1.0 m.** At 2.5 m a room drawn near a building
+  corner could have several sides classified "exposed" by different walls,
+  whatever its orientation (the check measures distance, not alignment).
+  Verified on a concrete case: a room rotated 25° near a corner went from 3
+  exposed sides out of 4 (at 2.5 m) to the only real one (at 1.0 m).
 
 ## [3.1.0] — 2026-08-31
 
-Colorazione per-parete di sole/ombra, geolocalizzazione anche in home, e un bug di sovrapposizione corretto.
+Per-wall sun/shade colouring, geolocation on the landing, an overlap bug fixed.
 
-- 🟢⬜ **Ogni parete esposta mostra se prende sole *ora***, non solo il totale della stanza: verde = sole diretto, grigio = bloccata da un edificio vicino in questo momento. Riusa lo stesso calcolo già fatto per il valore aggregato "Sole diretto", non una seconda passata. Le pareti verso un altro vano restano com'erano: solo il contorno sottile del poligono, mai un colore proprio — ed è ora spiegato in legenda, non solo deducibile dallo spessore.
-- 📌 **Icona posizione cambiata** da 🎯 a 📌 (il classico segnaposto), ovunque appare.
-- 🏠📌 **Geolocalizzazione anche sulla landing page** — un pulsante accanto alla ricerca porta dritto su `app.html` centrato sulla propria posizione reale (nuovi parametri `?lat=&lng=`), senza passare dalla ricerca testuale.
-- 🐛 **Bug: il pulsante "rimuovi stanza" copriva il pannello istruzioni** — entrambi occupavano lo stesso rettangolo (42×42 px) quando il pannello 💡 era compresso, quindi chiuderlo lo rendeva irriapribile: il click ci andava sopra al pulsante nuovo, non al toggle sotto. Spostato oltre l'altezza massima che il pannello raggiunge da aperto (118px, misurata dal vivo — non a occhio).
-- 📐 **Metratura della stanza mostrata** — la superficie disegnata (già usata internamente per lo smorzamento stagionale) ora si vede anche in sidebar accanto alle coordinate e nel dettaglio del Comfort Rate, non solo nel calcolo interno.
-- 📝 **Legenda: aggiunta la voce mancante** — il contorno sottile (parete verso un altro vano) non era spiegato da nessuna parte, solo deducibile per differenza con quello spesso.
-
----
+- **Every exposed wall shows whether it's in sun right now**, not just the room
+  total: green = direct sun, grey = blocked by a nearby building. Walls towards
+  another room keep only the thin outline, now explained in the legend.
+- **Location icon** changed.
+- **Geolocation on the landing page**: a button next to the search goes
+  straight to `app.html` centred on the user's position (`?lat=&lng=`).
+- **Bug: the remove-room button covered the hint panel** when collapsed (same
+  42×42 px box), making it impossible to reopen. Moved below the panel's full
+  expanded height, measured live.
+- **Room area shown** in the sidebar and in the Comfort Rate detail.
+- **Legend: the missing entry added** for the thin outline.
 
 ## [3.0.0] — 2026-08-30
 
-SunTrace 2.0: si disegna la stanza, non più un punto. Via la bussola, dentro un modello climatico a livello di stanza.
+SunTrace 2.0: you draw the room, not a point. The compass goes, a room-level
+climate model comes in.
 
-- 🖊️ **Disegno del perimetro della stanza** — l'interazione cambia radicalmente: invece di cliccare un punto sulla mappa, si clicca un vertice per parete e si chiude l'anello tornando vicino al primo punto. La stanza si **blocca** istantaneamente alla chiusura (nessun editing successivo, per evitare tocchi accidentali) e un nuovo pulsante 🗑️ (accanto a quello di geolocalizzazione) la rimuove per permettere di ridisegnare da zero. Non c'è più alcuna analisi finché non si disegna una stanza — anche al primo avvio.
-- 🧭 **Bussola rimossa** — l'orientamento di ogni parete non si sceglie più a mano: deriva geometricamente dai lati del poligono disegnato. Sparisce il quadrante, i suoi 8 pulsanti cardinali, il drag-to-rotate e il relativo widget mobile.
-- 🏘️ **Classificazione automatica delle pareti** — ogni lato disegnato viene confrontato con il perimetro reale dell'edificio OSM che contiene la stanza: se è a ridosso del muro esterno (entro ~2.5 m) è **esposto al sole** (variabile, stagionale), altrimenti è **verso un altro vano** (valore fisso e neutro, nessun guadagno solare). Senza un edificio OSM disponibile, ogni parete resta prudenzialmente esposta.
-- 🌡️ **Modello climatico a livello di stanza** — un solo risultato combinato invece di N pannelli per N pareti: le pareti esterne pesano per la propria lunghezza, quelle interne tirano verso il valore neutro, e l'intera escursione stagionale viene smorzata o amplificata in base alla superficie della stanza (una stanza piccola scalda/raffredda più in fretta di una grande).
-- 🗺️ **Legenda aggiornata** — "Punto analizzato"/"Orientamento facciata" diventano "Perimetro stanza"/"Parete esposta al sole"; "Area di analisi" (il vecchio cerchio di 35 m) sparisce, sostituita dal perimetro stesso.
-- ✅ **Suite e2e riscritta** (25 casi) per il nuovo flusso — disegno via click sulla mappa, chiusura del poligono, rimozione, e gli stessi controlli di prima (mese/ora, infissi/isolamento, lingua, confini, piano/ombra) riletti sul modello a stanza.
-
----
+- **Room outline drawing**: click one vertex per wall and close the loop near
+  the first point. The room locks on closing; a new bin button removes it. No
+  analysis until a room is drawn.
+- **Compass removed**: each wall's orientation comes from the polygon's sides.
+- **Automatic wall classification**: each side is compared with the real OSM
+  outline of the building containing the room — on the outer wall it's
+  **exposed**, otherwise it faces **another room**. Without an OSM building,
+  every wall stays exposed (conservative).
+- **Room-level climate model**: one combined result, outside walls weighted by
+  length, inside walls pulled to a neutral value, the seasonal swing damped or
+  amplified by floor area.
+- **Legend updated**; **e2e suite rewritten** (25 cases) for the new flow.
 
 ## [2.6.2] — 2026-08-28
 
-Rotazione libera della bussola, e il tetto come vera e propria superficie.
-
-- 🎚️ **Bussola: rotazione libera, senza scatto a 45°** — il modello sotto lavora già in gradi esatti; trascinare il quadrante ora ruota grado per grado invece di agganciarsi al punto cardinale più vicino. Gli 8 pulsanti restano per chi vuole un punto esatto con un tap.
-- 🏚️ **Il 5° piano è il tetto** — non più "una parete a 15m", ma una superficie orizzontale senza un lato a cui rivolgersi: il guadagno solare dipende solo da quanto è alto il sole, mai dall'orientamento. La bussola si disattiva (visivamente e all'input) quando il tetto è selezionato, la linea di facciata sparisce dalla mappa, e il pulsante cambia icona (🔺, tooltip "Tetto").
-
----
+- **Compass: free rotation**, no 45° snapping.
+- **Floor 5 is the roof**: a horizontal surface whose solar gain depends only
+  on sun height, not orientation.
 
 ## [2.6.1] — 2026-08-28
 
-Mobile: pinch-zoom libero, bussola in un widget, lingua fuori dalla fascia bassa.
-
-- 🔍 **Pinch-zoom ovunque sulla mappa** — rimossa la gesture a due dita sul marker: intercettava qualunque pinch entro ~70px dal punto analizzato, rendendo impossibile zoomare "dentro il cerchio". Ora due dita zoomano sempre, come ci si aspetta.
-- 🧭 **Bussola nel widget mobile** — la rotazione della facciata su mobile ora ha un controllo esplicito: un terzo widget (🧭, sotto ☀️ e 🌡️) apre lo stesso quadrante del desktop — tocca una delle 8 direzioni o trascina l'ago (i Pointer Events funzionano al tocco). Sostituisce la gesture nascosta, che nessuno poteva scoprire.
-- ☝️ **Widget mutuamente esclusivi** — aprire uno dei tre widget (sole, clima, bussola) chiude gli altri: i pannelli espansi non si accavallano più tra loro né coprono la mappa.
-- 🌐 **Selettore IT/EN in alto a sinistra** — la fascia in basso era affollata (barra temperature, pulsante Imposta, widget): il selettore lingua si sposta nella colonna in alto a sinistra, sotto i pulsanti di geolocalizzazione e Info, dove non si sovrappone a nulla.
-
----
+- **Pinch-zoom anywhere on the map** (the two-finger gesture on the marker
+  blocked zooming near it).
+- **Compass in a mobile widget**, replacing a hidden gesture.
+- **Mutually exclusive widgets** (sun, climate, compass).
+- **IT/EN switch moved to the top left** on mobile.
 
 ## [2.6.0] — 2026-08-28
 
-Layout mobile per il simulatore, e prima esecuzione reale della CI.
-
-- 📱 **Layout mobile per `app.html`** — sotto i 768px la sidebar non è più bloccata: il suo contenuto si sposta in una barra inferiore persistente (le 4 temperature stagionali + il Comfort Rate), un drawer "Impostazioni" (ricerca, mese/ora, infissi/isolamento), un foglio "Info" unico che unisce legenda e suggerimento, e due widget a comparsa per i dati solari e il clima. Il blocco totale ora scatta solo sotto i 320px.
-- 🤏 **Bussola sostituita da gesture su mobile** — un dito sul marker lo sposta (già gestito da Leaflet), due dita lo ruotano con lo stesso scatto ai punti cardinali della bussola desktop.
-- 🧭 **Bussola desktop trascinabile** — oltre ai pulsanti, si può trascinare il quadrante per ruotare la facciata, con scatto automatico ogni 45°.
-- 🎯 **Marker centrato correttamente** — il pallino visibile non era centrato nella propria icona: ombra, raggio solare e linea di facciata sembravano partire dal bordo invece che dal centro esatto.
-- ✅ **CI verde alla prima esecuzione reale** — girata per la prima volta dopo l'introduzione della pipeline, ha trovato: uno script `npm test`/`test:e2e` con un glob non espandibile da Node 20 (va tolta la virgoletta, la espande la shell); tre test e2e rimasti agganciati a elementi rimossi in una modifica precedente (`#telemetry-cardinal`, `#val-manual-obs`, `#compass-state`); un `z-index` mancante sul pulsante di chiusura del modale Comfort Rate, che un titolo abbastanza lungo poteva coprire rendendolo non cliccabile.
-
----
+- **Mobile layout for `app.html`** below 768px: persistent bottom bar, settings
+  drawer, Info sheet, sun and climate widgets. The full block only below 320px.
+- **Touch gestures** for the marker; **draggable desktop compass**.
+- **Marker correctly centred** in its icon.
+- **CI green on its first real run**, after fixing an unexpanded test glob,
+  three e2e tests bound to removed elements and a missing `z-index` on the
+  Comfort Rate modal's close button.
 
 ## [2.5.0] — 2026-08-27
 
-Infrastruttura: CI, self-hosting delle risorse esterne e cache Overpass pronta al deploy.
-
-- ⚙️ **CI su GitHub Actions** (`.github/workflows/ci.yml`) — su ogni push e PR girano i 60 unit test, il controllo di parità i18n IT/EN (prima era un one-liner manuale) e i 22 e2e Playwright.
-- 🔐 **Font e Leaflet self-hostati** (`vendor/`) — Space Grotesk, IBM Plex Mono e Leaflet 1.9.4 (hash sha256 verificato contro leafletjs.com) sono ora serviti dal sito stesso: nessuna richiesta dei visitatori raggiunge più Google Fonts o unpkg (privacy GDPR + niente rischio supply-chain da CDN). Privacy policy aggiornata in entrambe le lingue.
-- 🚀 **Edge cache Overpass pronta al deploy** (`server/overpass-cache/`) — Cloudflare Worker con cache KV a 30 giorni davanti ai tre mirror Overpass; disattivata finché `OVERPASS_PROXY_URL` in `ui.js` resta vuota, e anche da attiva i mirror diretti restano come fallback. Istruzioni di deploy nel README della cartella.
-- 📐 **Query Overpass canoniche** — le coordinate nella query sono arrotondate a 4 decimali (~11 m, stessa tolleranza della cache in localStorage), così click vicini producono query identiche e condivisibili dalla cache.
-
----
+- **CI on GitHub Actions**: unit tests, i18n IT/EN parity, Playwright e2e on
+  every push and PR.
+- **Self-hosted fonts and Leaflet** (`vendor/`, Leaflet sha256 checked): no
+  visitor request reaches Google Fonts or unpkg. Privacy policy updated.
+- **Overpass edge cache ready to deploy** (`server/overpass-cache/`): a
+  Cloudflare Worker with a 30-day KV cache, off until `OVERPASS_PROXY_URL` is set.
+- **Canonical Overpass queries**: coordinates rounded to 4 decimals (~11 m).
 
 ## [2.4.0] — 2026-08-27
 
-Landing page, deploy live e pulizia dei pannelli sulla mappa.
-
-- 🏠 **Landing page** (`index.html`) — nuova pagina di missione/vision con hero animato (cielo stellato, sole pulsante, arco solare), 4 sezioni "Perché SunTrace" con mini-grafici SVG che si disegnano allo scroll, e una CTA finale. Il simulatore vero e proprio è ora su `app.html`, raggiungibile dalla ricerca in home (che porta con sé l'indirizzo cercato) o dal pulsante "Inizia ora"; un link «← Home» in `app.html` torna alla landing.
-- 🌍 **Deploy live** — pubblicato su GitHub Pages: <https://holyemilio.github.io/Suntrace/>.
-- 🗺️ **Legenda e suggerimento comprimibili** — sulla mappa, entrambi ora collassano in un bottone 42×42 (stessa misura del pulsante di geolocalizzazione) con un'animazione fluida, invece di restare sempre aperti a occupare spazio.
-- ✂️ **Suggerimento più corto e leggibile** — il testo copriva troppo spazio sulla mappa; ora è più breve, con caratteri più grandi e più chiari.
-- 🧭 **Bussola pulita** — rimosso il testo di stato sotto la bussola, che ripeteva l'informazione già presente in sidebar ("Sole diretto").
-- 🐛 **Corretto** — il box "Temperature" si comprimeva a una striscia di pochi pixel quando il contenuto della sidebar superava l'altezza della finestra (era l'unica card con `overflow: hidden`, su cui il flexbox scaricava tutto il ridimensionamento).
-- 🧱 **Riordino sidebar** — Ricerca → Temperature → Crono-Solare → Facciata → Dati Solari, con i titoli dei box rimossi e i parametri di orientamento/schermatura (calcolati ma non editabili) tolti dalla vista.
-
----
+- **Landing page** (`index.html`) with animated hero and four "Why SunTrace"
+  sections; the simulator moves to `app.html`.
+- **Live deploy** on GitHub Pages (SunTrace 1).
+- **Collapsible legend and hint** on the map; shorter, more legible hint.
+- **Fix**: the "Temperatures" box collapsed to a few pixels when the sidebar
+  overflowed (flexbox shrink on an `overflow: hidden` card).
+- **Sidebar reordered.**
 
 ## [2.3.0] — 2026-08-27
 
-Nuovo Brand Icon, Arco Solare Dinamico e Restyling UI Bento.
-
-- 🎨 **Nuovo Brand Icon SunTrace** — icona vettoriale ad alta definizione con sole dorato, arco di traiettoria, facciata architettonica con finestra illuminata e cuneo d'ombra (`docs/app-icon.svg`, `docs/logo.svg`, favicon e logo header).
-- ☀️ **Widget "Dati Solari" con Arco Traiettoria (Sky Dome)** — sostituita la barra lineare con un arco parabolico dinamico in SVG: un globo solare luminoso si muove in tempo reale lungo la traiettoria celeste tra alba (🌅) e tramonto (🌇).
-- 📊 **Griglia Telemetrica Bento** — per elevazione solare, azimut e stato del sole diretto con pillole glassmorphism ad alto contrasto.
-- 📐 **Allineamento Verticale Hero** — centratura verticale del box Estimate / Coordinate (`.hero-top`) per una migliore pulizia visiva.
-- 🗺️ **Mappa Chiara ad Alto Contrasto** — tiles chiare e nitide per la massima leggibilità geometrica di ombre e orientamenti.
-
----
+- **New brand icon**; **solar arc widget** (sunrise to sunset); **bento
+  telemetry grid**; light high-contrast map.
 
 ## [2.2.0] — 2026-08-26
 
-Interfaccia rinnovata, mappa leggibile e dati climatici in evidenza.
-
-- 🗺️ **Mappa gratuita e leggibile** — passaggio a OpenStreetMap: CARTO ha iniziato a marchiare ogni stile con "API KEY REQUIRED".
-- 🧭 **Bussola sulla mappa** — scegli la parete fra le 8 direzioni; l'ago indica la facciata, il ☀ dove sta il sole, e sotto leggi se lo riceve. Sostituisce il cursore "Rotazione parete".
-- 🌡️ **Clima del luogo nella sidebar** — umidità, vento, pioggia e temperatura percepita del mese scelto, dai dati reali del punto.
-- 🏠 **Selettori più compatti** — infissi e muri come tre icone su una riga, col nome che appare passandoci sopra. Il terzo livello del muro ora si chiama "Casa Passiva".
-- ✍️ **Tipografia** — Space Grotesk per il testo, IBM Plex Mono per i numeri.
-- 💡 **Promemoria sul posizionamento** — sulla mappa: il punto va messo in linea con il muro, né dentro né fuori.
-- 🐛 **Corretto** — con la finestra stretta (o con lo zoom del browser) sparivano tutti i controlli senza spiegazione.
-- 🐛 **Corretto** — Città del Vaticano e San Marino venivano respinti come "estero".
-- 🛟 **Errori visibili** — un guasto imprevisto ora compare come avviso invece di lasciare la pagina muta; `start.command` non fa più cachare il browser.
-- ✅ **Test** — da 23 a **60 unit + 22 end-to-end** eseguiti in un browser vero.
-
----
+- **OpenStreetMap tiles** (CARTO started stamping "API KEY REQUIRED").
+- **Compass on the map** to pick the wall; **local climate** in the sidebar;
+  compact selectors; Space Grotesk + IBM Plex Mono.
+- **Fixes**: controls disappearing in narrow windows; the Vatican and San
+  Marino rejected as "abroad"; visible error messages; `start.command` without
+  caching.
+- **Tests**: from 23 to 60 unit + 22 end-to-end.
 
 ## [2.1.0] — 2026-07-15
 
-Grande aggiornamento: dati reali, nuova interfaccia e app bilingue.
-
-- 🌍 **Dati reali per ogni luogo** — temperatura, umidità, vento e pioggia veri del punto scelto (non più solo Roma).
-- 🌡️ **Temperatura percepita** — l'afa d'estate e il freddo ventoso d'inverno ora influenzano il giudizio di comfort.
-- 🏢 **Orientamento e ombreggiamento veri** — presi dagli edifici reali della zona: basta valori casuali.
-- 🇮🇹 **Solo territorio italiano** — se clicchi all'estero o in mare, l'app te lo dice e ti riporta a Roma.
-- 🔎 **Ricerca indirizzo in cima** — con suggerimenti mentre scrivi; la ricerca parte col tasto «Vai».
-- 🌐 **App bilingue Italiano / English** — con selettore sulla mappa; rileva da sola la lingua del browser.
-- 🖤 **Nuova interfaccia scura** in stile "strumento" — più moderna e leggibile.
-- 🗺️ **Mappa migliore** — puntatore più pulito, legenda che spiega i simboli, uno zoom in più.
-- 💬 **Spiegazioni al passaggio del mouse** su dati solari, orientamento e schermatura.
-- 🧹 **Rimosso** il grafico "Ore di sole" (poco chiaro): l'informazione è ora dentro il Comfort Rate.
-- 🚀 **Avvio più semplice** con `start.command` (l'app va aperta da server locale, non col doppio click).
-
----
+- **Real data for every place** (temperature, humidity, wind, rain).
+- **Feels-like temperature**; real orientation and shading from buildings.
+- **Italy only**, with a message and a return to Rome otherwise.
+- **Address search** with suggestions; **bilingual app**; new dark interface;
+  better map; hover explanations; `start.command`.
 
 ## [2.0.0] — 2026-07-14
 
 ### Added
-- **Comfort Rate** replaces "Classe Energetica": 5-star comfort rating with GitHub-style hover tooltip explaining the index meaning. Labels: Eccellente / Buono / Discreto / Scarso / Critico.
-- **Property parameters** in sidebar: dropdown selectors for window type (Vetro Singolo, Doppio Vetro, Triplo Vetro) and wall insulation (Nessuno, Cappotto Termico). Both affect seasonal temperature estimates and the Comfort Rate score.
-- **Open-Meteo API integration**: real monthly climate normals (1991–2020, EC-Earth3P-HR model) fetched on each map click and cached in `localStorage`. Automatic silent fallback to Rome table on network failure.
-- **Italy geofencing**: coordinates outside the Italian bounding box (lat 35.4–47.1 N, lon 6.6–18.6 E, islands included) trigger a friendly toast and redirect to Rome.
-- **Mobile block overlay**: on screen width < 768 px or touch device, a full-screen overlay blocks the app and invites the user to switch to a desktop browser.
-- **`docs/storyline.md`**: project development narrative (v0.3.3 → v1.0.0 → v2.0.0).
-- **`CLAUDE.md` Phase -1 and Phase 0**: critical-stance and model-tier classification rules added upstream.
+- **Comfort Rate** (5 stars) replacing the energy class.
+- **Property parameters**: window type and wall insulation.
+- **Open-Meteo integration**: real monthly climate normals (1991–2020), cached,
+  with a Rome fallback.
+- **Italy geofencing** and a **mobile block overlay**.
 
 ### Changed
-- `energyClass()` in `climate.js` replaced by `cozynessScore()` (name kept in JS; visible label is "Comfort Rate").
-- `seasonalTemperatures()` accepts `customBaseTemps`, `windowsType`, and `insulationType` parameters.
-- `airTemperature()` accepts optional `customBaseTemps` array (bypasses Rome static table when provided).
-- KPI modal redesigned: shows winter/summer comfort temperatures, selected infissi/isolamento type, and dynamic improvement tip. Energy consumption and CO₂ fields removed.
-- `CLASS_COLORS` simplified to 5 comfort labels (`Eccellente` → `Critico`).
+- `energyClass()` replaced by `cozynessScore()`; seasonal model accepts climate
+  normals, windows and insulation; KPI modal redesigned.
 
 ### Removed
-- `KPI_BY_CLASS` table (heating kWh, cooling kWh, cost estimates, CO₂, savingsVsG) — no longer relevant after removing energy-class model.
-- Inline `title` attribute on the Comfort Rate badge (replaced by custom CSS tooltip).
-
----
+- Energy consumption, cost and CO₂ estimates of the old energy-class model.
 
 ## [1.0.0] — 2026-07-02
 
 ### Added
-- **Motore solare Meeus/SPA** (`src/solar.js`): declinazione, equazione del tempo (formula a 5 termini), angolo orario con correzione di longitudine, elevazione, azimut, rifrazione atmosferica Bennet.
-- **Calcolo alba/tramonto** con angolo di depressione standard (−0.833°).
-- **Fuso orario + ora legale automatici**: `Intl.DateTimeFormat / Europe/Rome` via `localToUTC()` — nessun offset hardcoded.
-- **Sezione "Ore di sole per facciata"**: 8 orientamenti (N/NE/E/SE/S/SW/W/NW), con togglee "Oggi" / "Media annuale" (solstizi + equinozi come giorni campione).
-- **Modal KPI energetico**: consumo in kWh/m²/anno, costo stimato, CO₂ emessa, risparmio vs classe G, consigli per miglioramento classe.
-- **Indicatore coordinate** lat/lon del punto selezionato nel pannello di output.
-- **Sezione "Dati Solari"** in sidebar: alba, tramonto, durata del giorno, elevazione, azimut in tempo reale.
-- **Layout mobile-first** con sidebar collassabile su schermi < 768px.
-- **23 unit test** astronomici (`node --test`, oracle SunCalc): 8 casi Roma, 2 casi Milano, DST, anno bisestile, edge cases.
-- **offsetByAzimuth()** con correzione longitudine per proiezione mappa geograficamente corretta.
-- **Architettura modulare**: `solar.js` + `climate.js` + `ui.js` + `styles.css` separati.
+- **Meeus/SPA solar engine** (`src/solar.js`): declination, equation of time,
+  hour angle with longitude correction, elevation, azimuth, Bennet refraction.
+- Sunrise/sunset; automatic time zone and DST via `Intl.DateTimeFormat`.
+- Sun hours per facade; KPI modal; solar data panel; mobile-first layout.
+- **23 astronomical unit tests** against SunCalc.
+- Modular architecture: `solar.js` + `climate.js` + `ui.js` + `styles.css`.
 
 ### Fixed
-- **Bug critico**: formula azimut invertita (`sin(elev)·sin(lat) − sin(decl)` → corretto `sin(decl) − sin(elev)·sin(lat)`).
-- **Bug critico**: angolo orario senza correzione fuso orario / ora legale (errore fino a ~80 min in estate su Roma).
-- **Bug**: `radarCircle` non nullificato dopo `removeLayer` → potenziale crash Leaflet.
-- **Bug**: `facadeLine` non nullificata dopo rimozione.
-- **Bug**: slider angolo sovrascrive sempre le modifiche manuali dell'utente ad ogni click mappa.
-- **Bug**: debounce autocomplete a 350ms (sotto la soglia minima di 400ms) → portato a 420ms.
-- **Bug**: `searchAddress` senza feedback UI su errore rete o indirizzo non trovato.
-- **Bug**: tasto "Vai" non risponde a Enter nel campo di ricerca.
-- **Bug**: ombra mappa con distorsione geometrica (mancava correzione `cos(lat)` per longitudine).
+- Inverted azimuth formula; hour angle without time zone/DST (up to ~80 min off
+  in summer); several Leaflet layer and search bugs; map shadow distortion.
 
-### Changed
-- Refactoring da single-file HTML a struttura multi-modulo ES (`src/`).
-- `solarPowerFactor` hardcoded → `SOLAR_POWER` in `climate.js`, temperatura base scalata per latitudine.
-- Giorno rappresentativo fisso al 15 del mese → date reali per solstizi/equinozi.
-- Debounce autocomplete: 350ms → 420ms.
-- Limit risultati Nominatim: 4 → 5.
-- Sidebar width: 460px → variabile CSS `--sidebar-width: 460px` (overridabile via media query).
+## [0.3.3] — 2026-06-01
 
-### Removed
-- Inline `<style>` dall'HTML → tutto in `src/styles.css`.
-- Inline `<script>` dall'HTML → tutto in `src/ui.js`.
-
----
-
-## [0.3.3] — 2026-06-01 (suntrace-old.html)
-
-- Versione precedente single-file con motore Cooper semplificato.
-- Nessun calcolo di alba/tramonto.
-- Azimut con formula invertita.
-- Nessuna gestione fuso orario / ora legale.
+- Earlier single-file version with a simplified Cooper engine, no
+  sunrise/sunset, inverted azimuth, no time zone handling.

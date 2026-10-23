@@ -2,7 +2,7 @@
  * cost.js — how much it costs to heat the drawn room.
  *
  * Pure functions, no DOM, no network. Every constant below carries its source;
- * the method and a legend of every symbol are in docs/metodo.md.
+ * the method and a legend of every symbol are in docs/method.md.
  *
  * In one line: heat lost through the room's exterior walls, windows, ceiling,
  * floor and air changes (H, in W/K) × how cold the heating season is (degree
@@ -16,7 +16,7 @@
 
 import { solarPosition } from './solar.js';
 
-// ─── fixed values (sources in docs/metodo.md) ─────────────────────────────────
+// ─── fixed values (sources in docs/method.md) ─────────────────────────────────
 
 /** DM 5/7/1975: minimum internal height of a living room. */
 export const ROOM_HEIGHT_M = 2.7;
@@ -142,7 +142,7 @@ export const MAX_DAILY_HOURS = { A: 6, B: 8, C: 10, D: 12, E: 14, F: 24 };
  * (factor 1), nor less than the loss during those hours alone (hours / 24, as
  * if the room went cold the instant the heating stopped — it never does). The
  * typical case takes the middle of the two: an assumption, stated as such in
- * docs/metodo.md, because how fast a room cools depends on walls we can't see.
+ * docs/method.md, because how fast a room cools depends on walls we can't see.
  */
 export function dailyHoursFactor(hours, c) {
   const share = Math.min(24, Math.max(0, hours)) / 24;
